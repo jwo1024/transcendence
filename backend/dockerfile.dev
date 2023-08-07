@@ -1,0 +1,21 @@
+# Dockerfile.dev
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# COPY package*.json ./ 
+
+RUN npm i -g @nestjs/cli
+
+# COPY /Users/surinlee/Desktop/42/6circle/nestjs/crud_api ./crud_api/
+
+EXPOSE 3000
+
+# CMD ["npm", "run", "start:dev"]
+
+#임시
+# CMD ["node", "app.js"]
+CMD ["ash", "-c", "while true; do sleep 1; done"]
+
+# CMD ["npm", "run", "start:dev"]
