@@ -6,3 +6,5 @@ API 문서 -> https://docs.google.com/spreadsheets/d/1hYWRlkUOdoUOZ31l31bAXLnLJa
 No Switching this respository to Public cause it has ".env" file.
 -------------------------------
 We are 1 INTP and 4 INFPs!
+
+bot test
