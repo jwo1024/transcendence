@@ -1,32 +1,9 @@
 import styled from "styled-components";
 import { ChangeEvent, useCallback, useState } from "react";
-import { Button, Input } from "@react95/core";
+import { Button, Input, List, Modal } from "@react95/core";
 
 import MessageBox from "./MessageBox";
-
-const WindowLayout = styled.div`
-  display: flex;
-  flex-direction: column;
-  border: 1px solid black;
-    width: 80%;
-`;
-
-const FormWrapper = styled.form`
-  display: flex;
-  flex-direction: row;
-  border: 1px solid black;
-  height: 10%;
-  width: 100%;
-`;
-
-const InputWrapper = styled(Input)`
-  width: 80%;
-  height: 100%;
-`;
-
-const ButtonWrapper = styled(Button)`
-  width: 20%;
-`;
+import Window from "../common/Window";
 
 const ChatRoomWindow = () => {
   const [message, setMessage] = useState<string[]>([]);
@@ -40,10 +17,16 @@ const ChatRoomWindow = () => {
     setInputMessage("");
   };
 
+  const scrollDown = useCallback(() => {
+    const scrollableBox = document.getElementById("scrollable-box"); // useRef 공부하기
+    scrollableBox?.scrollTo(0, scrollableBox?.scrollHeight);
+  }, []);
+
   const handleSendMessage = useCallback(() => {
     setMessage((message) => [...message, inputMessage]);
     resetInputMessage();
-  }, [inputMessage]);
+    scrollDown();
+  }, [inputMessage, scrollDown]);
 
   const handleFormSubmit = useCallback(
     (event: ChangeEvent<HTMLFormElement>) => {
@@ -53,20 +36,38 @@ const ChatRoomWindow = () => {
     [handleSendMessage]
   );
 
+  const handleOpenSettingModal = () => {
+    console.log("handleOpenSettingModal");
+  };
+
   return (
-    <WindowLayout>
-      <MessageBox message={message} />
-      <FormWrapper onSubmit={handleFormSubmit}>
-        <InputWrapper
-          placeholder="message to group chat"
-          value={inputMessage}
-          onChange={handleInputChange}
-        />
-        <ButtonWrapper type="button" onClick={handleSendMessage}>
-            hi
-        </ButtonWrapper>
-      </FormWrapper>
-    </WindowLayout>
+    <Window title="ChattingRoom">
+      <div className="flex flex-row">
+        <List>
+          
+          <List.Item  onClick={handleOpenSettingModal}>setting</List.Item>
+        </List>
+        <List>
+          <List.Item onClick={handleOpenSettingModal}>setting</List.Item>
+        </List>
+      </div>
+      <List.Divider />
+      <div className="flex flex-col w-full h-full">
+        <MessageBox message={message} />
+        <form
+          onSubmit={handleFormSubmit}
+          className="flex flex-row h-10 min-h-fit"
+        >
+          <Input
+            className="w-full h-full"
+            placeholder="Hello, my friend !"
+            value={inputMessage}
+            onChange={handleInputChange}
+          />
+          <Button>send</Button>
+        </form>
+      </div>
+    </Window>
   );
 };
 

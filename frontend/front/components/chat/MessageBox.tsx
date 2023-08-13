@@ -1,7 +1,10 @@
 import React, { FC } from "react";
 import styled from "styled-components";
 
+import { Frame } from "@react95/core";
+
 const BoxLayout = styled.div`
+  id = scrollable-div;
   display: flex;
   flex-direction: column;
   border: 1px solid black;
@@ -20,20 +23,27 @@ const NameTag = styled.span`
 interface MessageBoxProps {
   message?: string[];
 }
+// id
 
-const MessageBox:FC<MessageBoxProps> = ({ message }) => {
+const MessageBox: FC<MessageBoxProps> = ({ message }) => {
   return (
-    <BoxLayout>
-      <div>message box</div>
-      {message?.map((message, index) => {
-        return (
-          <div key={index}>
-            <NameTag>name:</NameTag> {``}
-            {message}
-          </div>
-        );
-      })}
-    </BoxLayout>
+    <Frame
+      // id={id}
+      className="flex flex-col border border-black h-full w-full overflow-y-scroll scroll-behavior-smooth"
+      h="100%" boxShadow="in" bg="white"
+    >
+      {/* <Frame className="h-full" boxShadow="in" bg="white"> */}
+        <div>message box</div>
+        {message?.map((message, index) => {
+          return (
+            <div key={index}>
+              <NameTag>name:</NameTag> {``}
+              {message}
+            </div>
+          );
+        })}
+      {/* </Frame> */}
+    </Frame>
   );
 };
 
