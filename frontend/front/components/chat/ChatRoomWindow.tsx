@@ -4,6 +4,7 @@ import { Button, Input, List, Modal } from "@react95/core";
 
 import MessageBox from "./MessageBox";
 import Window from "../common/Window";
+import MenuBar from "./MenuBar";
 
 const ChatRoomWindow = () => {
   const [message, setMessage] = useState<string[]>([]);
@@ -41,16 +42,8 @@ const ChatRoomWindow = () => {
   };
 
   return (
-    <Window title="ChattingRoom">
-      <div className="flex flex-row">
-        <List>
-          
-          <List.Item  onClick={handleOpenSettingModal}>setting</List.Item>
-        </List>
-        <List>
-          <List.Item onClick={handleOpenSettingModal}>setting</List.Item>
-        </List>
-      </div>
+    <Window title="ChattingRoom" >
+      <MenuBar></MenuBar>
       <List.Divider />
       <div className="flex flex-col w-full h-full">
         <MessageBox message={message} />

@@ -25,7 +25,7 @@ const Window = ({ children, title, w, h, customOption, ...props }: WindowProps) 
           <TitleBar.Option>X</TitleBar.Option>
         </TitleBar.OptionsBox>
       </TitleBar>
-      <div className="h-5/6">
+      <div className="h-5/6 p-1">
         {children}
       </div>
     </Frame>

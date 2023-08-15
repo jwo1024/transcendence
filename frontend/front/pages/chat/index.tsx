@@ -27,18 +27,13 @@ const ChatPage = ({ children }: ChatProps) => {
             <div className="flex flex-col border-2 border-purple-400 h-full w-full">
               <ChatRoomWindow />
             </div>
-            {/* <div className="flex flex-row border-2 border-orange-500 h-full w-1/5">
-              ChatSettingWindow
-            </div> */}
+            
           </>
         ) : (
           <div className="flex flex-col border-2 border-blue-500 h-full w-full">
             WaitingRoomWindow
           </div>
         )}
-
-        {/* <ChatRoomWindow /> */}
-        {/* <ChatSettingWindow /> */}
       </div>
       <div>
         <Button onClick={switchToWaitingRoom}>Waiting Room</Button>
