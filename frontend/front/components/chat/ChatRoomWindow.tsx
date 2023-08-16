@@ -1,10 +1,10 @@
 import { ChangeEvent, useCallback, useState } from "react";
 import { createContext } from "react";
-import { Button, Input, List, Modal } from "@react95/core";
+import { Button, Input } from "@react95/core";
 
 import MessageBox from "./MessageBox";
 import Window from "../common/Window";
-import MenuBar from "./MenuBar";
+import MenuBar from "../common/MenuBar";
 import ChatSettingBox from "./ChatSettingBox";
 import ChatUserListBox from "./ChatUserListBox";
 
@@ -47,10 +47,15 @@ const ChatRoomWindow = () => {
     setShowSettingBox((showSettingBox) => !showSettingBox);
   };
 
+  const menuItems = [
+    { name: "Settings", handleClick: handleTmpButton },
+    { name: "User-List", handleClick: handleTmpButton },
+  ];
+
   return (
     <Window title="Chatting Room | 방제">
-      {/* menu */}
-      <MenuBar></MenuBar>
+      {/* menu bar */}
+      <MenuBar menu={menuItems} />
       {/* main box */}
       <div className="flex flex-row flex-1 overflow-auto ">
         {/* chat box */}
@@ -68,18 +73,7 @@ const ChatRoomWindow = () => {
             <Button>send</Button>
           </form>
         </div>
-        {/* setting box */}
-        {/* <ChatSettingBox></ChatSettingBox> */}
-        {/* friends */}
-        {showSettingBox ? (
-          <ChatSettingBox>
-            <Button onClick={handleTmpButton}>tmp chage to UserList</Button>
-          </ChatSettingBox>
-        ) : (
-          <ChatUserListBox>
-            <Button onClick={handleTmpButton}>tmp chage to Setting</Button>
-          </ChatUserListBox>
-        )}
+        {showSettingBox ? <ChatSettingBox /> : <ChatUserListBox />}
       </div>
     </Window>
   );
