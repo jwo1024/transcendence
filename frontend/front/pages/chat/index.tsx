@@ -1,7 +1,10 @@
 import React, { ReactNode, useState } from "react";
+import styled from "styled-components";
 
 import ChatRoomWindow from "@/components/chat/ChatRoomWindow";
-import ChatSettingWindow from "@/components/chat/ChatSettingWindow";
+import WaitingRoomWindow from "@/components/chat/WaitingRoomWindow";
+import ChatDmWindow from "@/components/chat/ChatDmWindow";
+// import ChatSettingWindow from "@/components/chat/ChatSettingWindow";
 
 import { Button } from "@react95/core";
 
@@ -9,37 +12,54 @@ interface ChatProps {
   children?: ReactNode;
 }
 
-const ChatPage = ({ children }: ChatProps) => {
-  const [chatRoom, setChatRoom] = useState<string>("");
-  const [waitingRoom, setWaitingRoom] = useState<boolean>(true);
+const ChatPageLayout = styled.div`
+  display: flex;
+  flex-direction: column;
+  border: 1px solid black;
+  height: 90vh;
+  width: 100%;
+`;
 
-  const switchToWaitingRoom = () => {
-    setWaitingRoom((waitingRoom) => !waitingRoom); // 이게 맞나 기억이 안나
-    console.log("switchToWaitingRoom");
+const ChatPage = ({ children }: ChatProps) => {
+  const [chatRoom, setChatRoom] = useState<boolean>(true);
+  const [waitingRoom, setWaitingRoom] = useState<boolean>(false); 
+  const [DMRoom, setDMRoom] = useState<boolean>(false); /// 교체 및 삭제 필요
+
+  const showChatRoomButton = () => {
+    setWaitingRoom((waitingRoom) => !waitingRoom);
+    setChatRoom(false);
+    setDMRoom(false);
+  };
+
+  const showWaitingRoomButton = () => {
+    setChatRoom((chatRoom) => !chatRoom);
+    setWaitingRoom(false);
+    setDMRoom(false);
+  };
+
+  const showDMRoomButton = () => {
+    setDMRoom((DMRoom) => !DMRoom);
+    setChatRoom(false);
+    setWaitingRoom(false);
   };
 
   return (
-    <>
-      <div className="flex flex-row border-2 border-black h-96 w-full ">
-        {children}
-        {waitingRoom ? (
-          <>
-            <div className="flex flex-col border-2 border-purple-400 h-full w-full">
-              <ChatRoomWindow />
-            </div>
-            
-          </>
-        ) : (
-          <div className="flex flex-col border-2 border-blue-500 h-full w-full">
-            WaitingRoomWindow
-          </div>
-        )}
+    <div className="m-2">
+      <div className="flex flex-row  h-90vh ">
+        {chatRoom ? <ChatRoomWindow /> : null}
+        {waitingRoom ? <WaitingRoomWindow /> : null}
+        {DMRoom ? <ChatDmWindow /> : null}
       </div>
-      <div>
-        <Button onClick={switchToWaitingRoom}>Waiting Room</Button>
-        <Button>Chat Room</Button>
-      </div>
-    </>
+      <Button className="m-1" onClick={showChatRoomButton}>
+        tmp chat room
+      </Button>
+      <Button className="m-1" onClick={showWaitingRoomButton}>
+        tmp waiting room
+      </Button>
+      <Button className="m-1" onClick={showDMRoomButton}>
+        tmp DM room
+      </Button>
+    </div>
   );
 };
 

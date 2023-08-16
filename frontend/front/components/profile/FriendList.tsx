@@ -15,9 +15,9 @@ const FriendList: React.FC<FriendListProps> = ({ friends }) => {
     <ThemeProvider>
       <Frame w={330} h={400} padding={4} className="flex flex-col">
         <div className="overflow-y-auto flex-grow p-5">
-          <List className=" space-y-2">
+          <List className=" space-y-2 w-96">
             {friends.map((friend, index) => (
-              <List.Item key={index} className="flex justify-between">
+              <List.Item key={index} className="flex justify-between w-full">
                 <List>
                   <List.Item>
                     <span>귓속말</span>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Link from "next/link";
 
 import { TaskBar, Modal, List } from "@react95/core";
 import { WindowsExplorer, ReaderClosed } from "@react95/icons";
@@ -51,6 +52,11 @@ const MainTaskBar = () => {
               }}
             >
               Windows Explorer
+            </List.Item>
+            <List.Item>
+              <Link href="/">
+                  PONG HOME
+              </Link>
             </List.Item>
           </List>
         }

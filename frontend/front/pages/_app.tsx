@@ -9,7 +9,7 @@ import MainTaskBar from "@/components/common/MainTaskBar";
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider>
-      <NavBar />
+      {/* <NavBar /> */}
       <Component {...pageProps} />
       <MainTaskBar />
     </ThemeProvider>
