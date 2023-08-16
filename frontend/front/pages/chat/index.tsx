@@ -1,24 +1,14 @@
 import React, { ReactNode, useState } from "react";
-import styled from "styled-components";
 
 import ChatRoomWindow from "@/components/chat/ChatRoomWindow";
 import WaitingRoomWindow from "@/components/chat/WaitingRoomWindow";
 import ChatDmWindow from "@/components/chat/ChatDmWindow";
-// import ChatSettingWindow from "@/components/chat/ChatSettingWindow";
 
 import { Button } from "@react95/core";
 
 interface ChatProps {
   children?: ReactNode;
 }
-
-const ChatPageLayout = styled.div`
-  display: flex;
-  flex-direction: column;
-  border: 1px solid black;
-  height: 90vh;
-  width: 100%;
-`;
 
 const ChatPage = ({ children }: ChatProps) => {
   const [chatRoom, setChatRoom] = useState<boolean>(true);
