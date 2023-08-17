@@ -18,7 +18,7 @@ const MiniProfile: React.FC<MiniProfileProps> = ({
 }) => {
   return (
     <ThemeProvider>
-      <Frame w={300} h={200} padding={4}>
+      <Frame w={250} h={130} padding={4}>
         <div className="p-4 flex items-center">
           <div className="flex-grow">
             <div className="font-bold text-lg">{nickname}</div>
