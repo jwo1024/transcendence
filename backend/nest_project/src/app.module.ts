@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
             GameModule,
             AuthModule,
   ],
+  providers: [],
   // controllers: [AppController],
   // providers: [AppService], //사실 얘네는 필요 없을 듯.
 })
