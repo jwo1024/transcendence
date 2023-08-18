@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
+import { from, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
+import { Server } from 'ws';
+
 // entity or dto?
 
 // 내 프로필, 상대 프로필
@@ -27,4 +32,11 @@ interface GameField
 }
 
 @Injectable()
-export class GameGateway {}
+@WebSocketGateway({ namespace: 'game' })
+export class GameGateway {
+	@WebSocketServer()
+	server: Server;
+
+	@SubscribeMessage('game')
+	handleEvent(){}
+}
