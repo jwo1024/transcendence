@@ -1,5 +1,5 @@
 import { ChangeEvent, useCallback, useState } from "react";
-import { createContext } from "react";
+import { createContext, useRef, useEffect } from "react";
 import { Button, Input } from "@react95/core";
 
 import MessageBox from "./MessageBox";
@@ -8,32 +8,24 @@ import MenuBar from "../common/MenuBar";
 import ChatSettingBox from "./ChatSettingBox";
 import ChatUserListBox from "./ChatUserListBox";
 
-// export const ChatContext = createContext(null);
-
-const ChatRoomWindow = () => {
+function ChatGroupWindow() {
   const [message, setMessage] = useState<string[]>([]);
-  const [inputMessage, setInputMessage] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const [showSettingBox, setShowSettingBox] = useState<boolean>(true);
-  const [showUserListBox, setShowUserListBox] = useState<boolean>(false);
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setInputMessage(event.target.value);
-  };
+  // const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  //   // setInputMessage(event.target.value);
+  //   // inputRef.current!.value = event.target.value;
+  // };
 
   const resetInputMessage = () => {
-    setInputMessage("");
+    inputRef.current!.value = "";
   };
 
-  const scrollDown = useCallback(() => {
-    const scrollableBox = document.getElementById("scrollable-box"); // useRef 공부하기
-    scrollableBox?.scrollTo(0, scrollableBox?.scrollHeight);
-  }, []);
-
   const handleSendMessage = useCallback(() => {
-    setMessage((message) => [...message, inputMessage]);
+    setMessage([...message, inputRef.current?.value as string]);
     resetInputMessage();
-    scrollDown();
-  }, [inputMessage, scrollDown]);
+  }, [message]);
 
   const handleFormSubmit = useCallback(
     (event: ChangeEvent<HTMLFormElement>) => {
@@ -52,23 +44,26 @@ const ChatRoomWindow = () => {
     { name: "User-List", handleClick: handleTmpButton },
   ];
 
+  useEffect(() => console.log("렌더링된다"));
+
   return (
     <Window title="Chatting Room | 방제">
       {/* menu bar */}
       <MenuBar menu={menuItems} />
       {/* main box */}
       <div className="flex flex-row flex-1 overflow-auto ">
-        {/* chat box */}
+        {/* chat box => DM 에서도 쓸 거니가 Component화 하면 좋겠따*/}
         <div className="flex flex-col flex-1 overflow-auto ">
           <div className="flex flex-row flex-1 overflow-auto">
+            {/* 메시지 데이터 관리방법 어떻게 하지? :  user-name, text, 날짜시간 */}
             <MessageBox message={message} />
           </div>
           <form onSubmit={handleFormSubmit} className="flex flex-row">
             <Input
               className="w-full h-full "
               placeholder="Hello, my friend !"
-              value={inputMessage}
-              onChange={handleInputChange}
+              // onChange={handleInputChange}
+              ref={inputRef}
             />
             <Button>send</Button>
           </form>
@@ -77,6 +72,6 @@ const ChatRoomWindow = () => {
       </div>
     </Window>
   );
-};
+}
 
-export default ChatRoomWindow;
+export default ChatGroupWindow;
