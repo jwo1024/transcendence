@@ -1,5 +1,5 @@
 import { ChangeEvent, useCallback, useState } from "react";
-import { createContext, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { Button, Input } from "@react95/core";
 
 import MessageBox from "./MessageBox";
@@ -12,11 +12,6 @@ function ChatGroupWindow() {
   const [message, setMessage] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSettingBox, setShowSettingBox] = useState<boolean>(true);
-
-  // const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-  //   // setInputMessage(event.target.value);
-  //   // inputRef.current!.value = event.target.value;
-  // };
 
   const resetInputMessage = () => {
     inputRef.current!.value = "";
