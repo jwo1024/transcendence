@@ -5,6 +5,7 @@ import { Frame } from "@react95/core";
 interface FrameButtonProps {
   children?: ReactNode;
   boxShadow?: "in" | "";
+  bg?: string;
   handleClick?: () => void;
   handleClickCustom?: () => void;
 }
@@ -12,6 +13,7 @@ interface FrameButtonProps {
 const FrameButton = ({
   children,
   boxShadow,
+  bg,
   handleClick,
   handleClickCustom,
   ...props
@@ -22,10 +24,10 @@ const FrameButton = ({
   };
   return (
     <Frame
-      className="w-full h-full flex-1 p-1" // 모두 같은 비율의 with를 가지도록 수정하기
+      className="w-full h-full flex-1 p-1"
       boxShadow={boxShadow}
       onClick={bindHandleClick}
-	  bg="#e6e6e6;" // TMP 누를때만 색상이 바뀌도록 수정하기
+      bg={bg}
       {...props}
     >
       {children}
@@ -33,36 +35,35 @@ const FrameButton = ({
   );
 };
 
-
 // SelectButton
 interface SelectButtonProps {
   children?: ReactNode;
   frameButton?: FrameButtonProps[];
+  className?: string;
 }
 
 const SelectButton = ({
   children,
   frameButton,
+  className,
   ...props
 }: SelectButtonProps) => {
   const [activeFrameButtonKey, setActiveFrameButtonKey] =
     React.useState<number>(-1);
 
   const handleClick = (key: number) => () => {
-    // console.log(key + "번째 버튼 클릭");
-    // if (activeFrameButtonKey === key) setActiveFrameButtonKey(-1);
-    // else
     setActiveFrameButtonKey(key);
   };
 
   return (
-    <div className="flex flex-row w-full text-center" {...props}>
+    <div className={className?className:"flex flex-row w-full text-center"} {...props}>
       {children}
       {frameButton?.map((button, index) => {
         return (
           <FrameButton
             key={index}
             boxShadow={activeFrameButtonKey === index ? "in" : ""}
+            bg={activeFrameButtonKey === index ? "#e6e6e6" : ""}
             handleClick={handleClick(index)}
             handleClickCustom={button.handleClickCustom}
           >
