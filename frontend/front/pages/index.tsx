@@ -1,25 +1,18 @@
-import Image from "next/image";
+// import Image from "next/image";
 import { Frame, ThemeProvider } from "@react95/core";
 import { useState } from "react";
-import Link from "next/link";
 import LinkButton from "@/components/common/LinkButton";
 import Window from "@/components/common/Window";
+import Icon from "@/components/common/Icon";
 
-// Icon 컴포넌트 만들어야함
 const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
   return (
-    <div className="text-center" onClick={handleClick}>
-      {/*  <Link className="text-center" href={to}> */}
-      {/* <Icon src="" text="" /> */}
-      <Image
-        src="/images/icon-image.png" // public 디렉토리 내의 경로
-        alt="Icon Image" // 대체 텍스트
-        width={100} // 이미지 폭
-        height={100} // 이미지 높이
-      />
-      <div>Desktop</div>
-      {/* </Link> */}
-    </div>
+    <Icon
+      src="/images/icon-image.png" // public 디렉토리 내의 경로
+      alt="Icon Image" // 대체 텍스트
+      text="The Pong Game"
+      handleClick={handleClick}
+    />
   );
 };
 
