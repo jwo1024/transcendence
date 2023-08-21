@@ -1,6 +1,6 @@
 import React, { ReactNode, useState } from "react";
 
-import ChatRoomWindow from "@/components/chat/ChatRoomWindow";
+import ChatGroupWindow from "@/components/chat/ChatGroupWindow";
 import WaitingRoomWindow from "@/components/chat/WaitingRoomWindow";
 import ChatDmWindow from "@/components/chat/ChatDmWindow";
 
@@ -11,42 +11,42 @@ interface ChatProps {
 }
 
 const ChatPage = ({ children }: ChatProps) => {
-  const [chatRoom, setChatRoom] = useState<boolean>(true);
+  const [chatGroup, setChatGroup] = useState<boolean>(true);
   const [waitingRoom, setWaitingRoom] = useState<boolean>(false); 
-  const [DMRoom, setDMRoom] = useState<boolean>(false); /// 교체 및 삭제 필요
+  const [ChatDM, setChatDM] = useState<boolean>(false); /// 교체 및 삭제 필요
 
-  const showChatRoomButton = () => {
+  const showChatGroupButton = () => {
     setWaitingRoom((waitingRoom) => !waitingRoom);
-    setChatRoom(false);
-    setDMRoom(false);
+    setChatGroup(false);
+    setChatDM(false);
   };
 
   const showWaitingRoomButton = () => {
-    setChatRoom((chatRoom) => !chatRoom);
+    setChatGroup((chatGroup) => !chatGroup);
     setWaitingRoom(false);
-    setDMRoom(false);
+    setChatDM(false);
   };
 
-  const showDMRoomButton = () => {
-    setDMRoom((DMRoom) => !DMRoom);
-    setChatRoom(false);
+  const showChatDMButton = () => {
+    setChatDM((ChatDM) => !ChatDM);
+    setChatGroup(false);
     setWaitingRoom(false);
   };
 
   return (
     <div className="m-2">
       <div className="flex flex-row  h-90vh ">
-        {chatRoom ? <ChatRoomWindow /> : null}
+        {chatGroup ? <ChatGroupWindow /> : null}
         {waitingRoom ? <WaitingRoomWindow /> : null}
-        {DMRoom ? <ChatDmWindow /> : null}
+        {ChatDM ? <ChatDmWindow /> : null}
       </div>
-      <Button className="m-1" onClick={showChatRoomButton}>
+      <Button className="m-1" onClick={showChatGroupButton}>
         tmp chat room
       </Button>
       <Button className="m-1" onClick={showWaitingRoomButton}>
         tmp waiting room
       </Button>
-      <Button className="m-1" onClick={showDMRoomButton}>
+      <Button className="m-1" onClick={showChatDMButton}>
         tmp DM room
       </Button>
     </div>
