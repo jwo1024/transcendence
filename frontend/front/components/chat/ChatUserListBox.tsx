@@ -23,7 +23,8 @@ const UserList = () => {
       {userList.map((user, index) => {
         return (
           <div className="m-1 my-4 text-lg" key={index}>
-            <Checkbox className="" key={index}></Checkbox>
+            <input type="checkbox" />
+            {/* <Checkbox className="" key={index}></Checkbox> */}
             {/* name tag 스타일 가능하도록 수정하기 */}
             <NameTag>{user.name}</NameTag>
             <NameTag>{user.role}</NameTag>

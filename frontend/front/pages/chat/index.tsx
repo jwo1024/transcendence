@@ -12,32 +12,33 @@ interface ChatProps {
 
 const ChatPage = ({ children }: ChatProps) => {
   const [chatGroup, setChatGroup] = useState<boolean>(true);
-  const [waitingRoom, setWaitingRoom] = useState<boolean>(false); 
+  const [waitingRoom, setWaitingRoom] = useState<boolean>(false);
   const [ChatDM, setChatDM] = useState<boolean>(false); /// 교체 및 삭제 필요
 
   const showChatGroupButton = () => {
-    setWaitingRoom((waitingRoom) => !waitingRoom);
-    setChatGroup(false);
-    setChatDM(false);
+    setChatGroup((chatGroup) => !chatGroup);
+    // setChatGroup(false);
+    // setChatDM(false);
   };
 
   const showWaitingRoomButton = () => {
-    setChatGroup((chatGroup) => !chatGroup);
-    setWaitingRoom(false);
-    setChatDM(false);
+    setWaitingRoom((waitingRoom) => !waitingRoom);
+    // setWaitingRoom(false);
+    // setChatDM(false);
   };
 
   const showChatDMButton = () => {
     setChatDM((ChatDM) => !ChatDM);
-    setChatGroup(false);
-    setWaitingRoom(false);
+    // setChatGroup(false);
+    // setWaitingRoom(false);
   };
 
   return (
-    <div className="m-2">
+    <div className="m-2 max-w-screen">
       <div className="flex flex-row  h-90vh ">
         {chatGroup ? <ChatGroupWindow /> : null}
-        {waitingRoom ? <WaitingRoomWindow /> : null}
+        {/* {waitingRoom ? <WaitingRoomWindow /> : null} */}
+        {waitingRoom ? <ChatGroupWindow /> : null}
         {ChatDM ? <ChatDmWindow /> : null}
       </div>
       <Button className="m-1" onClick={showChatGroupButton}>

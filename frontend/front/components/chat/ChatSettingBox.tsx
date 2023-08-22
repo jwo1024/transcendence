@@ -11,7 +11,7 @@ interface FrameButtonProps {
 }
 
 // ChatSettingBox
-const ChatSettingBox = ({ children }: { children?: ReactNode }) => {
+const ChatSettingBox = () => {
   const [checkedPassword, setCheckedPassword] = React.useState<boolean>(false);
 
   const handleCheckedPassword = () => {
@@ -25,18 +25,17 @@ const ChatSettingBox = ({ children }: { children?: ReactNode }) => {
 
   return (
     <div className="flex flex-col w-2/5 p-3">
-      
       <Fieldset
         className="flex flex-col p-2 w-full h-min gap-2 "
         legend="Chat-Room Settings"
       >
         <div>관리자만 채팅방 설정이 가능합니다.</div>
-      
+
         <div className="flex flex-col mt-4">
           <div>공개/비공개 방</div>
-          <SelectButton frameButton={frameButton}/>
+          <SelectButton frameButton={frameButton} />
         </div>
-      
+
         <div className="flex flex-col mt-4">
           <Checkbox checked={checkedPassword} onChange={handleCheckedPassword}>
             비밀번호 설정
@@ -49,7 +48,7 @@ const ChatSettingBox = ({ children }: { children?: ReactNode }) => {
             ></Input>
           ) : null}
         </div>
-      
+
         <br />
         <Button className=" font-semibold">적용하기</Button>
       </Fieldset>

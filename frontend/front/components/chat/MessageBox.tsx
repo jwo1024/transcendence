@@ -6,9 +6,10 @@ import NameTag from "./NameTag";
 
 interface MessageBoxProps {
   message?: string[];
+  userName?: string[];
+  time?: string[];
   ref?: React.RefObject<HTMLDivElement>;
 }
-// id
 
 const WhiteInnerFrame = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -38,7 +39,7 @@ const MessageBox: FC<MessageBoxProps> = ({ message, ref }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" })
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [message]);
 
   return (
@@ -52,16 +53,19 @@ const MessageBox: FC<MessageBoxProps> = ({ message, ref }) => {
       {message?.map((message, index) => {
         return (
           // message overflow 처리하기
-          <div className=" bg-stone-300 m-0.5 rounded" key={index}>
-            <NameTag>name</NameTag> {``}
-            <span className="">{message}</span>
-            <span className="text-sm m-1 text-zinc-100 ml-2">
+          <div
+            className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "
+            key={index}
+          >
+            <NameTag>name</NameTag>
+            <span className="text-ellipsis break-all ">{message}</span>
+            <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
               22.22.22 22:22:22
             </span>
           </div>
         );
       })}
-      <div ref={scrollRef}/>
+      <div ref={scrollRef} />
     </Frame>
   );
 };
