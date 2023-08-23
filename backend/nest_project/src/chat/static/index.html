@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Simple Nest Chat</title>
+    </head>
+    <body>
+        <h2>Simple Nest Chat</h2>
+        <div id="chat"></div>
+
+        <div>
+            <h2>채팅방 목록</h2>
+            <ul id="rooms"></ul>
+        </div>
+
+        <input type="text" id="message" placeholder="메시지를 입력해주세요.">
+        <button onclick="sendMessage()">전송</button>
+        <button onclick="createNewRoom()">방만들기</button>
+
+        <div>
+            <h2>공지</h2>
+            <div id="notice"></div>
+        </div>
+    </body>
+
+    <!-- jquery 로드 -->
+    <script src="https://code.jquery.com/jquery-3.6.1.slim.js"></script>
+    <!-- socket.io 클라이언트 로드 -->
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <!-- <script src="/socket.io/socket.io.js"></script> //이걸로 써도 됨 -->
+    <!-- 컨테이너 내부 socket.io-client 설치해야함. 설치 한 후 실행하니 잘 됨. npm install socket.io-client -->
+    <script src = ./script.js></script>
+
+</html>
