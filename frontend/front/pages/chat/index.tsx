@@ -1,66 +1,48 @@
-import React, { ReactNode, useState } from "react";
-import styled from "styled-components";
+import React, { useState, useEffect } from 'react';
+import socket from '../../socket'; // socket.js 파일을 import합니다.
 
-import ChatRoomWindow from "@/components/chat/ChatRoomWindow";
-import WaitingRoomWindow from "@/components/chat/WaitingRoomWindow";
-import ChatDmWindow from "@/components/chat/ChatDmWindow";
-// import ChatSettingWindow from "@/components/chat/ChatSettingWindow";
+const socket = io.connect('http://localhost:3000'); // 백엔드 서버의 주소로 변경
 
-import { Button } from "@react95/core";
 
-interface ChatProps {
-  children?: ReactNode;
-}
+function Home() {
+  const [messages, setMessages] = useState([]); // 채팅 메시지를 상태로 관리합니다.
+  const [messageInput, setMessageInput] = useState(''); // 입력된 메시지를 상태로 관리합니다.
 
-const ChatPageLayout = styled.div`
-  display: flex;
-  flex-direction: column;
-  border: 1px solid black;
-  height: 90vh;
-  width: 100%;
-`;
+  useEffect(() => {
+    // 컴포넌트가 마운트되었을 때 소켓 이벤트 리스너를 등록합니다.
+    socket.on('chatMessage', (message) => {
+      // 'chatMessage' 이벤트가 수신되면 새 메시지를 상태에 추가합니다.
+      setMessages([...messages, message]);
+    });
 
-const ChatPage = ({ children }: ChatProps) => {
-  const [chatRoom, setChatRoom] = useState<boolean>(true);
-  const [waitingRoom, setWaitingRoom] = useState<boolean>(false); 
-  const [DMRoom, setDMRoom] = useState<boolean>(false); /// 교체 및 삭제 필요
+    return () => {
+      // 컴포넌트가 언마운트되기 전에 소켓 연결을 끊습니다.
+      socket.disconnect();
+    };
+  }, [messages]);
 
-  const showChatRoomButton = () => {
-    setWaitingRoom((waitingRoom) => !waitingRoom);
-    setChatRoom(false);
-    setDMRoom(false);
-  };
-
-  const showWaitingRoomButton = () => {
-    setChatRoom((chatRoom) => !chatRoom);
-    setWaitingRoom(false);
-    setDMRoom(false);
-  };
-
-  const showDMRoomButton = () => {
-    setDMRoom((DMRoom) => !DMRoom);
-    setChatRoom(false);
-    setWaitingRoom(false);
+  const sendMessage = () => {
+    // 'Send' 버튼 클릭 시 호출되는 함수로 소켓을 통해 메시지를 보냅니다.
+    console.log('Sending message:', messageInput);
+    socket.emit('chatMessage', messageInput); // 'chatMessage' 이벤트와 입력된 메시지를 전송합니다.
+    setMessageInput(''); // 입력 필드를 초기화합니다.
   };
 
   return (
-    <div className="m-2">
-      <div className="flex flex-row  h-90vh ">
-        {chatRoom ? <ChatRoomWindow /> : null}
-        {waitingRoom ? <WaitingRoomWindow /> : null}
-        {DMRoom ? <ChatDmWindow /> : null}
+    <div>
+      <div>
+        {messages.map((message, index) => (
+          <div key={index}>{message}</div> // 상태에 저장된 메시지들을 출력합니다.
+        ))}
       </div>
-      <Button className="m-1" onClick={showChatRoomButton}>
-        tmp chat room
-      </Button>
-      <Button className="m-1" onClick={showWaitingRoomButton}>
-        tmp waiting room
-      </Button>
-      <Button className="m-1" onClick={showDMRoomButton}>
-        tmp DM room
-      </Button>
+      <input
+        type="text"
+        value={messageInput}
+        onChange={(e) => setMessageInput(e.target.value)} // 입력 필드의 값을 상태에 반영합니다.
+      />
+      <button onClick={sendMessage}>Send</button> // 'Send' 버튼을 클릭하면 sendMessage 함수가 호출됩니다.
     </div>
   );
-};
+}
 
-export default ChatPage;
+export default Home;
