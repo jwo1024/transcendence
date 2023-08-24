@@ -14,6 +14,7 @@ const withTM = require("next-transpile-modules")([
 
 module.exports = withTM(withFonts());
 
+
 // //프록시 설정 테스트
 // const proxy = require('http-proxy-middleware');
 

@@ -2,7 +2,8 @@ import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/web
 import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common'; // Logger 모듈을 import합니다.
 
-@WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001" } })
+// @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001" } })
+@WebSocketGateway({ namespace: '/chat', cors: { origin: "*"} })
 export class ChatGateway {
   private logger = new Logger('EventsGateway'); // Logger 인스턴스를 생성합니다.
 

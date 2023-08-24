@@ -5,6 +5,14 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // app.useGlobalPipes(new ValidationPipe());
-  await app.listen(3000);
+
+  // CORS 설정
+  app.enableCors({
+    origin: '*', // 프론트엔드 주소로 변경
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
+  await app.listen(4000);
 }
 bootstrap();
