@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
 // const socket = io.connect('http://localhost:3000'); // 백엔드 서버의 주소로 변경
-const socket = io('http://localhost:4000');
+const socket = io('http://localhost:3000');
 
 
 // export default function Home() {

@@ -1,18 +1,22 @@
+import { Injectable } from '@nestjs/common';
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { Logger } from '@nestjs/common'; // Logger 모듈을 import합니다.
 
 // @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001" } })
-@WebSocketGateway({ namespace: '/chat', cors: { origin: "*"} })
+// @WebSocketGateway({ namespace: 'chat', cors: { origin: "*"} })
+@Injectable()
+@WebSocketGateway({ namespace: 'chat' })
 export class ChatGateway {
   private logger = new Logger('EventsGateway'); // Logger 인스턴스를 생성합니다.
 
   @WebSocketServer() server: Server;
 
   @SubscribeMessage('chatMessage')
-  handleMessage(client: any, payload: any): void {
-    this.logger.log(`Received message: ${payload}`); // 로그를 출력합니다.
-    this.server.emit('chatMessage', payload);
+  handleMessage(client: Socket): void {
+    // this.logger.log(`Received message: ${payload}`); // 로그를 출력합니다.
+    this.logger.log(`Received message`); // 로그를 출력합니다.
+    // this.server.emit('chatMessage', payload);
   }
 }
 
