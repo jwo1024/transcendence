@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from "react";
-import { Tooltip, List } from "@react95/core";
+import { Tooltip } from "@react95/core";
 
 
 interface NameTagProps {

@@ -1,5 +1,4 @@
 import React, { FC, useRef, useEffect } from "react";
-import styled from "styled-components";
 
 import { Frame } from "@react95/core";
 import NameTag from "./NameTag";
@@ -8,16 +7,7 @@ interface MessageBoxProps {
   message?: string[];
   userName?: string[];
   time?: string[];
-  ref?: React.RefObject<HTMLDivElement>;
 }
-
-const WhiteInnerFrame = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <Frame className=" flex-1 text-sm" h="100%" boxShadow="in" bg="white">
-      {children}
-    </Frame>
-  );
-};
 
 const ChatRoomStatus: FC = () => {
   return (
@@ -35,16 +25,16 @@ const ChatRoomStatus: FC = () => {
   );
 };
 
-const MessageBox: FC<MessageBoxProps> = ({ message, ref }) => {
+const MessageBox: FC<MessageBoxProps> = ({ message }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = useEffect(() => {
+  useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [message]);
 
   return (
     <Frame
-      className="flex flex-col flex-1 overflow-y-scroll p-2"
+      className="flex flex-col flex-1 overflow-y-scroll p-2 "
       h=""
       boxShadow="in"
       bg="white"

@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 
-import { Fieldset, Frame, Button, Checkbox, List } from "@react95/core";
+import { Fieldset, Frame, Button } from "@react95/core";
 
 import NameTag from "./NameTag";
 
@@ -66,13 +66,13 @@ const ButtonList = () => {
       <div className="flex flex-col">
         {/* Button onClick => Modal 팝업 되도록 */}
         <div className="flex flex-row grid-cols-5">
-          <Button className="flex-1">kick</Button>
-          <Button className="flex-1">ban</Button>
-          <Button className="flex-1">mute</Button>
+          <Button className="flex-1" onClick={handleClickKick}>kick</Button>
+          <Button className="flex-1" onClick={handleClickBan}>ban</Button>
+          <Button className="flex-1" onClick={handleClickMute}>mute</Button>
         </div>
         <div className="flex flex-col">
-          <Button>invite-freind</Button>
-          <Button>leave-chat</Button>
+          <Button onClick={handleClickInviteFriend}>invite-freind</Button>
+          <Button onClick={handleClickLeaveChat}>leave-chat</Button>
         </div>
       </div>
     </>

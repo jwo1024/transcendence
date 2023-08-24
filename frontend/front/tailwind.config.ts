@@ -21,6 +21,10 @@ const config: Config = {
       },
       minHeight: {
         "80vh": "80vh",
+        "100" : "100px",
+      },
+      minWidth: {
+        "100" : "100px",
       },
       maxWidth: {
         "max-w-screen": "100vw",

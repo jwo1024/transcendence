@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { List, Modal } from "@react95/core";
+import React from "react";
+import { List } from "@react95/core";
 
 interface ListProps {
   name: string;
@@ -11,8 +11,6 @@ interface MenuBarProps {
 }
 
 const MenuBar = ({ menu }: MenuBarProps) => {
-  const [showModal, setShowModal] = useState<boolean>(false);
-
   return (
     <>
       <ul className="flex flex-row">

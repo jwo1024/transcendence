@@ -24,7 +24,8 @@ const ChatSettingBox = () => {
   ];
 
   return (
-    <div className="flex flex-col w-2/5 p-3">
+    // <div className="flex flex-col w-2/5 p-3">
+    <div>
       <Fieldset
         className="flex flex-col p-2 w-full h-min gap-2 "
         legend="Chat-Room Settings"

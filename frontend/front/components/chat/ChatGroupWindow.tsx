@@ -1,5 +1,5 @@
 import { ChangeEvent, useCallback, useState } from "react";
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { Button, Frame, Input } from "@react95/core";
 
 import MessageBox from "./MessageBox";
@@ -21,6 +21,9 @@ function ChatGroupWindow({ className }: { className?: string }) {
   const handleSendMessage = useCallback(() => {
     setMessage([...message, inputRef.current?.value as string]);
     resetInputMessage();
+    // localStorage.setItem("message", JSON.stringify("hi"));
+    sessionStorage.setItem("sesstion-message", JSON.stringify("sesstion-message"));
+
   }, [message]);
 
   const handleFormSubmit = useCallback(
@@ -49,8 +52,6 @@ function ChatGroupWindow({ className }: { className?: string }) {
     { name: "Settings", handleClick: handleSettingBoxButton },
     { name: "User-List", handleClick: handleUserListBoxButton },
   ];
-
-  useEffect(() => console.log("렌더링된다"));
 
   return (
     <Window title="Chatting Room | 방제" className={className}>

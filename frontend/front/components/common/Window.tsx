@@ -1,7 +1,5 @@
 import { Frame, TitleBar } from "@react95/core";
-import React, { FC, ReactNode } from "react";
-
-import { Access218, FileIcons, Raplayer801 } from "@react95/icons";
+import React, { ReactNode } from "react";
 
 interface WindowProps {
   children?: ReactNode;
@@ -26,8 +24,8 @@ const Window = ({
       {...props}
       className={
         className
-          ? "flex flex-col w-full h-full p-0.5 m-1 shrink " + className
-          : "flex flex-col w-full h-full p-0.5 m-1 shrink"
+          ? "flex flex-col w-full h-full p-0.5 m-1 shrink min-h-100 min-w-100" + className
+          : "flex flex-col w-full h-full p-0.5 m-1 shrink min-h-100 min-w-100"
       }
       title={title}
       w={w ? w : ""}
@@ -37,7 +35,7 @@ const Window = ({
         className=""
         active={true}
         title={title}
-        icon={<FileIcons variant="32x32_4" />}
+        // icon={<FileIcons variant="32x32_4" />}
       >
         <TitleBar.OptionsBox>
           {customOption}
