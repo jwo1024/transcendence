@@ -38,10 +38,9 @@ services:
     container_name: backend-dev
     restart: always
     ports:
-      - "3000:3000"
+      - "4000:4000"
     volumes:
       - ./backend/nest_project:/app
-      - /app/node_modules
     depends_on:
       - db
     networks:
@@ -64,7 +63,6 @@ services:
       - "3001:3000"
     volumes:
       - ./frontend/front:/app
-      - /app/node_modules
     networks:
       - frontend-backend
 
