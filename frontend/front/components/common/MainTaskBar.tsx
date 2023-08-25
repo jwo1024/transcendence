@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 
 import { TaskBar, Modal, List } from "@react95/core";
@@ -54,9 +54,17 @@ const MainTaskBar = () => {
               Windows Explorer
             </List.Item>
             <List.Item>
-              <Link href="/">
-                  PONG HOME
-              </Link>
+              <Link href="/">PONG HOME</Link>
+            </List.Item>
+            {/* TMP 링크 버튼들 (login 페이지 수정중이어서 우회 접근 가능하도록) */}
+            <List.Item>
+              <Link href="/game">GAME Page</Link>
+            </List.Item>
+            <List.Item>
+              <Link href="/chat">CHAT Page</Link>
+            </List.Item>
+            <List.Item>
+              <Link href="/profile">PROFILE Page</Link>
             </List.Item>
           </List>
         }
