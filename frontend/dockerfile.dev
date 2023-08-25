@@ -4,4 +4,4 @@ WORKDIR /app
 
 EXPOSE 3001
 
-ENTRYPOINT npm i && npm run dev
+ENTRYPOINT npm run dev

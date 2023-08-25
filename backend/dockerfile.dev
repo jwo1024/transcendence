@@ -6,6 +6,4 @@ WORKDIR /app
 
 EXPOSE 3000
 
-RUN npm install -g @nestjs/cli
-
-ENTRYPOINT npm i && npm run start:dev
+ENTRYPOINT npm run start:dev
