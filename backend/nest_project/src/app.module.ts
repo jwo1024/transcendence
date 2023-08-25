@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+// import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -13,7 +14,18 @@ import { AuthModule } from './auth/auth.module';
             GameModule,
             AuthModule,
   ],
+  providers: [],
   // controllers: [AppController],
   // providers: [AppService], //사실 얘네는 필요 없을 듯.
 })
-export class AppModule {}
+export class AppModule {
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer
+  //     // // .apply(AuthMiddleware)
+  //     // .exclude(
+  //     //   { path: '/api/users', method: RequestMethod.POST},
+  //     //   {path: '/api/users/login', method: RequestMethod.POST}
+  //     // )
+  //     .forRoutes('')
+  // }
+}

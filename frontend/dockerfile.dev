@@ -2,11 +2,6 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# RUN npm install
-
 EXPOSE 3001
 
-# CMD ["npm", "start"]
-
-#임시
-CMD ["ash", "-c", "while true; do sleep 1; done"]
+ENTRYPOINT npm run dev
