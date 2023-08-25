@@ -76,3 +76,4 @@ const SelectButton = ({
 };
 
 export default SelectButton;
+export type { FrameButtonProps };

@@ -1,36 +1,46 @@
-import React, { FC, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 
 import { Frame } from "@react95/core";
-import NameTag from "./NameTag";
+import NameTag from "../common/NameTag";
+
+interface StatusBlockProps {
+  status?: string[];
+}
 
 interface MessageBoxProps {
   message?: string[];
-  userName?: string[];
-  time?: string[];
 }
 
-const ChatRoomStatus: FC = () => {
+const StatusBlock = ({ children }: { children: React.ReactNode }) => (
+  <span className="mx-1 my-2 bg-stone-200 p-1 rounded">{children}</span>
+);
+
+const StatusBlockList = ({ status }: StatusBlockProps) => {
+ 
   return (
-    // <Frame className="flex flex-raw p-3 text-center" h="" w="100%" padding={3}>
-    //   <WhiteInnerFrame>방제</WhiteInnerFrame>
-    //   <WhiteInnerFrame>공개방</WhiteInnerFrame>
-    //   <WhiteInnerFrame>비밀번호 없음</WhiteInnerFrame>
-    //   <WhiteInnerFrame> 메모</WhiteInnerFrame>
-    // </Frame>
     <div className="p-3">
-      <span className="mx-1 my-2 bg-stone-200 p-1 rounded">방제</span>
-      <span className="mx-1 my-2 bg-stone-200 p-1 rounded">공개방</span>
-      <span className="mx-1 my-2 bg-stone-200 p-1 rounded">비밀번호 없음</span>
+      {status?.map((status, index) => {
+        return (
+          <StatusBlock key={index}>
+            {status}
+          </StatusBlock>
+        );
+      })}
     </div>
   );
 };
 
-const MessageBox: FC<MessageBoxProps> = ({ message }) => {
+const MessageBox = ({ message }: MessageBoxProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [roomStatus, setRoomStatus] = React.useState<string[]>([]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [message]);
+
+  useEffect(() => {
+    setRoomStatus(["방제", "비밀번호 있음", "인원 [3명]"]);
+  }, []);
 
   return (
     <Frame
@@ -39,7 +49,7 @@ const MessageBox: FC<MessageBoxProps> = ({ message }) => {
       boxShadow="in"
       bg="white"
     >
-      <ChatRoomStatus />
+      <StatusBlockList status={roomStatus} />
       {message?.map((message, index) => {
         return (
           // message overflow 처리하기

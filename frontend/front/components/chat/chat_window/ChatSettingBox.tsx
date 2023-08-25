@@ -1,18 +1,16 @@
-import React, { ReactNode } from "react";
 import { Fieldset, Checkbox, Input, Button } from "@react95/core";
-import SelectButton from "../common/SelectButton";
+import SelectButton from "../../common/SelectButton";
+import type { FrameButtonProps } from "../../common/SelectButton";
+import React, { useState } from "react";
+import MenuBoxLayout from "../common/MenuBoxLayout";
 
-// TMP 이걸 어떻게 처리해야하나?
-interface FrameButtonProps {
-  children?: ReactNode;
-  boxShadow?: "in" | "";
-  handleClick?: () => void;
-  handleClickCustom?: () => void;
+interface ChatSettingBoxProps {
+  confirmButtonName?: string;
 }
 
 // ChatSettingBox
-const ChatSettingBox = () => {
-  const [checkedPassword, setCheckedPassword] = React.useState<boolean>(false);
+const ChatSettingBox = ({ confirmButtonName }: ChatSettingBoxProps) => {
+  const [checkedPassword, setCheckedPassword] = useState<boolean>(false);
 
   const handleCheckedPassword = () => {
     setCheckedPassword(!checkedPassword);
@@ -24,14 +22,11 @@ const ChatSettingBox = () => {
   ];
 
   return (
-    // <div className="flex flex-col w-2/5 p-3">
-    <div>
+    <MenuBoxLayout>
       <Fieldset
-        className="flex flex-col p-2 w-full h-min gap-2 "
+        className="flex flex-col p-2 h-min gap-2 min-w-max"
         legend="Chat-Room Settings"
       >
-        <div>관리자만 채팅방 설정이 가능합니다.</div>
-
         <div className="flex flex-col mt-4">
           <div>공개/비공개 방</div>
           <SelectButton frameButton={frameButton} />
@@ -51,9 +46,9 @@ const ChatSettingBox = () => {
         </div>
 
         <br />
-        <Button className=" font-semibold">적용하기</Button>
+        <Button className=" font-semibold">{confirmButtonName}</Button>
       </Fieldset>
-    </div>
+    </MenuBoxLayout>
   );
 };
 

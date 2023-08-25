@@ -2,18 +2,30 @@ import { ChangeEvent, useCallback, useState } from "react";
 import { useRef } from "react";
 import { Button, Frame, Input } from "@react95/core";
 
-import MessageBox from "./MessageBox";
 import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
-import ChatSettingBox from "./ChatSettingBox";
-import ChatUserListBox from "./ChatUserListBox";
+import MessageBox from "./chat_window/MessageBox";
+import ChatSettingBox from "./chat_window/ChatSettingBox";
+import ChatUserListBox from "./chat_window/ChatUserListBox";
+
+// import type { GroupRoomStatusProps } from "./types/ChatProps";
+
+// // TMP data
+// const roomStatus: GroupRoomStatusProps = {
+//   id: 1,
+//   chatType: "group",
+//   title: "hi hello 내가 누군지 아니 ! 트센이다 트센이다 트센이다 트센이다",
+//   password: true,
+//   private: false,
+//   numOfUser: 3,
+// }; //TMP
+// => message box
+
 
 function ChatGroupWindow({ className }: { className?: string }) {
   const [message, setMessage] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [showSettingBox, setShowSettingBox] = useState<boolean>(false);
-  const [showUserListBox, setshowUserListBox] = useState<boolean>(false);
-
+  
   const resetInputMessage = () => {
     inputRef.current!.value = "";
   };
@@ -21,9 +33,6 @@ function ChatGroupWindow({ className }: { className?: string }) {
   const handleSendMessage = useCallback(() => {
     setMessage([...message, inputRef.current?.value as string]);
     resetInputMessage();
-    // localStorage.setItem("message", JSON.stringify("hi"));
-    sessionStorage.setItem("sesstion-message", JSON.stringify("sesstion-message"));
-
   }, [message]);
 
   const handleFormSubmit = useCallback(
@@ -33,6 +42,10 @@ function ChatGroupWindow({ className }: { className?: string }) {
     },
     [handleSendMessage]
   );
+
+  // menu bar items
+  const [showSettingBox, setShowSettingBox] = useState<boolean>(false);
+  const [showUserListBox, setshowUserListBox] = useState<boolean>(false);
 
   const handleSettingBoxButton = () => {
     setShowSettingBox((showSettingBox) => !showSettingBox);
@@ -57,28 +70,26 @@ function ChatGroupWindow({ className }: { className?: string }) {
     <Window title="Chatting Room | 방제" className={className}>
       {/* menu bar */}
       <MenuBar menu={menuItems} />
-      {/* main box */}
+      {/* main */}
       <div className="flex flex-row flex-1 overflow-auto ">
-        {/* chat box => DM 에서도 쓸 거니가 Component화 하면 좋겠따*/}
+        {/* chat box */}
         <div className="flex flex-col flex-1 overflow-auto ">
           <Frame
             className="flex flex-row flex-1 overflow-auto p-1"
             boxShadow="in"
           >
-            {/* 메시지 데이터 관리방법 어떻게 하지? :  user-name, text, 날짜시간 */}
-            <MessageBox message={message} />
+            <MessageBox message={message}/>
           </Frame>
           <form onSubmit={handleFormSubmit} className="flex flex-row p-1">
             <Input
               className="w-full h-full "
               placeholder="Hello, my friend !"
-              // onChange={handleInputChange}
               ref={inputRef}
             />
             <Button>send</Button>
           </form>
         </div>
-
+        {/* menu box */}
         {showSettingBox ? <ChatSettingBox /> : null}
         {showUserListBox ? <ChatUserListBox /> : null}
       </div>

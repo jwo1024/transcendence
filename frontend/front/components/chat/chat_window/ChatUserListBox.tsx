@@ -1,8 +1,6 @@
-import React, { ReactNode } from "react";
-
 import { Fieldset, Frame, Button } from "@react95/core";
-
-import NameTag from "./NameTag";
+import NameTag from "../common/NameTag";
+import MenuBoxLayout from "../common/MenuBoxLayout";
 
 const UserList = () => {
   const userList = [
@@ -66,9 +64,15 @@ const ButtonList = () => {
       <div className="flex flex-col">
         {/* Button onClick => Modal 팝업 되도록 */}
         <div className="flex flex-row grid-cols-5">
-          <Button className="flex-1" onClick={handleClickKick}>kick</Button>
-          <Button className="flex-1" onClick={handleClickBan}>ban</Button>
-          <Button className="flex-1" onClick={handleClickMute}>mute</Button>
+          <Button className="flex-1" onClick={handleClickKick}>
+            kick
+          </Button>
+          <Button className="flex-1" onClick={handleClickBan}>
+            ban
+          </Button>
+          <Button className="flex-1" onClick={handleClickMute}>
+            mute
+          </Button>
         </div>
         <div className="flex flex-col">
           <Button onClick={handleClickInviteFriend}>invite-freind</Button>
@@ -79,21 +83,17 @@ const ButtonList = () => {
   );
 };
 
-const ChatUserListBox = ({ children }: { children?: ReactNode }) => {
+const ChatUserListBox = () => {
   return (
-    <div className="flex flex-col w-2/5 p-3">
+    <MenuBoxLayout>
       <Fieldset className="flex flex-col p-2 w-full h-min" legend="User List">
-        {/* user list */}
         <UserList />
         <br />
-        {/* buttons */}
         <ButtonList />
         <br />
         <Button className=" font-semibold">적용하기</Button>
       </Fieldset>
-      {/* TMP */}
-      <div className="flex flex-col p-5">{children}</div>
-    </div>
+    </MenuBoxLayout>
   );
 };
 
