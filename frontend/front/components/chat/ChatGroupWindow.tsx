@@ -21,11 +21,10 @@ import ChatUserListBox from "./chat_window/ChatUserListBox";
 // }; //TMP
 // => message box
 
-
 function ChatGroupWindow({ className }: { className?: string }) {
   const [message, setMessage] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const resetInputMessage = () => {
     inputRef.current!.value = "";
   };
@@ -78,7 +77,7 @@ function ChatGroupWindow({ className }: { className?: string }) {
             className="flex flex-row flex-1 overflow-auto p-1"
             boxShadow="in"
           >
-            <MessageBox message={message}/>
+            <MessageBox message={message} />
           </Frame>
           <form onSubmit={handleFormSubmit} className="flex flex-row p-1">
             <Input
