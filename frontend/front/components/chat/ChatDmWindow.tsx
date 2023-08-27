@@ -52,13 +52,12 @@ function ChatGroupWindow({ className }: { className?: string }) {
             className="flex flex-row flex-1 overflow-auto p-1"
             boxShadow="in"
           >
-            <MessageBox message={message} />
+            <MessageBox message={message} friendName={friendName} />
           </Frame>
           <form onSubmit={handleFormSubmit} className="flex flex-row p-1">
             <Input
               className="w-full h-full "
               placeholder="Hello, my friend !"
-              // onChange={handleInputChange}
               ref={inputRef}
             />
             <Button>send</Button>
