@@ -2,8 +2,42 @@ import Link from "next/link";
 import Window from "@/components/common/Window";
 import LinkButton from "@/components/common/LinkButton";
 import { Button, Input } from "@react95/core";
+import { useEffect, useState } from "react";
 
-const SignInPage = () => {
+interface User42Dto {
+  id: number;
+  login: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  campus: string;
+} // from backend
+
+const SignUpPage = () => {
+  const [user42Dto, setUser42Dto] = useState<User42Dto | null>(null);
+
+  useEffect(() => {
+    console.log("mount SignUpPage");
+    const fetchUser42Data = async () => {
+      const res = await fetch("http://localhost:4000/auth")
+        .then((res) => {
+          console.log(res.json);
+          // const obj;
+          // const data : User42Dto = res.json.toString;
+          // return;
+
+        })
+        // .then ((obj) => {
+        //   const data : User42Dto = obj;
+        //   setUser42Dto(data);
+        // })
+        .catch((err) => console.log(err));
+        fetchUser42Data();
+    };
+  }, []);
+
+
+
   return (
     <div className="flex flex-col  h-90vh items-center justify-center">
       <Link href="/" className=" text-lg">
@@ -24,25 +58,18 @@ const SignInPage = () => {
             <div className="px-5">
               유니크한 닉네임인지, 닉네임글자수 제한 등 확인해야한다.
             </div>
-            <div className="px-5">
-              적절하지 못한 닉네임일시 에러나 문구 메시지를 띄워주어야한다.
-            </div>
-            <div className="px-5">닉네임 자동추천이 존재하면 좋지 않을까</div>
           </div>
           <div>
             avatar 이미지 업로드
-            <div className="px-5"><Button>Upload</Button></div>
-            <div className="px-5">기본 아바타 이미지가 있어야한다.</div>
             <div className="px-5">
-              파일의 종류, 사이즈 제한이 있고 그에 맞는 파일만 업로드 되도록
-              해야한다.
+              <Button>Upload</Button>
             </div>
           </div>
         </div>
-        <LinkButton to="/menu" > Sign - in </LinkButton>
+        <LinkButton to="/menu"> Sign - up </LinkButton>
       </Window>
     </div>
   );
 };
 
-export default SignInPage;
+export default SignUpPage;

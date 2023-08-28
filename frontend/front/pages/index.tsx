@@ -23,7 +23,7 @@ const LoginPage = () => {
         <span> THIS IS PONG GAME</span>
         <br />
         <br />
-        <LinkButton to="/signin"> LOG IN</LinkButton>
+        <LinkButton to="/signup"> LOG IN</LinkButton>
       </div>
     </Window>
   );
