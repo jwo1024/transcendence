@@ -1,8 +1,12 @@
-import React from "react";
+import React, { createContext } from "react";
 import { Frame, Button, List } from "@react95/core";
 import Image from "next/image";
 import SelectButton from "./SelectButton";
 import type { FrameButtonProps } from "./SelectButton";
+
+
+export const CurrentPageState = createContext("Home Page");
+export const WindowDispatchContext = createContext([]);
 
 const TaskBar: React.FC = () => {
   const [startButtonClicked, setStartButtonClicked] =
@@ -13,8 +17,8 @@ const TaskBar: React.FC = () => {
   };
 
   const frameButton: FrameButtonProps[] = [
-	{ children: "공개방", handleClickCustom: () => console.log("공개방 클릭") },
-	{ children: "비공개방" },
+    { children: "공개방", handleClickCustom: () => console.log("공개방 클릭") },
+    { children: "비공개방" },
   ];
 
   return (
@@ -47,20 +51,17 @@ const TaskBar: React.FC = () => {
         <div className="flex flex-row mx-1 overflow-clip">
           <Frame
             className="flex flex-row p-0.5 h-full m-0.5 items-center"
-            onClick={handleStartButtonClick}
             boxShadow="out"
           >
             <span className="px-7">Current Tasks</span>
           </Frame>
           <Frame
             className="flex flex-row p-0.5 h-full m-0.5 items-center"
-            onClick={handleStartButtonClick}
             boxShadow="out"
           >
             <span className="px-7">Current Tasks</span>
           </Frame>
         </div>
-	
       </span>
 
       {/* Clock */}
