@@ -42,16 +42,7 @@ export default function ProfilePage() {
             />
           ) : null}
         </div>
-        {friendList ? (
-          <FriendList
-            friends={[
-              { nickname: "hogkim", status: "접속중" },
-              { nickname: "hogkim", status: "접속중" },
-              { nickname: "hogkim", status: "접속중" },
-              { nickname: "hogkim", status: "접속중" },
-            ]}
-          />
-        ) : null}
+        {friendList ? <FriendList /> : null}
       </div>
       <div className="flex space-x-3 items-center">
         <Button onClick={showMyProfile}>My Profile</Button>
