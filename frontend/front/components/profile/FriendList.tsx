@@ -15,22 +15,22 @@ const FriendList: React.FC<FriendListProps> = ({ friends }) => {
   return (
     <Window title="Friend List" w="370" h="620">
       <div className="overflow-auto flex-grow p-1">
-        <List className=" space-y-2 w-96">
+        <ul className="space-y-2 w-full">
           {friends.map((friend, index) => (
-            <List.Item key={index} className="flex justify-between w-full">
-              <List>
-                <List.Item>
-                  <span>귓속말</span>
-                </List.Item>
-                <List.Item>
-                  <span>친구삭제</span>
-                </List.Item>
-              </List>
+            <List.Item
+              key={index}
+              className="flex w-full items-center justify-between"
+            >
               <strong>{friend.nickname}</strong>
-              <span>{friend.status}</span>
+              <div className="flex items-center space-x-2">
+                <span>{friend.status}</span>
+                <Button className=" h-7 flex items-center justify-center">
+                  프로필 보기
+                </Button>
+              </div>
             </List.Item>
           ))}
-        </List>
+        </ul>
       </div>
       <div className="flex items-center justify-between p-4 pt-4 border-2 border-white">
         <Input className=" w-60" />
