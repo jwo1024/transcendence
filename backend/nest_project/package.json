@@ -27,6 +27,8 @@
     "@nestjs/platform-socket.io": "^10.1.3",
     "@nestjs/typeorm": "^10.0.0",
     "@nestjs/websockets": "^10.1.3",
+    "nest-cli": "^0.0.5",
+    "nestjs-typeorm-paginate": "^4.0.4",
     "pg": "^8.11.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
