@@ -47,7 +47,11 @@ async function startGame()
 
 function queueProcess(socket: Socket)
 {
-	console.log("log: queueProcess function start.");
+	console.log("============ ladderGameQueue: queueProcess ================");
+	const queueRoom = "queueRoom";
+	socket.join(queueRoom);
+	console.log(socket.id);
+	console.log(socket.rooms);
 	// const room_name = "1"; // somethig like user.id
 	// socket.join(room_name);
 	// queue process logic
@@ -62,17 +66,17 @@ function queueProcess(socket: Socket)
 @WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
-	private logger = new Logger('GameGateway');
+	// private logger = new Logger('GameGateway');
 	// this.logger.log();
 
 	async onModuleInit() {}
 	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
 	{
-		console.log("game.gateway.ts: connected.");
+		console.log("Server: connected.");
 	}
 	async handleDisconnect(socket: Socket)
 	{
-		console.log("game.gateway.ts: disconnected.");
+		console.log("Server: disconnected.");
 	}
 
 	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
@@ -85,16 +89,82 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	{
 		// 인가? user id?
 		console.log("log: ladder game queue start.");
-		// socket.queue = true; // 큐 잡는 중이라는 표시?
-		console.log("============ socket ================");
-		console.log(socket);
-		console.log("============ data ================");
+
+		
+		console.log("============ ladderGameQueue: handleEvent ================");
+		console.log("socket.id : " + socket.id);
+		console.log(socket.rooms);
+		console.log(socket.data);
 		console.log(data);
+		
 		const opponent = queueProcess(socket);
 		if (opponent === null)
 		{
-			console.log("log: no game now.");
+			console.log("============ ladderGameQueue: handleEvent: if() ================");
+			console.log("no game now.");
 			socket.emit('noLadderGame');
 		}
+		const clients = this.server.in("queueRoom").fetchSockets();
+		console.log(clients);
 	}
 }
+
+
+
+
+
+
+
+
+
+// temp --------------------
+// import MiniProfile from "@/components/game/MiniProfile";
+// import React from "react";
+// import { ThemeProvider } from "@react95/core";
+// import Window from "@/components/common/Window";
+
+// import io from 'socket.io-client';
+// const socket = io('http://localhost:4000/game'); 
+
+// export default function GamePage() {
+
+//   const testHandler = () => {
+//     console.log("front: game/index.tsx");
+//     console.log("============ socket ================");
+// 		console.log("socket.id : " + socket.id);
+//     socket.emit('ladderGameQueue');
+//   };
+
+//   socket.on('noLadderGame', () => {
+//     console.log("Oh, there's no ladder game now..");
+//   });
+
+
+//   return (
+//     <div className="flex items-center justify-center h-screen">
+//       <Window title="pong game" w="900" h="850">
+//         <div className="h-screen flex flex-col justify-center items-center">
+//           <div className="bg-black w-[800px] h-[600px]"></div>
+//           <button onClick={testHandler}>WANT LADDER GAME</button>
+//           <div className="flex mt-10 w-[800px] items-center justify-between">
+//             <MiniProfile
+//               nickname="JohnDoe"
+//               ladder={2134}
+//               win={23}
+//               lose={17}
+//               avatarSrc="https://github.com/React95.png"
+//             />
+//             <img className="h-40 mx-10" src="versus.png" />
+//             <MiniProfile
+//               nickname="JohnDoe"
+//               ladder={2134}
+//               win={23}
+//               lose={17}
+//               avatarSrc="https://github.com/React95.png"
+//             />
+//           </div>
+//         </div>
+//       </Window>
+//     </div>
+//   );
+// }
