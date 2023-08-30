@@ -1,10 +1,11 @@
 // import Image from "next/image";
 import { Button, Frame, ThemeProvider } from "@react95/core";
+import { Frame, ThemeProvider, Button } from "@react95/core";
 import { useState } from "react";
 // import LinkButton from "@/components/common/LinkButton";
 import Window from "@/components/common/Window";
 import Icon from "@/components/common/Icon";
-import { useRouter } from "next/router";
+import Router from "next/router";
 
 const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
   return (
@@ -35,17 +36,19 @@ const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
 // useRouter 는 처음 써봐서 되는지 모르겟어요
 
 const LoginPage = () => {
-  const router = useRouter();
-
-  const handleClick = () => {
-    fetch("http://localhost:4000/login/getUrl")
+  const onClick = () => {
+    // fetch("http://localhost:4000/login/first")
+    fetch("http://localhost:3001/api/login")
       .then((res) => {
+        if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
+        console.log("res", "RES : " + res);
         return res.text();
       })
-      .then((data) => {
-        console.log(data);
-        router.push(data.toString());
-      });
+      .then((url) => {
+        console.log("url", "URL : " + url);
+        Router.push(url);
+      })
+      .catch((err) => console.log(err));
   };
 
   return (
@@ -54,30 +57,13 @@ const LoginPage = () => {
         <span> THIS IS PONG GAME</span>
         <br />
         <br />
-        <Button onClick={handleClick}> LOG IN </Button>
-        {/* <LinkButton to="/signin"> LOG IN</LinkButton> */}
+        <Button onClick={onClick}> LOG IN </Button>
       </div>
     </Window>
   );
 };
 
-// const IndexPage = () => {
-//   return (
-//     <Window title="pong game" w="300" h="480">
-//       <ThemeProvider>
-//         <div className="flex flex-col space-y-20 my-20 items-center">
-//           <LinkButton to="./game"> 레더 </LinkButton>
-//           <LinkButton to="/chat"> 채팅 </LinkButton>
-//           <LinkButton to="/profile"> 프로필 </LinkButton>
-//         </div>
-//       </ThemeProvider>
-//     </Window>
-//   );
-// };
-
 export default function Home() {
-  const linkPageTo = () => {};
-
   const [popLogin, setPopLogin] = useState(false);
 
   const handleClick = () => {
