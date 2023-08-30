@@ -3,55 +3,17 @@ import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
 import { Button, Frame } from "@react95/core";
 import MakeNewChatGroup from "./waiting_room_window/MakeNewChatGroup";
-import type { GroupRoomStatusProps } from "./types/ChatProps";
+import type { ChatRoomInfo, ChatRoomListInfo } from "./types/ChatProps";
 import { Group } from "next/dist/shared/lib/router/utils/route-regex";
 
-type ChatRoomList = {
-  list: GroupRoomStatusProps[];
-};
-
-const initData: ChatRoomList = {
-  list: [],
-};
 // var index = arr3.findIndex(i => i.name == "강호동");
 
-// tmp data
-const initialList: ChatRoomList = {
-  list: [
-    {
-      id: 1,
-      chatType: "group",
-      title:
-        "intial list hi hello 내가 누군지 아니 ! 트센이다 트센이다 트센이다 트센이다",
-      password: true,
-      is_public: true,
-      num_of_user: 3,
-    },
-    {
-      id: 2,
-      chatType: "group",
-      title: "intial list 강쥐 좋아하는 사람들 모여라",
-      password: false,
-      is_public: true,
-      num_of_user: 10,
-    },
-    {
-      id: 3,
-      chatType: "group",
-      title: "intial list bye",
-      password: false,
-      is_public: true,
-      num_of_user: 8,
-    },
-  ],
-};
-
 type Action =
-  | { type: "ADD"; room: GroupRoomStatusProps }
+  | { type: "ADD"; room: ChatRoomInfo }
   | { type: "REMOVE"; id: number }
-  | { type: "ADD_LIST"; lists: ChatRoomList };
+  | { type: "ADD_LIST"; lists: ChatRoomListInfo };
 
-const reducer = (state: ChatRoomList, action: Action) => {
+const reducer = (state: ChatRoomListInfo, action: Action) => {
   console.log(state);
   switch (action.type) {
     case "ADD": {
@@ -73,7 +35,7 @@ const reducer = (state: ChatRoomList, action: Action) => {
 
 // ChatGroupList 출력
 const ChatGroupBlock = () => {
-  const [state, dispatch] = useReducer(reducer, initData);
+  const [state, dispatch] = useReducer(reducer, { list: [] });
 
   useEffect(() => {
     console.log("useEffect");
@@ -97,7 +59,7 @@ const ChatGroupBlock = () => {
       });
   }, []);
 
-  const addState = ({ roomData }: { roomData: GroupRoomStatusProps }) => {
+  const addState = ({ roomData }: { roomData: ChatRoomInfo }) => {
     dispatch({ type: "ADD", room: roomData });
   };
 
@@ -105,11 +67,11 @@ const ChatGroupBlock = () => {
     dispatch({ type: "REMOVE", id: roomId });
   };
 
-  // const addListState = ({ addlist }: { addlist: ChatRoomList }) => {
+  // const addListState = ({ addlist }: { addlist: ChatRoomListInfo }) => {
   //   dispatch({ type: "ADD_LIST", lists: addlist });
   // };
 
-  const handleClick = (chatGroup: GroupRoomStatusProps) => {
+  const handleClick = (chatGroup: ChatRoomInfo) => {
     console.log(chatGroup);
     if (chatGroup.password)
       console.log("비밀번호가 있습니다. 비밀번호를 입력해주세요");
@@ -132,7 +94,7 @@ const ChatGroupBlock = () => {
           <span className="flex-1 p-2 font-bold truncate">
             {chatGroup.title}
           </span>
-          <span className="w-16 p-2">[ {chatGroup.num_of_user} ]</span>
+          <span className="w-16 p-2">[ {chatGroup.numOfUser} ]</span>
           <span className="w-28 p-2">
             {chatGroup.password ? "비밀번호 있음" : "비밀번호 없음"}
           </span>
