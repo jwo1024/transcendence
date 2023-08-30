@@ -4,6 +4,17 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-EXPOSE 3000
+EXPOSE 4000
 
-ENTRYPOINT npm run start:dev
+COPY ./nest_project/package.json .
+
+# COPY ./npm_init.sh .
+
+# CMD [ "/bin/sh", "./entrypoint.sh" ]
+# RUN sh ./npm_init.sh
+
+# RUN npm i -g @nestjs/cli
+
+# CMD ["ash", "-c", "while true; do sleep 1; done"]
+
+ENTRYPOINT npm i && npm run start:dev
