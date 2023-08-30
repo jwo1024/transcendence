@@ -11,8 +11,8 @@ export default function App({ Component, pageProps }: AppProps) {
       <div className=" scroll-auto">
       <Component {...pageProps} />
       </div>
-      <TaskBar />
-      {/* <MainTaskBar /> */}
+      {/* <TaskBar /> */}
+      <MainTaskBar />
     </ThemeProvider>
   );
 }

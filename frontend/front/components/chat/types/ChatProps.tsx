@@ -6,9 +6,9 @@ interface ChatRoomStatusProps {
 interface GroupRoomStatusProps extends ChatRoomStatusProps {
   chatType: "group";
   title: string;
-  private: boolean;
+  is_public: boolean;
   password: boolean;
-  numOfUser: number;
+  num_of_user: number;
 }
 interface DMRoomStatusProps extends ChatRoomStatusProps {
   chatType: "dm";

@@ -1,50 +1,113 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
 import { Button, Frame } from "@react95/core";
 import MakeNewChatGroup from "./waiting_room_window/MakeNewChatGroup";
 import type { GroupRoomStatusProps } from "./types/ChatProps";
+import { Group } from "next/dist/shared/lib/router/utils/route-regex";
+
+type ChatRoomList = {
+  list: GroupRoomStatusProps[];
+};
+
+const initData: ChatRoomList = {
+  list: [],
+};
+// var index = arr3.findIndex(i => i.name == "강호동");
 
 // tmp data
-const newChatGroupList: GroupRoomStatusProps[] = [
-  {
-    id: 1,
-    chatType: "group",
-    title: "hi hello 내가 누군지 아니 ! 트센이다 트센이다 트센이다 트센이다",
-    password: true,
-    private: false,
-    numOfUser: 3,
-  },
-  {
-    id: 2,
-    chatType: "group",
-    title: "hello",
-    password: false,
-    private: false,
-    numOfUser: 10,
-  },
-  {
-    id: 3,
-    chatType: "group",
-    title: "bye",
-    password: false,
-    private: false,
-    numOfUser: 8,
-  },
-]; // TMP
+const initialList: ChatRoomList = {
+  list: [
+    {
+      id: 1,
+      chatType: "group",
+      title:
+        "intial list hi hello 내가 누군지 아니 ! 트센이다 트센이다 트센이다 트센이다",
+      password: true,
+      is_public: true,
+      num_of_user: 3,
+    },
+    {
+      id: 2,
+      chatType: "group",
+      title: "intial list 강쥐 좋아하는 사람들 모여라",
+      password: false,
+      is_public: true,
+      num_of_user: 10,
+    },
+    {
+      id: 3,
+      chatType: "group",
+      title: "intial list bye",
+      password: false,
+      is_public: true,
+      num_of_user: 8,
+    },
+  ],
+};
+
+type Action =
+  | { type: "ADD"; room: GroupRoomStatusProps }
+  | { type: "REMOVE"; id: number }
+  | { type: "ADD_LIST"; lists: ChatRoomList };
+
+const reducer = (state: ChatRoomList, action: Action) => {
+  console.log(state);
+  switch (action.type) {
+    case "ADD": {
+      return { list: [...state.list, action.room] };
+    }
+    case "REMOVE": {
+      return {
+        list: state.list.filter((item) => item.id !== action.id),
+      };
+    }
+    case "ADD_LIST": {
+      // const newList = state
+      return { list: [...state.list, ...action.lists.list] };
+    }
+    default:
+      return state;
+  }
+};
 
 // ChatGroupList 출력
-const ChatGroupList = () => {
-  const [chatGroupName, setChatGroupName] = useState<GroupRoomStatusProps[]>(
-    []
-  ); // Map으로 변경 필요 (겹치는 id 에 대한 관리가 필요함)
+const ChatGroupBlock = () => {
+  const [state, dispatch] = useReducer(reducer, initData);
 
   useEffect(() => {
-    setChatGroupName((chatGroupName) => [
-      ...chatGroupName,
-      ...newChatGroupList,
-    ]);
+    console.log("useEffect");
+
+    fetch("/api/chat_list")
+      .then((res) => {
+        console.log("then1");
+
+        if (res.ok) {
+          console.log("then2 res.ok");
+
+          res.json().then((data) => {
+            console.log("then3 res.json()");
+
+            dispatch({ type: "ADD_LIST", lists: data });
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }, []);
+
+  const addState = ({ roomData }: { roomData: GroupRoomStatusProps }) => {
+    dispatch({ type: "ADD", room: roomData });
+  };
+
+  const removeState = ({ roomId }: { roomId: number }) => {
+    dispatch({ type: "REMOVE", id: roomId });
+  };
+
+  // const addListState = ({ addlist }: { addlist: ChatRoomList }) => {
+  //   dispatch({ type: "ADD_LIST", lists: addlist });
+  // };
 
   const handleClick = (chatGroup: GroupRoomStatusProps) => {
     console.log(chatGroup);
@@ -64,12 +127,12 @@ const ChatGroupList = () => {
         <span className=" w-28">{""} </span>
       </div>
       {/* chatting room list */}
-      {chatGroupName.map((chatGroup) => (
+      {state.list.map((chatGroup) => (
         <div className="flex flex-row m-1 bg-stone-200" key={chatGroup.id}>
           <span className="flex-1 p-2 font-bold truncate">
             {chatGroup.title}
           </span>
-          <span className="w-16 p-2">[ {chatGroup.numOfUser} ]</span>
+          <span className="w-16 p-2">[ {chatGroup.num_of_user} ]</span>
           <span className="w-28 p-2">
             {chatGroup.password ? "비밀번호 있음" : "비밀번호 없음"}
           </span>
@@ -110,7 +173,7 @@ const WaitingRoomWindow = ({ className }: { className?: string }) => {
           className="flex flex-col flex-1 overflow-auto p-1"
           boxShadow="in"
         >
-          <ChatGroupList />
+          <ChatGroupBlock />
         </Frame>
         {/* menu box */}
         {showMakeChatGroupBox ? <MakeNewChatGroup /> : null}
