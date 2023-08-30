@@ -1,8 +1,9 @@
-import { Controller, Get, Query, Req, Res } from '@nestjs/common';
+import { Controller, Get, HttpCode, Query, Redirect, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { LoginService } from './login.service';
 import { ProfileService } from '../profile/profile.service';
 import { User42Dto } from './dto/user42.dto';
+import * as qs from 'qs';
 
 @Controller('login')
 export class LoginController {
@@ -49,15 +50,13 @@ export class LoginController {
         }
          
         const userProfile = await this.profileService.getUserProfileById(userDataFrom42.id);
-        console.log('userProfile: ', userProfile);
         if (userProfile) {
-            console.log('여기');
-            res.redirect('/login/main');
+            console.log('userProfile : ' + JSON.stringify(userProfile));
+            res.redirect('http://localhost:3001/menu');
         }
         else {
-            res.send("[FrontEnd.signupForm] userDataFrom42 : " + JSON.stringify(userDataFrom42));
+            res.redirect('http://localhost:3001/signup?' + qs.stringify(userDataFrom42));
         }
-        // 자 여기서! 이제 userDataFrom42를 가지고, DB에 저장된 유저인지 확인하고, 없으면 DB에 저장하고, 있으면 그냥 로그인 시키면 됨.
     }
 
     @Get('getUrl')
@@ -65,9 +64,10 @@ export class LoginController {
         return this.loginService.getRedirectUrlTo42Auth()
     }
 
-
     @Get('main')
     getMainPage() : string {
         return 'this is main_page';
     }
+
+    
 }

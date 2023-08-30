@@ -3,6 +3,7 @@ import Window from "@/components/common/Window";
 import LinkButton from "@/components/common/LinkButton";
 import { Button, Input, Avatar, Frame } from "@react95/core";
 import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 
 interface User42Dto {
   id: number;
@@ -23,17 +24,10 @@ interface User42Dto {
 const InfoBlockLayout = ({ menu, value }: { menu?: string; value?: string }) => {
   return (
     <div className="flex flex-row ">
-      <Frame
-        className=" w-20 text-center border border-black px-p-2px mr-1	font-extrabold"
-        w=""
-      >
+      <Frame className=" w-20 text-center border border-black px-p-2px mr-1	font-extrabold" w="">
         {menu}
       </Frame>
-      <Frame
-        className="flex-1 pl-3 border border-black bg-zinc-400"
-        boxShadow="in"
-        bg=""
-      >
+      <Frame className="flex-1 pl-3 border border-black bg-zinc-400" boxShadow="in" bg="">
         {value}
       </Frame>
     </div>
@@ -57,19 +51,40 @@ const SignUpPage = () => {
   };
   // useMutation
 
-  // get user42Dto from backend
+  // get user42Dto from backend in query string
   useEffect(() => {
-    fetch("http://localhost:3001/api/signup")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
-        console.log(res.json);
-        return res.json();
-      })
-      .then((data) => {
-        if (isUser42Dto(data)) setUser42Dto(data);
-        else throw new Error("data is not User42Dto");
-      })
-      .catch((err) => console.log("FAILED" + err));
+    const params = new URLSearchParams(window.location.search);
+    if (
+      !params.has("id") ||
+      !params.has("login") ||
+      !params.has("email") ||
+      !params.has("first_name") ||
+      !params.has("last_name") ||
+      !params.has("campus")
+    ) {
+      console.log("params is not valid");
+      return;
+    }
+    setUser42Dto({
+      id: Number(params.get("id")),
+      login: params.get("login") as string,
+      email: params.get("email") as string,
+      first_name: params.get("first_name") as string,
+      last_name: params.get("last_name") as string,
+      campus: params.get("campus") as string,
+    });
+    
+    // fetch("http://localhost:3001/api/signup")
+    //   .then((res) => {
+    //     if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
+    //     console.log(res.json);
+    //     return res.json();
+    //   })
+    //   .then((data) => {
+    //     if (isUser42Dto(data)) setUser42Dto(data);
+    //     else throw new Error("data is not User42Dto");
+    //   })
+    //   .catch((err) => console.log("FAILED" + err));
   }, []);
 
   // send SignUpDto to backend
@@ -149,19 +164,13 @@ const SignUpPage = () => {
           <form onSubmit={onSubmitNickName} className="w-full">
             <label>👻 유저 닉네임을 설정해 주세요 👀</label>
             <div className="flex flex-row space-y-1 p-0.5 items-center">
-              <Input
-                placeholder="Nick Name"
-                ref={nicknameInputRef}
-                className="flex-1 "
-              />
+              <Input placeholder="Nick Name" ref={nicknameInputRef} className="flex-1 " />
               <Button className="">Check</Button>
             </div>
             {nickNameIsValid === true ? (
               <div className="px-5 text-green-700">유효한 닉네임 입니다</div>
             ) : nickNameIsValid === false ? (
-              <div className="px-5 text-red-700">
-                유효하지 않은 닉네임 입니다
-              </div>
+              <div className="px-5 text-red-700">유효하지 않은 닉네임 입니다</div>
             ) : null}
           </form>
 
@@ -184,7 +193,7 @@ const SignUpPage = () => {
             </div>
           </form>
           <br />
-          
+
           {/* Sign - Up */}
           <div className=" text-center">
             <Link href="/">
