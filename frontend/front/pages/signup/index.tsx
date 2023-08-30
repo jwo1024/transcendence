@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Window from "@/components/common/Window";
-import LinkButton from "@/components/common/LinkButton";
 import { Button, Input, Avatar, Frame } from "@react95/core";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, use } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 interface User42Dto {
   id: number;
@@ -13,14 +13,13 @@ interface User42Dto {
   campus: string;
 } // data from backend
 
-// interface SignUpDto {
-//   id: number;
-//   nickname: string;
-//   enable2FA: boolean;
-//   data2FA: string;
-// } // send to backend
-
-const InfoBlockLayout = ({ menu, value }: { menu?: string; value?: string }) => {
+const InfoBlockLayout = ({
+  menu,
+  value,
+}: {
+  menu?: string;
+  value?: string;
+}) => {
   return (
     <div className="flex flex-row ">
       <Frame
@@ -57,19 +56,26 @@ const SignUpPage = () => {
   };
   // useMutation
 
-  // get user42Dto from backend
+  // get user42Dto from backend in query string
   useEffect(() => {
-    fetch("http://localhost:3001/api/signup")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
-        console.log(res.json);
-        return res.json();
-      })
-      .then((data) => {
-        if (isUser42Dto(data)) setUser42Dto(data);
-        else throw new Error("data is not User42Dto");
-      })
-      .catch((err) => console.log("FAILED" + err));
+    const params = new URLSearchParams(location.search);
+    if (
+      !params.has("id") ||
+      !params.has("login") ||
+      !params.has("email") ||
+      !params.has("first_name") ||
+      !params.has("last_name") ||
+      !params.has("campus")
+    )
+      return;
+    setUser42Dto({
+      id: Number(params.get("id")),
+      login: params.get("login") as string,
+      email: params.get("email") as string,
+      first_name: params.get("first_name") as string,
+      last_name: params.get("last_name") as string,
+      campus: params.get("campus") as string,
+    });
   }, []);
 
   // send SignUpDto to backend
@@ -139,7 +145,10 @@ const SignUpPage = () => {
               <InfoBlockLayout menu="id" value={user42Dto?.id.toString()} />
               <InfoBlockLayout menu="login" value={user42Dto?.login} />
               <InfoBlockLayout menu="email" value={user42Dto?.email} />
-              <InfoBlockLayout menu="first name" value={user42Dto?.first_name} />
+              <InfoBlockLayout
+                menu="first name"
+                value={user42Dto?.first_name}
+              />
               <InfoBlockLayout menu="last name" value={user42Dto?.last_name} />
               <InfoBlockLayout menu="campus" value={user42Dto?.campus} />
             </div>
@@ -184,7 +193,7 @@ const SignUpPage = () => {
             </div>
           </form>
           <br />
-          
+
           {/* Sign - Up */}
           <div className=" text-center">
             <Link href="/">

@@ -5,12 +5,12 @@ import { Button, Frame, Input } from "@react95/core";
 import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
 import MessageBox from "./chat_window/MessageBox";
-import ChatSettingBox from "./chat_window/ChatSettingBox";
+import SettingMenuBox from "./chat_window/SettingMenuBox";
 
 /// tmp data
 const friendName = "jiwolee";
 
-function ChatGroupWindow({ className }: { className?: string }) {
+const ChatGroupWindow = ({ className }: { className?: string }) => {
   const [message, setMessage] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSettingBox, setShowSettingBox] = useState<boolean>(false);
@@ -63,7 +63,7 @@ function ChatGroupWindow({ className }: { className?: string }) {
             <Button>send</Button>
           </form>
         </div>
-        {showSettingBox ? <ChatSettingBox /> : null}
+        {showSettingBox ? <SettingMenuBox /> : null}
       </div>
     </Window>
   );

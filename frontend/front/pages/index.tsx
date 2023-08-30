@@ -1,7 +1,6 @@
 // import Image from "next/image";
-import { Frame, ThemeProvider, Button } from "@react95/core";
+import { Button } from "@react95/core";
 import { useState } from "react";
-import LinkButton from "@/components/common/LinkButton";
 import Window from "@/components/common/Window";
 import Icon from "@/components/common/Icon";
 import Router from "next/router";
@@ -23,11 +22,9 @@ const LoginPage = () => {
     fetch("http://localhost:3001/api/login")
       .then((res) => {
         if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
-        console.log("res", "RES : " + res);
         return res.text();
       })
       .then((url) => {
-        console.log("url", "URL : " + url);
         Router.push(url);
       })
       .catch((err) => console.log(err));

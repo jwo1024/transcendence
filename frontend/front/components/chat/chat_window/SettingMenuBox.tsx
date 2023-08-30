@@ -4,12 +4,12 @@ import type { FrameButtonProps } from "../../common/SelectButton";
 import React, { useState } from "react";
 import MenuBoxLayout from "../common/MenuBoxLayout";
 
-interface ChatSettingBoxProps {
+interface SettingMenuBoxProps {
   confirmButtonName?: string;
 }
 
-// ChatSettingBox
-const ChatSettingBox = ({ confirmButtonName }: ChatSettingBoxProps) => {
+// SettingMenuBox
+const SettingMenuBox = ({ confirmButtonName }: SettingMenuBoxProps) => {
   const [checkedPassword, setCheckedPassword] = useState<boolean>(false);
 
   const handleCheckedPassword = () => {
@@ -52,4 +52,4 @@ const ChatSettingBox = ({ confirmButtonName }: ChatSettingBoxProps) => {
   );
 };
 
-export default ChatSettingBox;
+export default SettingMenuBox;
