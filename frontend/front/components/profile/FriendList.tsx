@@ -4,14 +4,23 @@ import { Fax } from "@react95/icons";
 import Window from "../common/Window";
 
 // 임시 백엔드 타입용.
-type friend = {
+type user = {
   nickname: string;
   state: string;
+  avatarSrc: string;
+  ladder: number;
+  win: number;
+  lose: number;
 };
-type friends = friend[];
+type users = user[];
 
-const FriendList: React.FC = () => {
-  const [friendsList, setFriendsList] = useState<friends>([]);
+interface FriendListProps {
+  handleProfileClick: (friend: user) => void;
+}
+
+const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
+  const [friendsList, setFriendsList] = useState<users>([]);
+
   useEffect(() => {
     fetch("http://localhost:3001/api/friendList")
       .then((res) => res.json())
@@ -31,7 +40,10 @@ const FriendList: React.FC = () => {
               <strong>{friend.nickname}</strong>
               <div className="flex items-center space-x-2">
                 <span>{friend.state}</span>
-                <Button className=" h-7 flex items-center justify-center">
+                <Button
+                  onClick={() => handleProfileClick(friend)}
+                  className=" h-7 flex items-center justify-center"
+                >
                   프로필 보기
                 </Button>
               </div>
