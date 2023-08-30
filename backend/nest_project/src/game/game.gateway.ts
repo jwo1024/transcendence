@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
 // entity or dto?
@@ -45,14 +45,14 @@ async function startGame()
 	// 
 }
 
-function queueProcess(client: Socket)
+function queueProcess(socket: Socket)
 {
 	console.log("log: queueProcess function start.");
 	// const room_name = "1"; // somethig like user.id
-	// client.join(room_name);
+	// socket.join(room_name);
 	// queue process logic
 	// if (이미 큐 대기 중인 사람 중에서 맞는 상대를 찾는다면)
-	// client.join(/*opponent_room_name*/);
+	// socket.join(/*opponent_room_name*/);
 	startGame();
 	// 대결 상대를 찾지 못한 채 특정 시간 이상이 지나도 null 반환
 	return null;
@@ -60,23 +60,41 @@ function queueProcess(client: Socket)
 
 @Injectable()
 @WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
-export class GameGateway {
-	
+export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+{
+	private logger = new Logger('GameGateway');
+	// this.logger.log();
+
+	async onModuleInit() {}
+	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
+	{
+		console.log("game.gateway.ts: connected.");
+	}
+	async handleDisconnect(socket: Socket)
+	{
+		console.log("game.gateway.ts: disconnected.");
+	}
+
 	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
 	server: Server;
 
+	
+
 	@SubscribeMessage('ladderGameQueue') // ladder game 큐 시도
-	handleEvent(client: Socket)
+	handleEvent(@ConnectedSocket() socket: Socket, @MessageBody() data)
 	{
-		// 인가 확인? user id 얻을 수 있나
+		// 인가? user id?
 		console.log("log: ladder game queue start.");
-		// client.queue = true; // 큐 잡는 중이라는 표시?
-		console.log(client);
-		const opponent = queueProcess(client);
+		// socket.queue = true; // 큐 잡는 중이라는 표시?
+		console.log("============ socket ================");
+		console.log(socket);
+		console.log("============ data ================");
+		console.log(data);
+		const opponent = queueProcess(socket);
 		if (opponent === null)
 		{
 			console.log("log: no game now.");
-			client.emit("noLadderGame");
+			socket.emit('noLadderGame');
 		}
 	}
 }
