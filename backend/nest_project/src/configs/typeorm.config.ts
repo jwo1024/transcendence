@@ -1,5 +1,6 @@
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Common } from "./common.entity"; 
+import { UserProfile } from "src/user/profile/user-profile.entity";
 
 export const typeORMConfig : TypeOrmModule = {
 	logging: true,
@@ -11,7 +12,7 @@ export const typeORMConfig : TypeOrmModule = {
 	password: process.env.POSTGRES_PASSWORD,
 	database: process.env.POSTGRES_DB,
 // entities: [__dirname + '/../**/*.entity.{js,ts}'],
-	entities: [Common,],
+	entities: [Common, UserProfile],
 	synchronize: true
 }
 
