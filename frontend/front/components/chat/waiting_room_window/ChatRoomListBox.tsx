@@ -1,9 +1,10 @@
 import { Button, Frame } from "@react95/core";
-import useCustomReducer from "../waiting_room_window/hooks/useCustomReducer";
+
+import useChatRoomListReducer from "@/hooks/chat/useChatRoomListReducer";
 import type { ChatRoomInfo } from "@/types/ChatInfoType";
 
 const ChatRoomListBox = () => {
-  const { state, addState, removeState } = useCustomReducer();
+  const { state, addState, removeState } = useChatRoomListReducer();
 
   const handleClick = (chatGroup: ChatRoomInfo) => {
     console.log(chatGroup);
@@ -22,7 +23,7 @@ const ChatRoomListBox = () => {
         <span className="w-28 p-2">비밀번호 유무</span>
         <span className=" w-28">{""} </span>
       </div>
-      {/* chatting room list */}
+      {/* chat room list */}
       {state.list.map((chatGroup) => (
         <div className="flex flex-row m-1 bg-stone-200" key={chatGroup.id}>
           <span className="flex-1 p-2 font-bold truncate">

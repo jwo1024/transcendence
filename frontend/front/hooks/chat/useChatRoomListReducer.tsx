@@ -1,5 +1,7 @@
-// this hook is for WaitingRoomWindow.tsx's readablity
+// this hook is for "@/components/chat/waiting_room_window/ChatRoomListBox"
 
+// rename to useChatRoomListReducer
+// index 비교해서 업데이트하는 기능 추가 필요
 // var index = arr3.findIndex(i => i.name == "강호동");
 
 import type { ChatRoomInfo, ChatRoomListInfo } from "@/types/ChatInfoType";
@@ -30,7 +32,7 @@ const reducer = (state: ChatRoomListInfo, action: Action) => {
   }
 };
 
-const useCustomReducer = () => {
+const useChatRoomListReducer = () => {
   const [state, dispatch] = useReducer(reducer, { list: [] });
 
   useEffect(() => {
@@ -70,4 +72,4 @@ const useCustomReducer = () => {
   return { state, addState, removeState } as const;
 };
 
-export default useCustomReducer;
+export default useChatRoomListReducer;
