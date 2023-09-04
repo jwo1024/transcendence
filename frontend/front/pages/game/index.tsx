@@ -1,14 +1,15 @@
-import MiniProfile from "@/components/game/MiniProfile";
 import React from "react";
 import { ThemeProvider } from "@react95/core";
 import Window from "@/components/common/Window";
+import MiniProfile from "@/components/game/MiniProfile";
+import PongGame from "@/components/game/PongGame";
 
 export default function GamePage() {
   return (
     <div className="flex items-center justify-center h-screen">
       <Window title="pong game" w="900" h="850">
         <div className="h-screen flex flex-col justify-center items-center">
-          <div className="bg-black w-[800px] h-[600px]"></div>
+          <PongGame />
           <div className="flex mt-10 w-[800px] items-center justify-between">
             <MiniProfile
               nickname="JohnDoe"
