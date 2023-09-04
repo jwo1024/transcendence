@@ -20,31 +20,36 @@ import { RoomService } from './services/room/room.service';
 import { UserI } from './interfaces/user.interface';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
+import { UserService } from './services/user/user.service';
+
+//temp - profile
+import { ProfileService } from './services/profile-service/profile-service.service';
+import { SignupDto } from './dto/signup.dto';
 
 // @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001", "*" } })
 @WebSocketGateway({ namespace: '/chat', cors: { origin: "*"} })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit 
 {
-  private logger = new Logger('EventsGateway'); // Logger 인스턴스를 생성
-
   @WebSocketServer() server: Server;
+  
+  private logger = new Logger('EventsGateway'); // Logger 인스턴스를 생성
 
   constructor(
     //     // private authService: AuthService,
-    //     // private userService: UserService,
+      private userService: UserService,
       private roomService: RoomService,
       private readonly userRepository: Repository<UserEntity>,
-
+      private profileService : ProfileService,
     //     // private connectedUserService: ConnectedUserService,
     //     // private joinedRoomService: JoinedRoomService,
     //     // private messageService: MessageService
-        ) { }
+        ) { };
   
   //required by OnModuleInit
   async onModuleInit() {
     // await this.connectedUserService.deleteAll();
     // await this.joinedRoomService.deleteAll();
-  }
+  };
 
   //required by OnGatewayConnection
   async handleConnection(socket: Socket) {
@@ -56,7 +61,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         // return this.disconnect(socket);
       // } else {
 
-        const user
+      //temp profile
+      const tempProfile: SignupDto = new SignupDto();
+        tempProfile.id = 1234;
+        tempProfile.nickname = 'surlee';
+        tempProfile.enable2FA = false;
+        tempProfile.data2FA = '';
+      const profileUser = await this.profileService.signUp(tempProfile)
+        // const user
+        const user: UserI = await this.userService.getOne()
+        // const user: UserI = await this.userService.getOne(decodedToken.user.id);
         socket.data.user = user;
         const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
         // substract page -1 to match the angular material paginator
@@ -80,7 +94,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     private disconnect(socket: Socket) {
     socket.emit('Error', new UnauthorizedException());
     socket.disconnect();
-  }
+  };
 
 
   //--------메서드 시작

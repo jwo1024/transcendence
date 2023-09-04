@@ -1,5 +1,6 @@
 
-import { BaseEntity, Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
 
 enum userStatus {
   offline,
@@ -9,6 +10,11 @@ enum userStatus {
 
 @Entity()
 export class UserProfile extends BaseEntity {
+
+  @OneToOne(() => UserEntity, userEntity => userEntity.userProfile)
+  @JoinColumn()
+  userEntity: UserEntity;
+
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false})
   id: number;
   
@@ -35,6 +41,12 @@ block_list : number[];
 
 @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
 created_at: Date;  
+
+getStatus(): userStatus {
+  return this.status;
+}
+
+} 
 
 // // import { ConnectedUserEntity } from "src/chat/model/connected-user/connected-user.entity";
 // // import { JoinedRoomEntity } from "src/chat/model/joined-room/joined-room.entity";
@@ -68,4 +80,3 @@ created_at: Date;
 //   socket?: Socket;
 
 // }
-} 

@@ -19,10 +19,11 @@ export class RoomService {
     return this.roomRepository.save(newRoom);
   }
 
-  async addCreatorToRoom(room: RoomI, creator: UserI): Promise<RoomI> {
-    room.users.set(creator.id, creator);
-	room.room_owner = creator.id;
-	room.room_Admins.set(creator.id);
+  async addCreatorToRoom(room: RoomI, creator: UserI): Promise<RoomI> 
+  {
+    room.users.push(creator);
+    room.roomOwner = creator.id;
+    room.roomAdmins.set(creator.id);
     return room;
   }
 

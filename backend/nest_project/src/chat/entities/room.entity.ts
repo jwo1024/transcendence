@@ -1,20 +1,8 @@
 import { UserEntity } from "./user.entity";
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { MessageEntity } from "./message.entity";
-// import { UserI } from "../interfaces/user.interface";
 import { roomType } from "../types/roomTypes";
 import { JoinedRoomEntity } from "./joined-room.entity";
-
-// interface RoomInfo {
-// 	roomNumber: number; !!!
-// 	roomName: string; !!!!
-// 	roomType: roomType; 
-// 	roomMembers: Record<number, RoomMember>;
-// 	roomOwner: number;
-// 	roomAdmins: number[];
-// 	bannedUsers: number[];
-// 	roomPass?: string;
-// }
 
 @Entity()
 export class RoomEntity {
@@ -39,9 +27,11 @@ export class RoomEntity {
 
   @Column()
   roomAdmins: Map<number, void>;
+  // roomAdmins: number[];
 
   @Column()
   roomBanned: Map<number, void>;
+  // roomBanned: number[];
 
   @ManyToMany(() => UserEntity)
   @JoinTable()

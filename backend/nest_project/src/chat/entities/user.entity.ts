@@ -1,4 +1,4 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToMany, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 // import { Entity, Column, ManyToMany, OneToMany, BeforeUpdate } from "typeorm";
 import { UserProfile } from "./userprofile.entity";
 import { RoomEntity } from "./room.entity";
@@ -11,20 +11,21 @@ import { FindOneOptions } from "typeorm";
 @Entity()
 export class UserEntity {
 
+  // @ManyToOne(() => UserProfile)
+  //   @JoinColumn({ name: 'user_profile_id' }) // 외래키 컬럼 이름
+  //   userProfile: UserProfile;
+
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false})
   id: number;
 
   @Column({unique: true})
-  nick_name: string;
+  nickname: string;
 
   @Column()
   block_list : number[];
   
   @Column()
   friend_list : number[];
-
-//   @Column()
-//   socket?: Socket;
 
   @ManyToMany(() => RoomEntity, room => room.users)
   rooms: RoomEntity[]
@@ -39,40 +40,23 @@ export class UserEntity {
   messages: MessageEntity[];
 
 
-  // UserProfile의 변경이 감지되면 UserEntity도 동기화하는 메서드
-//   @BeforeUpdate()
-//   async syncWithUserProfile() {
-// 	const options: FindOneOptions<UserProfile> = {
-// 		where: {
-// 		  id: this.id,
-// 		},
-// 	  };
-// 	  const userProfile = await UserProfile.findOne(options);
+  //갱신을 위한 메서드 잠시 보류
+  // @BeforeInsert()
+  // @BeforeUpdate()
+  // async updateUserProfile() {
+  //   const options: FindOneOptions<UserProfile> = {
+	// 	where: {
+	// 	  id: this.id,
+	// 	},
+	//   };
+	//   const userProfile = await UserProfile.findOne(options);
 
-//     if (userProfile) {
-//       this.nick_name = userProfile.nickname;
-//       this.block_list = userProfile.block_list;
-//       this.friend_list = userProfile.friend_list;
-//       // ... 다른 필드도 동기화 가능
-//     }
-//   }
+	// // const userProfile = await UserProfile.findOne({ id: this.id });
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  async updateUserProfile() {
-    const options: FindOneOptions<UserProfile> = {
-		where: {
-		  id: this.id,
-		},
-	  };
-	  const userProfile = await UserProfile.findOne(options);
-
-	// const userProfile = await UserProfile.findOne({ id: this.id });
-
-    if (userProfile) {
-      userProfile.block_list = this.block_list;
-      userProfile.friend_list = this.friend_list;
-      await userProfile.save();
-    }
-  }
+  //   if (userProfile) {
+  //     userProfile.block_list = this.block_list;
+  //     userProfile.friend_list = this.friend_list;
+  //     await userProfile.save();
+  //   }
+  // }
 }

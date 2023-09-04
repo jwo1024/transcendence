@@ -1,5 +1,8 @@
-import { UserI } from "./user.interface";
+// import { UserI } from "./user.interface";
 import { roomType } from "../types/roomTypes";
+import { JoinedRoomEntity } from "../entities/joined-room.entity";
+import { MessageEntity } from "../entities/message.entity";
+import { UserEntity } from "../entities/user.entity";
 
 export interface RoomI {
   roomId?: number;
@@ -10,8 +13,9 @@ export interface RoomI {
   roomOwner: number; //owner user의 id
   roomAdmins: Map<number, void>; //ids
   roomBanned: Map<number, void>; //ids
-  users?: Map<number, UserI>;
-//   description?: string;
-//   created_at?: Date;
-//   updated_at?: Date;
+  users?: UserEntity[];
+  // users?: Map<number, UserI>;
+  joinedUsers?: JoinedRoomEntity[];
+  messages?: MessageEntity[];
+
 }
