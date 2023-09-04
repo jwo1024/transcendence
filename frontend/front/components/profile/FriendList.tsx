@@ -19,8 +19,8 @@ interface FriendListProps {
 }
 
 const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
+  // load friend list....
   const [friendsList, setFriendsList] = useState<users>([]);
-
   useEffect(() => {
     fetch("http://localhost:3001/api/friendList")
       .then((res) => res.json())
@@ -28,6 +28,12 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
         setFriendsList(res);
       });
   }, []);
+
+  // request plus friend
+  const addFriend = () => {
+    fetch("http://localhost:3001/api/friendsList");
+  };
+
   return (
     <Window title="Friend List" w="370" h="620">
       <div className="overflow-auto flex-grow p-1">
@@ -53,6 +59,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
       </div>
       <div className="flex items-center justify-between p-4 pt-4 border-2 border-white">
         <Input className=" w-60" />
+        {/* <Button onClick={addFriend}>친구추가</Button> */}
         <Button>친구추가</Button>
       </div>
     </Window>
