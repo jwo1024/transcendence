@@ -9,14 +9,15 @@ import { Socket, Server } from 'socket.io';
 
 // 내 프로필, 상대 프로필
 // ongoing score
-// game mode: 래더, 오리지널, 커스텀(종류, 속도)
+// game type: 래더, 오리지널, 커스텀(종류, 속도)
 interface GameInfo
 {
-	gameId,
-	playerLeft,
-	playerRight,
-	gameMode,
-	gameType,
+	matchId: number, // database 관리? or 서버 코드 내에서 임시 변수로 관리? // 데이터베이스에는 serial match_id
+	roomName: string,
+	playerLeft: string,
+	playerRight: string,
+	gameType: string,
+	customType:string,
 	scoreLeft: number,
 	scoreRight: number,
 }
@@ -29,30 +30,25 @@ interface GameField
 	canvasRight: number,
 	canvasUp: number,
 	canvasBottom: number,
-	barLeftY: number,
-	barRightY: number,
+	paddleLeftY: number,
+	paddleRightY: number,
 	ballX: number,
 	ballY: number,
 }
 
-// chat 소켓과의 관계:
-// 채팅방의 소켓을 그대로 가져와서 쓰기 or 게임 소켓 새로 만들기..?
-
-async function startGame()
+async function startGame() // setGame()
 {
 	// game mode 확인, 설정
 	// GameInfo, Gamefield 값 설정
 	// 
 }
 
-function queueProcess(socket: Socket)
+// 래더 큐 잡는 로직
+async function queueProcess()
 {
 	console.log("============ ladderGameQueue: queueProcess ================");
-	const queueRoom = "queueRoom";
-	socket.join(queueRoom);
-	console.log(socket.id);
-	console.log(socket.rooms);
-	// const room_name = "1"; // somethig like user.id
+	// ladderQueue[] 안에서 검색
+	// const room_name = "1"; // user.id? unique something
 	// socket.join(room_name);
 	// queue process logic
 	// if (이미 큐 대기 중인 사람 중에서 맞는 상대를 찾는다면)
@@ -62,55 +58,135 @@ function queueProcess(socket: Socket)
 	return null;
 }
 
+async function joinGameRoom(playerLeft: Socket, playerRight: Socket)
+{
+	// matchId 기록
+	playerLeft.join("game room"/* matchId */);
+	playerRight.join("game room"/* matchId */);
+}
+
+
+const playerList: string[] = [];
+
 @Injectable()
 @WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
-	// private logger = new Logger('GameGateway');
+	private logger = new Logger('GameGateway');
 	// this.logger.log();
+
+	// variables
+	private ladderQueue: Socket[];
+
+	// constructor
+	constructor()
+	{
+		this.ladderQueue = [];
+	}
+
+	// 서버 초기화 필요?
+
+	// 게임 기다리기 (래더 큐 / 친구 신청)
+		// 래더 큐 프로세스
+		// 친구에게 게임 신청하고 대기 (게임 타입 결정)
+		// 친구로부터 게임 신청 받고 승낙/거절
+	// 게임 설정하는 함수(게임 모드, 타입, 게임info 와 게임field 값 설정)
+	// 게임방을 만들고 두 플레이어를 조인
+	// 게임 시작!
+	// 두 클라이언트에게 데이터 받고 서버에서 양쪽에 일괄 전송
+	// 각 소켓, 각 방에 대한 정보 출력 (디버깅 목적)
+
 
 	async onModuleInit() {}
 	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
 	{
 		console.log("Server: connected.");
+		// user의 소켓 id 정보
 	}
 	async handleDisconnect(socket: Socket)
 	{
 		console.log("Server: disconnected.");
+		// 유저의 소켓 id 삭제?
 	}
 
 	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
 	server: Server;
 
-	
+	@SubscribeMessage('waitGame')
+	async waitGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
+	{
+		console.log("waitGame funtion start!");
+		const roomName = "Game Room";
+		playerList.push(socket.id);
+		console.log(`${socket.id} is added to playerList.`);
+		socket.join(roomName);
+		console.log(socket.rooms);
+		console.log(playerList);
 
-	@SubscribeMessage('ladderGameQueue') // ladder game 큐 시도
-	handleEvent(@ConnectedSocket() socket: Socket, @MessageBody() data)
+		if (playerList.length === 2)
+		{
+			console.log("Two player here now.");
+			console.log(socket.id);
+			console.log(socket.rooms);
+			console.log(playerList);
+		}
+	}
+
+	@SubscribeMessage('playGame')
+	async playGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
+	{
+		const gameInfo: GameInfo =
+		{
+			matchId: 0,
+			roomName: "Game Room",
+			playerLeft: playerList[0],
+			playerRight: playerList[1],
+			gameType: "original",
+			customType: "default",
+			scoreLeft: 0,
+			scoreRight: 0,
+		};
+
+		// 특정 rooms에게만 이벤트 발생
+		if (socket.id === gameInfo.playerLeft) // left side
+		{
+			// socket.on();
+		}
+		else // right side
+		{}
+	}
+
+	@SubscribeMessage('ladderGameQueue')
+	ladderQueueMatch(@ConnectedSocket() socket: Socket)
 	{
 		// 인가? user id?
-		console.log("log: ladder game queue start.");
+		this.ladderQueue.push(socket);
 
+		// console.log(socket.id);
+		// console.log(socket.rooms);
+		// console.log(socket.data);
+		// console.log(data);
 		
-		console.log("============ ladderGameQueue: handleEvent ================");
-		console.log("socket.id : " + socket.id);
-		console.log(socket.rooms);
-		console.log(socket.data);
-		console.log(data);
-		
-		const opponent = queueProcess(socket);
+		const opponent = queueProcess();
 		if (opponent === null)
 		{
-			console.log("============ ladderGameQueue: handleEvent: if() ================");
 			console.log("no game now.");
 			socket.emit('noLadderGame');
 		}
-		const clients = this.server.in("queueRoom").fetchSockets();
-		console.log(clients);
+		// const clients = this.server.in("queueRoom").fetchSockets();
+		// console.log(clients);
 	}
+
+	@SubscribeMessage('inviteGame')
+	inviteGameQueue(@ConnectedSocket() socket: Socket, @MessageBody() oppponent)
+	{
+		// login 확인
+		// set game
+		// invinte opponent user
+		joinGameRoom(socket, socket/* opponent's socket */);
+	}
+
 }
-
-
-
 
 
 
