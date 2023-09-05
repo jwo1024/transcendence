@@ -14,11 +14,6 @@ import * as fsp from 'fs/promises';
 export class ProfileController {
     // 이것은 백엔드 로직이므로, Get 요청에 대해 직접 값을 리턴하면 안된다.
     constructor(private profileService: ProfileService) {}
-    @Get()
-    getStringForTest(): string {
-        const str = 'Hello jchoi!'
-        return str; 
-    }
     
     @Get('/all') // 실제 서비스에서는 사용하지 않을 것이다.
     getAllUserProfiles(@Req() req): Promise<UserProfile[]> {
@@ -75,7 +70,8 @@ export class ProfileController {
     async uploadImage(@Param('id') id: string, @UploadedFile() image: Express.Multer.File, @Body() body) {
         // 파일 제한을 걸자. 이후에 Pipe를 사용하면 좋을 것 같다. ext는 검사할때만 사용하고, 실제 저장할때는 사용하지 않는다.
         // @CustomValidationPipe(body.ext) 라든지 이런식으로 사용하면 좋을 것 같다.
-        const filePath = join(__dirname, 'images', `${id}` );   
+        const filePath = join(__dirname, 'images', `${id}` ); 
+  
         // 이미지 파일을 지정된 경로로 이동 또는 복사
         await fs.rename(image.path, filePath, err => {
             if (err) {

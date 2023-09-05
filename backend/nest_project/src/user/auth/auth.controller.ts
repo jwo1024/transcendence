@@ -3,45 +3,13 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { ProfileService } from '../profile/profile.service';
 import { User42Dto } from './dto/user42.dto';
-//import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private profileService: ProfileService, // 이거 그냥 repository로 하면 되서 안써도 되긴 한거 아니낙
+    private profileService: ProfileService,
   ) {}
-
-  @Get('/first') // mock_front_page -> 이제 프론트페이지랑 잘 연결되었으니 지워도 되긴 함
-  getLoginPage(): string {
-    return `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Login Example</title>
-            </head>
-            <body>
-            <h1>Login with Resource Server</h1>
-            <button id="loginButton">Login with Resource Server</button>
-            
-            <script>
-            // 클릭 이벤트 리스너를 등록합니다.
-            const loginButton = document.getElementById('loginButton');
-            loginButton.addEventListener('click', () => {
-                // 클릭 시 특정 사이트로 리다이렉트됩니다.
-                window.location.href = '${this.authService.getRedirectUrlTo42Auth()}';
-            });
-            </script>
-            </body>
-            </html>
-            `;
-  }
-
-  @Get('main')
-  getMainPage(): string {
-    return 'this is main_page';
-  }
 
   @Get('getUrl')
   getURL(): string {
