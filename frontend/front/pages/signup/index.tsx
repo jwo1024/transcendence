@@ -1,15 +1,8 @@
-import Link from "next/link";
 import Window from "@/components/common/Window";
-import LinkButton from "@/components/common/LinkButton";
-import { Button, Input, Avatar, Frame } from "@react95/core";
+import { Button, Input, Frame } from "@react95/core";
 import { useEffect, useState, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useRouter } from "next/router";
-import { getCookieParser } from "next/dist/server/api-utils";
-import { request } from "http";
-import { RequestCookies } from "next/dist/compiled/@edge-runtime/cookies";
 import Cookies from "js-cookie";
-// import { access } from "fs";
 
 interface User42Dto {
   id: number;
@@ -67,10 +60,11 @@ const SignUpPage = () => {
       campus: data.campus,
     });
     const token = JSON.parse(Cookies.get("accessToken"));
-    fetch(`http://localhost:4000/profile/images/${data.id}`,
-      {headers: {
+    fetch(`http://localhost:4000/profile/images/${data.id}`, {
+      headers: {
         Authorization: `Bearer ${token}`,
-    }})
+      },
+    })
       .then((response) => {
         if (response.ok) {
           const blob = response.blob().then((blob) => {
@@ -92,15 +86,14 @@ const SignUpPage = () => {
   const handleSubmitSignUP = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (nicknameInputRef.current?.value === "") {
-      setNickNameIsNotValid(false);
+      setNickNameIsNotValid(true);
       return;
     }
     //const data = Cookies.get('accessToken');
     const token = JSON.parse(Cookies.get("accessToken"));
     // API 요청을 보낼 때 JWT 토큰을 헤더에 포함
     console.log("data", Cookies.get("accessToken"));
-    fetch("")
-
+    fetch("");
 
     fetch("http://localhost:4000/profile/signup", {
       method: "POST",
@@ -121,7 +114,9 @@ const SignUpPage = () => {
           Cookies.remove("user42Dto");
           router.push("http://localhost:3001/menu");
         } else {
-          res.text().then((text) => JSON.parse(text).message)
+          res
+            .text()
+            .then((text) => JSON.parse(text).message)
             .then((msg) => {
               if (msg === "user already exists") {
                 setUserAlreadyExist(true);
@@ -139,18 +134,21 @@ const SignUpPage = () => {
     event.preventDefault();
     const formData = new FormData();
     formData.append("image", uploadAvatar as Blob); // 필드 이름을 'image'로 변경
-    formData.append("ext", `.${uploadAvatar?.name?.split('.').pop()}`);
+    formData.append("ext", `.${uploadAvatar?.name?.split(".").pop()}`);
     const token = JSON.parse(Cookies.get("accessToken"));
-  
+
     try {
-      const response = await fetch(`http://localhost:4000/profile/images/${user42Dto?.id}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-  
+      const response = await fetch(
+        `http://localhost:4000/profile/images/${user42Dto?.id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
       if (response.ok) {
         console.log("이미지 업로드 성공");
       } else {
@@ -161,16 +159,12 @@ const SignUpPage = () => {
     }
   };
 
-
-
-
   const onChangeAvatarInput = (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setUploadAvatar(() => event.target.files ? event.target.files[0] : null);
+    setUploadAvatar(() => (event.target.files ? event.target.files[0] : null));
     if (uploadAvatar)
       console.log("uploadAvatar[][][]", uploadAvatar, uploadAvatar.name);
-    else
-      console.log("uploadAvatar onChaneFailed", uploadAvatar);
+    else console.log("uploadAvatar onChaneFailed", uploadAvatar);
   };
 
   return (
@@ -205,7 +199,7 @@ const SignUpPage = () => {
             />
           </div>
           {nickNameIsNotValid === true ? (
-            <div className="px-5 text-green-700">
+            <div className="px-5 text-red-700 font-bold">
               {" "}
               유효하지 않은 닉네임 입니다
             </div>
@@ -214,26 +208,29 @@ const SignUpPage = () => {
           {/* avatar */}
           <label>AVATAR 이미지 업로드 </label>
           <div className="flex flex-row items-center">
-            <div className="w-20 h-20">
+            <Frame className=" w-20 h-20" boxShadow="in" w="" h="">
               <img
                 src={avatarURL ? avatarURL : "https://github.com/React95.png"}
                 alt="photo"
-                className="object-cover"
+                // className="object-cover"
+                className="object-cover w-full h-full"
               />
-            </div>
+            </Frame>
             {/* <Avatar src={avatarURL? avatarURL:"https://github.com/React95.png"} alt="photo" className="object-cover"/> */}
             <form
-              className="flex flex-col m-1 flex-1"
+              className="flex flex-col m-1"
               onSubmit={onSubmitAvatar}
             >
               <Input
                 placeholder="Avatar"
                 type="file"
                 accept=".jpg, .png, image/jpeg, image/png"
-                className="flex-1 text-gray-200 file:mr-4 
+                className="w-full text-gray-200 file:mr-4 
                     file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold
                   file:bg-gray-100 file:text-blue-700 hover:file:bg-gray-300"
                 onChange={onChangeAvatarInput}
+                w=""
+                h=""
               />
               <Button className="px-5">Upload</Button>
             </form>
