@@ -4,9 +4,8 @@ import { ConnectedUserEntity } from "../entities/connected-user.entity";
 import { JoinedRoomEntity } from "../entities/joined-room.entity";
 import { MessageEntity } from "../entities/message.entity";
 
-import { FindOneOptions } from "typeorm";
-import { UserProfile } from "../entities/userprofile.entity";
-
+// import { FindOneOptions } from "typeorm";
+// import { UserProfile } from "../entities/userprofile.entity";
 
 export interface UserI {
 	id: number;
@@ -19,12 +18,3 @@ export interface UserI {
 	messages: MessageEntity[];
 
 }
-
-// export interface UserI 
-// {
-// 	id: number; 
-// 	nick_name: string;
-// 	block_list : number[];
-// 	friend_list : number[];
-// 	socket?: Socket;
-// }

@@ -28,11 +28,15 @@ export class RoomService {
   }
 
 
-//   async getRoom(roomId: number): Promise<RoomI> {
-//     return this.roomRepository.findOne(roomId, {
-//       relations: ['users']
-//     });
-//   }
+  async getRoom(roomId: number): Promise<RoomI> {
+    return this.roomRepository.findOne(roomId
+      // ,
+
+    //    {
+    //   relations: ['users']
+    // }
+    );
+  }
 
   async getRoomsForUser(userId: number, options: IPaginationOptions): Promise<Pagination<RoomI>> {
     const query = this.roomRepository

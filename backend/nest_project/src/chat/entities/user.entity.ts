@@ -1,6 +1,6 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 // import { Entity, Column, ManyToMany, OneToMany, BeforeUpdate } from "typeorm";
-import { UserProfile } from "./userprofile.entity";
+// import { UserProfile } from "./userprofile.entity";
 import { RoomEntity } from "./room.entity";
 import { ConnectedUserEntity } from "./connected-user.entity";
 import { JoinedRoomEntity } from "./joined-room.entity";
