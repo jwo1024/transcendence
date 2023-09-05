@@ -14,7 +14,6 @@ export interface RoomI {
   roomAdmins: Map<number, void>; //ids
   roomBanned: Map<number, void>; //ids
   users?: UserEntity[];
-  // users?: Map<number, UserI>;
   joinedUsers?: JoinedRoomEntity[];
   messages?: MessageEntity[];
 

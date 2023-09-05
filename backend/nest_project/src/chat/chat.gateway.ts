@@ -76,7 +76,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         // return this.disconnect(socket);
       // } else {
 
-      //temp profile
+      //temp profile for test
       const tempProfile: SignupDto = new SignupDto();
         tempProfile.id = 1234;
         tempProfile.nickname = 'surlee';
@@ -185,7 +185,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   @SubscribeMessage('addMessage')
   async onAddMessage(socket: Socket, message: MessageI) {
     const createdMessage: MessageI = await this.messageService.create({...message, user: socket.data.user});
-    const room: RoomI = await this.roomService.getRoom(createdMessage.room.id);
+    const room: RoomI = await this.roomService.getRoom(createdMessage.room.roomId);
     const joinedUsers: JoinedRoomI[] = await this.joinedRoomService.findByRoom(room);
     // TODO: Send new Message to all joined Users of the room (currently online)
     for(const user of joinedUsers) {

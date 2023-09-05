@@ -8,5 +8,4 @@ export interface MessageI {
   user: UserI;
   room: RoomI;
   created_at: Date;
-  updated_at: Date;
 }
