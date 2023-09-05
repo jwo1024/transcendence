@@ -16,6 +16,7 @@ import {
         } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
+//Types
 // import { roomType } from './types/roomTypes';
 
 //Entities
@@ -69,7 +70,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   //required by OnGatewayConnection
   async handleConnection(socket: Socket) {
     try {
-      //인증 관련 부분
+      //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
       // const decodedToken = await this.authService.verifyJwt(socket.handshake.headers.authorization);
       // const user: UserI = await this.userService.getOne(decodedToken.user.id);
       // if (!user) {
@@ -77,12 +78,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       // } else {
 
       //temp profile for test
-      const tempProfile: SignupDto = new SignupDto();
+        const tempProfile: SignupDto = new SignupDto();
         tempProfile.id = 1234;
         tempProfile.nickname = 'surlee';
         tempProfile.enable2FA = false;
         tempProfile.data2FA = '';
-      const profileUser = await this.profileService.signUp(tempProfile)
+        const profileUser = await this.profileService.signUp(tempProfile)
         // const user
         const user: UserI = await this.userService.getOne(tempProfile.id);
         // const user: UserI = await this.userService.getOne(decodedToken.user.id);
@@ -93,7 +94,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         // rooms.meta.currentPage = rooms.meta.currentPage - 1;
         
         // Save connection to DB
-        // await this.connectedUserService.create({ socketId: socket.id, user });
+        await this.connectedUserService.create({ socketId: socket.id, user });
         
         // Only emit rooms to the specific connected client
         return this.server.to(socket.id).emit('rooms', rooms);
@@ -124,13 +125,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	}
 
   //--------메서드 시작-------------------------
-
-  // @SubscribeMessage('chatMessage')
-  // handleMessage(client: Socket, payload: any): void {
-  //   this.logger.log(`Received message: ${payload}`); // 로그를 출력합니다.
-  //   this.logger.log(`Received message`); // 로그를 출력합니다.
-  //   this.server.emit('chatMessage', payload);
-  // }
 
 //chatRoomCreate parameter 초안
   // (
@@ -182,11 +176,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     await this.joinedRoomService.deleteBySocketId(socket.id);
   }
 
-  @SubscribeMessage('addMessage')
+   // @SubscribeMessage('chatMessage')
+  // handleMessage(client: Socket, payload: any): void {
+  //   this.logger.log(`Received message: ${payload}`); // 로그를 출력합니다.
+  //   this.logger.log(`Received message`); // 로그를 출력합니다.
+  //   this.server.emit('chatMessage', payload);
+  // }
+
+  @SubscribeMessage('Message-add')
   async onAddMessage(socket: Socket, message: MessageI) {
     const createdMessage: MessageI = await this.messageService.create({...message, user: socket.data.user});
     const room: RoomI = await this.roomService.getRoom(createdMessage.room.roomId);
     const joinedUsers: JoinedRoomI[] = await this.joinedRoomService.findByRoom(room);
+
     // TODO: Send new Message to all joined Users of the room (currently online)
     for(const user of joinedUsers) {
       await this.server.to(user.socketId).emit('messageAdded', createdMessage);

@@ -6,7 +6,6 @@ import { RoomI } from '../../interfaces/room.interface';
 import { UserI } from '../../interfaces/user.interface';
 import { Repository } from 'typeorm';
 
-
 @Injectable()
 export class JoinedRoomService {
 
@@ -27,10 +26,17 @@ export class JoinedRoomService {
 
   async findByRoom(room: RoomI): Promise<JoinedRoomI[]> {
     return this.joinedRoomRepository.find({
-      where: room,
-     });
+      where: { room: { roomId: room.roomId } },
+    });
   }
-
+  
+  // async findByRoom(room: RoomI): Promise<JoinedRoomI[]> {
+  //   return this.joinedRoomRepository.find({
+  //     where: room ,
+  //     // relations : ['user', 'room'], 
+  //   });
+  // }
+  
   async deleteBySocketId(socketId: string) {
     return this.joinedRoomRepository.delete({ socketId });
   }

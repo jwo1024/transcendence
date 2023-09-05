@@ -23,19 +23,16 @@ export class RoomService {
   {
     room.users.push(creator);
     room.roomOwner = creator.id;
-    room.roomAdmins.set(creator.id);
+    room.roomAdmins.push(creator.id);
     return room;
   }
 
 
   async getRoom(roomId: number): Promise<RoomI> {
-    return this.roomRepository.findOne(roomId
-      // ,
-
-    //    {
-    //   relations: ['users']
-    // }
-    );
+    return this.roomRepository.findOne({
+      where: { roomId },
+      relations: ['users'] //관련 엔터티도 함께 가져오겠다.
+    });
   }
 
   async getRoomsForUser(userId: number, options: IPaginationOptions): Promise<Pagination<RoomI>> {

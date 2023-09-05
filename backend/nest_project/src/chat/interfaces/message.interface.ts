@@ -6,6 +6,6 @@ export interface MessageI {
   id?: number;
   text: string;
   user: UserI;
-  room: RoomI;
+  room: RoomI; //roomId
   created_at: Date;
 }

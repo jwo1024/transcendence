@@ -26,12 +26,10 @@ export class RoomEntity {
   roomOwner: number;
 
   @Column()
-  roomAdmins: Map<number, void>;
-  // roomAdmins: number[];
+  roomAdmins: number[];
 
   @Column()
-  roomBanned: Map<number, void>;
-  // roomBanned: number[];
+  roomBanned: number[];
 
   @ManyToMany(() => UserEntity)
   @JoinTable()
@@ -46,7 +44,7 @@ export class RoomEntity {
   @CreateDateColumn()
   created_at: Date;
 
-  @UpdateDateColumn()
-  updated_at: Date;
+  // @UpdateDateColumn()
+  // updated_at: Date;
 
 }
