@@ -5,4 +5,5 @@ export class User42Dto {
     first_name : string;
     last_name: string
     campus: string;
+    image_url: string;
 }

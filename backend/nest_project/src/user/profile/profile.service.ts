@@ -4,6 +4,16 @@ import { UserProfile } from './user-profile.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupDto } from './dto/signup.dto';
 
+
+import * as fs from 'fs';
+import * as fsp from 'fs/promises';
+
+import * as path from 'path';
+
+
+import { sign } from 'crypto';
+import { extname } from 'path';
+
 @Injectable()
 export class ProfileService {
     constructor(
@@ -11,21 +21,26 @@ export class ProfileService {
         private userProfileRepository: Repository<UserProfile>,
     ) {}
 
-    async signUp(signupDto : SignupDto): Promise<UserProfile> {
+
+    async signUp(signupDto: SignupDto, imagePath: string): Promise<void> {
         const { id, nickname, enable2FA, data2FA } = signupDto;
-
-        const userProfile = this.userProfileRepository.create({id, nickname, enable2FA, data2FA});
         try {
+              const imageBuffer = await fsp.readFile(imagePath);
+              const userProfile = await this.userProfileRepository.create({
+                  id, nickname, enable2FA, data2FA, avatar: imageBuffer
+              });// Buffer 형식으로 이미지 데이터를 저장합니다.
             await this.userProfileRepository.save(userProfile);
-        } catch (error) {
-            if (error.code === '23505') // duplicate username
-                throw new ConflictException('duplicate nickname');
-            else
-                throw new Error('unknown error');
+            console.log('wow signup is done! : ', userProfile);
+          }
+          catch (error) {
+            if (error.code === '23505') { // 중복된 닉네임 처리
+             throw new ConflictException('duplicated nickname');
+            } else {
+             throw new Error('unknown error');
+            }
         }
-        return userProfile;
     }
-
+    
     async getAllUserProfiles(): Promise<UserProfile[]> {
         return this.userProfileRepository.find();
     }
@@ -55,7 +70,7 @@ export class ProfileService {
         await this.userProfileRepository.save(userProfile);
         return userProfile;
     }
-
+    
     async updateUserProfileByNickname(nickname: string, updateDto: SignupDto): Promise<UserProfile> {
         const { id, enable2FA, data2FA } = updateDto;
         const userProfile = await this.getUserProfileByNickname(nickname);
@@ -64,5 +79,17 @@ export class ProfileService {
         userProfile.data2FA = data2FA;
         await this.userProfileRepository.save(userProfile);
         return userProfile;
+    }
+
+    async storeImage(imageData: string, path : string): Promise<string> {
+        const imageBuffer = Buffer.from(imageData, 'base64');
+        await new Promise((resolve, reject) => {
+            const stream = fs.createWriteStream(path);
+            stream.write(imageBuffer);
+            stream.end()
+            stream.on('finish', resolve);
+            stream.on('error', reject);           
+        });
+        return path;
     }
 }

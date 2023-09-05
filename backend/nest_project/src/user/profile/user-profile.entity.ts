@@ -17,8 +17,8 @@ export class UserProfile extends BaseEntity {
     @Column({ type: 'enum', enum: userStatus, default: userStatus.offline})
     status: userStatus;
     
-//    @Column({ type: 'bytea'})
-//    data: Buffer;
+    @Column({ type: 'bytea'})
+    avatar: Buffer;
     
     @Column({ type: 'boolean', default: false, nullable: false})
     enable2FA: boolean;
