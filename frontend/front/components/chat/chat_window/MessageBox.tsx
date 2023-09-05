@@ -9,6 +9,7 @@ interface StatusBlockProps {
 
 interface MessageBoxProps {
   message?: string[];
+  friendName?: string;
 }
 
 const StatusBlock = ({ children }: { children: React.ReactNode }) => (
@@ -16,21 +17,16 @@ const StatusBlock = ({ children }: { children: React.ReactNode }) => (
 );
 
 const StatusBlockList = ({ status }: StatusBlockProps) => {
- 
   return (
     <div className="p-3">
       {status?.map((status, index) => {
-        return (
-          <StatusBlock key={index}>
-            {status}
-          </StatusBlock>
-        );
+        return <StatusBlock key={index}>{status}</StatusBlock>;
       })}
     </div>
   );
 };
 
-const MessageBox = ({ message }: MessageBoxProps) => {
+const MessageBox = ({ message, friendName }: MessageBoxProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [roomStatus, setRoomStatus] = React.useState<string[]>([]);
 
@@ -39,8 +35,13 @@ const MessageBox = ({ message }: MessageBoxProps) => {
   }, [message]);
 
   useEffect(() => {
-    setRoomStatus(["방제", "비밀번호 있음", "인원 [3명]"]);
+    {
+      friendName
+        ? setRoomStatus([friendName + "와 Private 한 DM방"])
+        : setRoomStatus(["방제", "비밀번호 있음", "인원 [3명]"]);
+    }
   }, []);
+
 
   return (
     <Frame

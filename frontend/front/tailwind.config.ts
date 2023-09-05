@@ -29,6 +29,13 @@ const config: Config = {
       maxWidth: {
         "max-w-screen": "100vw",
       },
+      padding: {
+        "p-2px" : "2px",
+      },
+      borderWidth: {
+        "border-0.5" : "0.5px",
+        "border-1" : "1px",
+      },
     },
   },
   plugins: [],
