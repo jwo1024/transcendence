@@ -3,15 +3,14 @@ import { In, Repository } from 'typeorm';
 import { UserProfile } from '../../entities/userprofile.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupDto } from '../../dto/signup.dto';
-// import { UserService } from '../user/user.service';
-import { UserEntity } from 'src/chat/entities/user.entity';
+import { UserEntity } from '../../entities/user.entity';
 
 @Injectable()
 export class ProfileService {
     constructor(
         @InjectRepository(UserProfile)
-        private userProfileRepository: Repository<UserProfile>,
 		private userEntityRepository : Repository<UserEntity>,
+        private userProfileRepository: Repository<UserProfile>,
 		) {}
 
     async signUp(signupDto : SignupDto): Promise<UserProfile> {
