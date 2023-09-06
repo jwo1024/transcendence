@@ -1,16 +1,24 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
-import { UserProfile } from '../../entities/userprofile.entity';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+
+//DTOs
 import { SignupDto } from '../../dto/signup.dto';
+
+//Entities
+// import { UserProfile } from '../../entities/userprofile.entity';
 import { UserEntity } from '../../entities/user.entity';
+import { UserProfile } from '../../entities/userprofile.entity';
+
+UserProfile
 
 @Injectable()
 export class ProfileService {
     constructor(
         @InjectRepository(UserProfile)
-		private userEntityRepository : Repository<UserEntity>,
         private userProfileRepository: Repository<UserProfile>,
+        @InjectRepository(UserEntity)
+        private userEntityRepository : Repository<UserEntity>,
 		) {}
 
     async signUp(signupDto : SignupDto): Promise<UserProfile> {
@@ -77,8 +85,3 @@ export class ProfileService {
         return userProfile;
     }
 }
-
-// import { Injectable } from '@nestjs/common';
-
-// @Injectable()
-// export class ProfileServiceService {}

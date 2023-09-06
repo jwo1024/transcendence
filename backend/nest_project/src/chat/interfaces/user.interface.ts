@@ -6,7 +6,7 @@ import { MessageEntity } from "../entities/message.entity";
 import { UserProfile } from "../entities/userprofile.entity";
 
 export interface UserI {
-	userProfile: UserProfile;
+	userProfile?: UserProfile;
 	id: number;
 	nickname: string;
 	block_list : number[];

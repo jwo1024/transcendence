@@ -11,9 +11,9 @@ import { FindOneOptions } from "typeorm";
 @Entity()
 export class UserEntity {
 
-  @ManyToOne(() => UserProfile)
-    @JoinColumn({ name: 'user_profile_id' }) // 외래키 컬럼 이름
-    userProfile: UserProfile;
+  // @ManyToOne(() => UserProfile)
+  //   @JoinColumn({ name: 'user_profile_id' }) // 외래키 컬럼 이름
+  //   userProfile: UserProfile;
 
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false}) //외래키 한번에 지정 할 수 있나?
   id: number;

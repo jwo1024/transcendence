@@ -11,9 +11,9 @@ enum userStatus {
 @Entity()
 export class UserProfile extends BaseEntity {
 
-  @OneToOne(() => UserEntity, userEntity => userEntity.userProfile)
-  @JoinColumn()
-  userEntity: UserEntity;
+  // @OneToOne(() => UserEntity, userEntity => userEntity.userProfile)
+  // @JoinColumn()
+  // userEntity: UserEntity;
 
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false})
   id: number;
