@@ -25,10 +25,10 @@ export class RoomEntity {
   @Column()
   roomOwner: number;
 
-  @Column()
+  @Column({type: 'integer', array: true, default: []})
   roomAdmins: number[];
 
-  @Column()
+  @Column({type: 'integer', array: true, default: []})
   roomBanned: number[];
 
   @ManyToMany(() => UserEntity)

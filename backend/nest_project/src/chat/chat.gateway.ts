@@ -93,7 +93,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.logger.log(`before make temp profile `); 
 
         //temp UserI
-        const tempProfile: UserI = {
+        const tempUser: UserI = {
           id: 12344,
           nickname: 'surlee',
           block_list: [],
@@ -104,14 +104,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
           messages: [],
         };
 
-      this.logger.log(`before create db `); 
+        this.logger.log(`before create db `); 
 
         //원래 로직은 만드는 것이 아닌, getOne으로 찾아와야 하나 일단 임시
-        const user: UserI = await this.userService.create(tempProfile);
-        // const user: UserI = await this.userService.getOne(tempProfile.id);
-        this.logger.log(`create User: ${tempProfile.id}, ${tempProfile.nickname}`); 
+        const user: UserI = await this.userService.create(tempUser);
+        // const user: UserI = await this.userService.getOne(tempUser.id);
+        this.logger.log(`create User: ${tempUser.id}, ${tempUser.nickname}`); 
+        this.logger.log(`returned User: ${user.id}, ${user.nickname}`); 
         // const user: UserI = await this.userService.getOne(decodedToken.user.id);
         socket.data.user = user;
+        // 현재는 만들어진 룸이 없음.
         const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
         
         // substract page -1 to match the angular material paginator

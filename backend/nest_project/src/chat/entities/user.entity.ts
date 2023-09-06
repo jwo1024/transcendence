@@ -21,10 +21,10 @@ export class UserEntity {
   @Column({unique: true})
   nickname: string;
 
-  @Column()
+  @Column({ type: 'integer', array: true, default: []})
   block_list : number[];
   
-  @Column()
+  @Column({ type: 'integer', array: true, default: []})
   friend_list : number[];
 
   @ManyToMany(() => RoomEntity, room => room.users)

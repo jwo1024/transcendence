@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { RoomEntity } from 'src/chat/entities/room.entity'; 
-import { RoomI } from 'src/chat/interfaces/room.interface'; 
-import { UserI } from 'src/chat/interfaces/user.interface'; 
+import { RoomEntity } from '../../entities/room.entity'; 
+import { RoomI } from '../../interfaces/room.interface'; 
+import { UserI } from '../../interfaces/user.interface'; 
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -41,7 +41,7 @@ export class RoomService {
       .leftJoin('room.users', 'users')
       .where('users.id = :userId', { userId })
       .leftJoinAndSelect('room.users', 'all_users')
-      .orderBy('room.updated_at', 'DESC');
+      .orderBy('room.created_at', 'DESC');
 
     return paginate(query, options);
   }
