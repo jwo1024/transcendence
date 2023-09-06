@@ -98,6 +98,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 
 	async onModuleInit() {}
+	// 연결, 끊길 시 -> secket id 리뉴얼하기
 	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
 	{
 		console.log("Server: connected.");
