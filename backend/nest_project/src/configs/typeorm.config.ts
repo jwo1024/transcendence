@@ -1,6 +1,13 @@
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Common } from "./common.entity"; 
-import { UserProfile } from "src/user/profile/user-profile.entity";
+
+//Entities
+import { UserProfile } from '../user/profile/user-profile.entity'; 
+import { RoomEntity } from '../chat/entities/room.entity';
+import { ConnectedUserEntity } from '../chat/entities/connected-user.entity'; 
+import { MessageEntity } from '../chat/entities/message.entity'; 
+import { JoinedRoomEntity } from '../chat/entities/joined-room.entity'; 
+import { UserEntity } from '../chat/entities/user.entity';
 
 export const typeORMConfig : TypeOrmModule = {
 	logging: {
@@ -17,7 +24,17 @@ export const typeORMConfig : TypeOrmModule = {
 	password: process.env.POSTGRES_PASSWORD,
 	database: process.env.POSTGRES_DB,
 	// entities: [__dirname + '/../**/*.entity.{js,ts}'],
-	entities: [Common, UserProfile],
+	entities:
+	[
+				Common, 
+				UserProfile,
+				//for chat
+				RoomEntity,
+				ConnectedUserEntity,
+				MessageEntity,
+				JoinedRoomEntity,
+				UserEntity,
+	],
 
 	synchronize: true
 }
