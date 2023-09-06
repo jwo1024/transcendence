@@ -1,40 +1,16 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
+import { Player, GameInfo, GameField } from './interface/game.interface';
+import { PlayerEntity } from './entities/player.entity';
+import { GameService } from './game.service';
+
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
-// entity or dto?
+///////////////////////typeorm config 설정하기!!!!!!!!!!
 
-// 내 프로필, 상대 프로필
-// ongoing score
-// game type: 래더, 오리지널, 커스텀(종류, 속도)
-interface GameInfo
-{
-	matchId: number, // database 관리? or 서버 코드 내에서 임시 변수로 관리? // 데이터베이스에는 serial match_id
-	roomName: string,
-	playerLeft: string,
-	playerRight: string,
-	gameType: string,
-	customType:string,
-	scoreLeft: number,
-	scoreRight: number,
-}
-
-// 퐁 캔버스, 플레이어 2명의 bar, 퐁 ball
-interface GameField
-{
-	// canvas
-	canvasLeft: number,
-	canvasRight: number,
-	canvasUp: number,
-	canvasBottom: number,
-	paddleLeftY: number,
-	paddleRightY: number,
-	ballX: number,
-	ballY: number,
-}
 
 async function startGame() // setGame()
 {
@@ -79,7 +55,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	private ladderQueue: Socket[];
 
 	// constructor
-	constructor()
+	constructor(
+		private gameService: GameService,
+	)
 	{
 		this.ladderQueue = [];
 	}
@@ -96,13 +74,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	// 두 클라이언트에게 데이터 받고 서버에서 양쪽에 일괄 전송
 	// 각 소켓, 각 방에 대한 정보 출력 (디버깅 목적)
 
-
 	async onModuleInit() {}
 	// 연결, 끊길 시 -> secket id 리뉴얼하기
 	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
 	{
 		console.log("Server: connected.");
 		// user의 소켓 id 정보
+
+		const player: Player = await this.gameService.createPlayer(socket.id);
+		console.log(player);
+		const player2: Player = await this.gameService.getPlayer(42);
+		console.log("되나?");
+		console.log(player2);
 	}
 	async handleDisconnect(socket: Socket)
 	{
