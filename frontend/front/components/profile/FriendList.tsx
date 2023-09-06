@@ -1,43 +1,68 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Frame, ThemeProvider, List, Input, Button } from "@react95/core";
 import { Fax } from "@react95/icons";
+import Window from "../common/Window";
 
-interface FriendStatusProps {
+// 임시 백엔드 타입용.
+type user = {
   nickname: string;
-  status: string;
-}
+  state: string;
+  avatarSrc: string;
+  ladder: number;
+  win: number;
+  lose: number;
+};
+type users = user[];
+
 interface FriendListProps {
-  friends: FriendStatusProps[];
+  handleProfileClick: (friend: user) => void;
 }
 
-const FriendList: React.FC<FriendListProps> = ({ friends }) => {
+const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
+  // load friend list....
+  const [friendsList, setFriendsList] = useState<users>([]);
+  useEffect(() => {
+    fetch("http://localhost:3001/api/friendList")
+      .then((res) => res.json())
+      .then((res) => {
+        setFriendsList(res);
+      });
+  }, []);
+
+  // request plus friend
+  const addFriend = () => {
+    fetch("http://localhost:3001/api/friendsList");
+  };
+
   return (
-    <ThemeProvider>
-      <Frame w={330} h={400} padding={4} className="flex flex-col">
-        <div className="overflow-y-auto flex-grow p-5">
-          <List className=" space-y-2 w-96">
-            {friends.map((friend, index) => (
-              <List.Item key={index} className="flex justify-between w-full">
-                <List>
-                  <List.Item>
-                    <span>귓속말</span>
-                  </List.Item>
-                  <List.Item>
-                    <span>친구삭제</span>
-                  </List.Item>
-                </List>
-                <strong>{friend.nickname}</strong>
-                <span>{friend.status}</span>
-              </List.Item>
-            ))}
-          </List>
-        </div>
-        <div className="flex items-center justify-between p-4 pt-4 border-2 border-white">
-          <Input className=" w-60" />
-          <Button>친구추가</Button>
-        </div>
-      </Frame>
-    </ThemeProvider>
+    <Window title="Friend List" w="370" h="620">
+      <div className="overflow-auto flex-grow p-1">
+        <ul className="space-y-2 w-full">
+          {friendsList.map((friend, index) => (
+            <List.Item
+              key={index}
+              className="flex w-full items-center justify-between"
+            >
+              <strong>{friend.nickname}</strong>
+              <div className="flex items-center space-x-2">
+                <span>{friend.state}</span>
+                <Button
+                  onClick={() => handleProfileClick(friend)}
+                  className=" h-7 flex items-center justify-center"
+                >
+                  프로필 보기
+                </Button>
+              </div>
+            </List.Item>
+          ))}
+        </ul>
+      </div>
+      <div className="flex items-center justify-between p-4 pt-4 border-2 border-white">
+        <Input className=" w-60" />
+        {/* <Button onClick={addFriend}>친구추가</Button> */}
+        <Button>친구추가</Button>
+      </div>
+    </Window>
   );
 };
 
