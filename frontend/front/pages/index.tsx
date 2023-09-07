@@ -1,4 +1,3 @@
-// import Image from "next/image";
 import { Button } from "@react95/core";
 import { useState } from "react";
 import Window from "@/components/common/Window";
@@ -18,8 +17,7 @@ const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
 
 const LoginPage = () => {
   const onClick = () => {
-    // fetch("http://localhost:4000/login/first")
-    fetch("http://localhost:3001/api/login")
+    fetch("http://localhost:4000/auth/getUrl")
       .then((res) => {
         if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
         return res.text();
@@ -36,6 +34,7 @@ const LoginPage = () => {
         <span> THIS IS PONG GAME</span>
         <br />
         <br />
+
         <Button onClick={onClick}> LOG IN </Button>
       </div>
     </Window>

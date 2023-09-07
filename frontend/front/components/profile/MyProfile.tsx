@@ -35,7 +35,7 @@ const MyProfile: React.FC<ProfileProps> = ({
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-center space-x-4">
+      <div className="flex items-center justify-center space-x-8">
         <Button className="w-32">아바타 변경</Button>
         <Button className="w-32">2차 인증</Button>
       </div>
