@@ -38,8 +38,10 @@ import { MessageService } from './services/message/message.service';
 
 //temp - profile
 import { ProfileService } from './services/profile-service/profile-service.service';
-import { SignupDto } from './dto/signup.dto';
+// import { SignupDto } from './dto/signup.dto';
 
+//DTOs
+import { RoomCreateDTO } from './dto/room-create.dto';
 
 
 // @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001", "*" } })
@@ -48,7 +50,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 {
   @WebSocketServer() server: Server;
   
-  private logger = new Logger('for Chat'); // Logger 인스턴스를 생성
+  private logger = new Logger('Chat');
 
   constructor(
     //     // private authService: AuthService,
@@ -65,7 +67,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   //required by OnModuleInit
   async onModuleInit() {
     // await this.connectedUserService.deleteAll();
-    // await this.joinedRoomService.deleteAll();
+    await this.joinedRoomService.deleteAll();
+    await this.connectedUserService.deleteAll();
+    await this.userService.deleteAll();
   };
 
   //required by OnGatewayConnection
@@ -92,6 +96,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     this.logger.log(`before make temp profile `); 
 
+
         //temp UserI
         const tempUser: UserI = {
           id: 12344,
@@ -113,16 +118,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.logger.log(`returned User: ${user.id}, ${user.nickname}`); 
         // const user: UserI = await this.userService.getOne(decodedToken.user.id);
         socket.data.user = user;
-        // 현재는 만들어진 룸이 없음.
+
         const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
         
         // substract page -1 to match the angular material paginator
         // rooms.meta.currentPage = rooms.meta.currentPage - 1;
+        this.logger.log(`load from DB : "${rooms.items}"`); 
         
-       this.logger.log(`save to DB : ${socket.id}, ${user}`); 
-
         // Save connection to DB
         await this.connectedUserService.create({ socketId: socket.id, user });
+        this.logger.log(`saved to DB : ${socket.id}, ${user}`); 
         
         // Only emit rooms to the specific connected client
         return this.server.to(socket.id).emit('rooms', rooms);
@@ -136,6 +141,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   async handleDisconnect(socket: Socket) {
     // // remove connection from DB
     await this.connectedUserService.deleteBySocketId(socket.id);
+    this.logger.log(`userid : ${socket.data.user.id}`);
+    await this.userService.deleteById(socket.data.user.id);
     socket.disconnect();
   }
 
@@ -144,7 +151,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     socket.disconnect();
   };
 
-  @SubscribeMessage("server-log")
+  @SubscribeMessage("socketId & message")
 	ServerLog(
 		@ConnectedSocket() socket: Socket,
 		@MessageBody() message: string 
@@ -170,10 +177,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   // )
 
   //For Room
+  // async chatRoomCreate(socket: Socket, room: RoomI)
+
   @SubscribeMessage('Room-create')
-  async chatRoomCreate(socket: Socket, room: RoomI)
+  async chatRoomCreate(
+        @ConnectedSocket() socket: Socket, 
+        @MessageBody() room:RoomCreateDTO)
   {
+    this.logger.log(`Room-create called : ${room} , ${room.roomName} ${room.roomType}`);
     const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
+    this.logger.log(`after call : ${createdRoom.roomName} , ${createdRoom.roomOwner} ${createdRoom.roomId}`);
 
     for (const user of createdRoom.users) {
       const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
