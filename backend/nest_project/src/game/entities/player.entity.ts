@@ -31,6 +31,6 @@ export class PlayerEntity {
   // @UpdateDateColumn({name: 'update_time'})
   // updateTime: Date;
   
-  // @DeleteDateColumn({name: 'delete_time'})
-  // deleteTime?: Date | null;
+  @DeleteDateColumn({name: 'delete_time'})
+  deleteTime?: Date | null;
 }

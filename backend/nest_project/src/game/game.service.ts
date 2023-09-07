@@ -19,21 +19,33 @@ export class GameService {
 		// console.log("create player::");
 		// const test = this.getPlayer(42);
 		// console.log((await test));
+
 		const player: PlayerEntity = {
-			id: 0,
-			level: 0,
+			id: 42,
+			level: 4242,
 			nickname: "default",
 			socketId: socketId,
 		};
+
 		var i = 0;
 		while (1)
 		{
 			if (await this.getPlayer(i) === null)
 			{
-				player.id = i;
-				player.level = 42;
-				player.nickname = "random player" + i;
-				player.socketId = socketId;
+				if (i % 2)
+				{
+					player.id = i;
+					player.level = 42;
+					player.nickname = "odd player" + i;
+					player.socketId = socketId;
+				}
+				else
+				{
+					player.id = i;
+					player.level = 42;
+					player.nickname = "even player" + i;
+					player.socketId = socketId;
+				}
 				break ;
 			}
 			else { i++; }
@@ -49,10 +61,22 @@ export class GameService {
 		// 	socketId: socketId,
 		// };
 		// await this.playerRepository.insert(player);
-		this.playerRepository.insert(player);
+		await this.playerRepository.insert(player);
 
 		return player;
 	}
+
+	// async tempCreatePlayer(id: number): Promise<Player>
+	// {
+	// 	const player: PlayerEntity = {
+	// 		id: id,
+	// 		level: 42,
+	// 		nickname: "player" + id,
+	// 		socketId: "not yet",
+	// 	};
+
+	// 	return player;
+	// }
 
 	//
 	async getPlayer(playerId: number): Promise<Player>
@@ -70,6 +94,23 @@ export class GameService {
 			where: { "socketId": socketId }
 		});
 	}
+	// temp code
+	async getPlayerBynickname(name: string): Promise<Player>
+	{
+		return this.playerRepository.findOne({
+			where: { "nickname": name }
+		});
+	}
 
-	async deletePlayer() {}
+	// todo
+	async deletePlayerBySocketId(socketId: string)
+	// async deletePlayerBySocketId(name: string)
+	{
+		// await this.playerRepository.delete({
+		// 	nickname: name
+		// });
+		await this.playerRepository.softDelete({
+			socketId: socketId
+		});
+	}
 }

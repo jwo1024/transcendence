@@ -13,13 +13,6 @@ import { Socket, Server } from 'socket.io';
 /////////////////////// front socket io 설정하기!!!!!!!!!
 
 
-async function startGame() // setGame()
-{
-	// game mode 확인, 설정
-	// MatchInfo, Gamefield 값 설정
-	// 
-}
-
 // 래더 큐 잡는 로직
 async function queueProcess()
 {
@@ -30,7 +23,7 @@ async function queueProcess()
 	// queue process logic
 	// if (이미 큐 대기 중인 사람 중에서 맞는 상대를 찾는다면)
 	// socket.join(/*opponent_room_name*/);
-	startGame();
+	// startGame();
 	// 대결 상대를 찾지 못한 채 특정 시간 이상이 지나도 null 반환
 	return null;
 }
@@ -42,8 +35,29 @@ async function joinGameRoom(playerLeft: Socket, playerRight: Socket)
 	playerRight.join("game room"/* matchId */);
 }
 
+// const playerList: string[] = [];
 
-const playerList: string[] = [];
+// async function tempSetPlayers(id: number)
+// {
+// 	const player: Player = await this.gameService.tempCreatePlayer(id);
+// 	return player;
+// }
+// //temp
+// const player1 = tempSetPlayers(0);
+// const player2 = tempSetPlayers(1);
+
+const player1: Player = {
+			id: 0,
+			level: 42,
+			nickname: "even player",
+			socketId: "not yet",
+		};
+const player2: Player = {
+			id: 1,
+			level: 42,
+			nickname: "odd player",
+			socketId: "not yet",
+		};
 
 @Injectable()
 @WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
@@ -82,13 +96,33 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		console.log("Server: connected.");
 		// user의 소켓 id 정보
 
-		const player: Player = await this.gameService.createPlayer(socket.id);
-		console.log(player);
+		// const player: Player = await this.gameService.createPlayer(socket.id);
+		// console.log(player);
+
+		if (player1.socketId === "not yet")
+		{
+			player1.socketId = socket.id;
+			console.log(player1);
+		}
+		else if (player2.socketId === "not yet")
+		{
+			player2.socketId = socket.id;
+			console.log(player2);
+		}
 	}
 	async handleDisconnect(socket: Socket)
 	{
 		console.log("Server: disconnected.");
 		// 유저의 소켓 id 삭제?
+		// await this.gameService.deletePlayerBySocketId(socket.id);
+		if (player1.socketId === socket.id)
+		{
+			player1.socketId = "not yet";
+		}
+		if (player2.socketId === socket.id)
+		{
+			player2.socketId = "not yet";
+		}
 	}
 
 	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
@@ -98,45 +132,56 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	async waitGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
 	{
 		console.log("waitGame funtion start!");
-		const roomName = "Game Room";
-		playerList.push(socket.id);
-		console.log(`${socket.id} is added to playerList.`);
-		socket.join(roomName);
-		console.log(socket.rooms);
-		console.log(playerList);
+		// const roomName = "Game Room";
+		// playerList.push(socket.id);
+		// console.log(`${socket.id} is added to playerList.`);
+		// socket.join(roomName);
+		// console.log(socket.rooms);
+		// console.log(playerList);
 
-		if (playerList.length === 2)
-		{
-			console.log("Two player here now.");
-			console.log(socket.id);
-			console.log(socket.rooms);
-			console.log(playerList);
-		}
+		// if (playerList.length === 2)
+		// {
+		// 	console.log("Two player here now.");
+		// 	console.log(socket.id);
+		// 	console.log(socket.rooms);
+		// 	console.log(playerList);
+		// }
 	}
 
-	@SubscribeMessage('playGame')
-	async playGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
+	@SubscribeMessage('startGame')
+	async startGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
 	{
+		// game mode 확인, 설정
+		// MatchInfo, Gamefield 값 설정
+		
+		// setGame();
+		// const playerLeft: Player = await this.gameService.getPlayerBynickname("odd player");
+		// const playerRight: Player = await this.gameService.getPlayerBynickname("even player");
+		const playerLeft: Player = player1;
+		const playerRight: Player = player2;
+		console.log("start Game ::");
+		console.log(playerLeft);
+		console.log(playerRight);
 		const matchInfo: MatchInfo =
 		{
-			matchId: 0,
+			matchId: 42, // dataBase 연동
 			// matchTime: Date.now(),
-			roomName: "Game Room",
-			playerLeft: playerList[0],
-			playerRight: playerList[1],
-			gameType: "original",
-			customType: "default",
+			roomName: "Game Room", // unique
+			playerLeft: playerLeft,
+			playerRight: playerRight,
+			gameType: "original", //
+			customMode: "default", //
 			scoreLeft: 0,
 			scoreRight: 0,
 		};
+		// const gameField: GameField = {};
+		
+		socket.emit('setMiniProfile', playerLeft, playerRight, () => {
+			console.log("sending mini profile data OK.");
+		});
 
-		// 특정 rooms에게만 이벤트 발생
-		if (socket.id === matchInfo.playerLeft) // left side
-		{
-			// socket.on();
-		}
-		else // right side
-		{}
+		// 특정 room에게만 이벤트 발생
+		// playGame();
 	}
 
 	@SubscribeMessage('ladderGameQueue')
@@ -160,14 +205,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// console.log(clients);
 	}
 
-	@SubscribeMessage('inviteGame')
-	inviteGameQueue(@ConnectedSocket() socket: Socket, @MessageBody() oppponent)
-	{
-		// login 확인
-		// set game
-		// invinte opponent user
-		joinGameRoom(socket, socket/* opponent's socket */);
-	}
+	// @SubscribeMessage('inviteGame')
+	// inviteGameQueue(@ConnectedSocket() socket: Socket, @MessageBody() oppponent)
+	// {
+	// 	// login 확인
+	// 	// set game
+	// 	// invinte opponent user
+	// 	joinGameRoom(socket, socket/* opponent's socket */);
+	// }
 
 }
 

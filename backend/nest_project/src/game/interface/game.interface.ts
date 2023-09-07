@@ -13,10 +13,10 @@ export interface MatchInfo
 {
 	matchId: number, // database 관리? or 서버 코드 내에서 임시 변수로 관리? // 데이터베이스에는 serial match_id
 	roomName: string,
-	playerLeft: string,
-	playerRight: string,
+	playerLeft: Player,
+	playerRight: Player,
 	gameType: string,
-	customType:string,
+	customMode:string,
 	scoreLeft: number,
 	scoreRight: number,
 }
