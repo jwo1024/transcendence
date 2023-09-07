@@ -8,13 +8,21 @@ import InfoBlock from "@/components/signup/InfoBlock";
 import AvatarBlock from "@/components/signup/AvatarBlock";
 import NickNameBlock from "@/components/signup/NickNameBlock";
 import { User42Dto } from "@/types/User42Dto";
+import type { UserInfo } from "@/types/UserInfo";
 
 const SignUpPage = () => {
   const router = useRouter();
   const [nickName, setNickName] = useState<string | null>(null);
   const [user42Dto, setUser42Dto] = useState<User42Dto | null>(null);
+  const errorPage = process.env.NEXT_PUBLIC_ERROR_PAGE_SIGNUP;
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    console.log("CHECK : SignUpPage : MOUNT");
+    return () => {
+      console.log("CHECK : SignUpPage : UNMOUNT");
+    }
+  }, []);
+  console.log("CHECK : SignUpPage : RENDER");
 
   // send SignUpDto to backend
   const handleSubmitSignUP = (event: React.FormEvent<HTMLFormElement>) => {
@@ -45,9 +53,7 @@ const SignUpPage = () => {
               .then((text) => JSON.parse(text).message)
               .then((msg) => {
                 if (msg === "user already exists") {
-                  router.push(
-                    `http://localhost:3001/error/signup?error=user_already_exist`
-                  );
+                  router.push(`${errorPage}?error=user_already_exist`);
                 } else if (msg === "duplicated nickname") {
                   setNickName("");
                 }
@@ -58,8 +64,18 @@ const SignUpPage = () => {
         .then((data) => {
           Cookies.remove("user42Dto");
           if (localStorage.getItem("user")) localStorage.removeItem("user");
-          localStorage.setItem("user", JSON.stringify(user42Dto));
-          router.push("http://localhost:3001/menu");
+          // localStorage.setItem("user", JSON.stringify(user42Dto));
+          if (user42Dto && nickName) {
+            const user: UserInfo = {
+              id: user42Dto.id,
+              nickname: nickName,
+              user42Dto: user42Dto,
+            };
+            localStorage.setItem("user", JSON.stringify(user));
+            router.push("http://localhost:3001/menu");
+          } else {
+            router.push(`${errorPage}?error=no_user42Dto_or_no_nickname`);
+          }
         })
         .catch((err) => console.log("FAILED " + err));
     }

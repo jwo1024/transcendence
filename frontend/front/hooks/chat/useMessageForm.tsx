@@ -23,10 +23,10 @@ const useMessageForm = ({
 
   useEffect(() => {
     const user = localStorage.getItem("user");
-    const obj = JSON.parse(user || "{}");
-    if (obj) setUserInfo({
-      id: obj.id,
-      name: obj.nickname,
+    const user_obj = JSON.parse(user || "{}");
+    if (user_obj) setUserInfo({
+      id: user_obj.id,
+      name: user_obj.nickname,
     });
     console.log("CHECK : useMessageForm : MOUNT");
     return () => {
@@ -44,7 +44,8 @@ const useMessageForm = ({
   const handleSendMessage = () => {
     // console.log("useMessageForm.tsx : user : ", userInfo);
     // make message data
-    if (userInfo.id === -1 || chatRoomData.id === -1) return;
+    console.log("useMessageForm.tsx : chatRoomData : ", chatRoomData);
+    // if (userInfo.id === -1 || chatRoomData.id === -1) return;
     const messageData: MessageInfo = {
       chatRoomId: chatRoomData?.id || -1, // get from local storage? or chatRoomData
       user: userInfo,
