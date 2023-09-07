@@ -1,74 +1,63 @@
-import { ChangeEvent, useCallback, useState } from "react";
-import { useRef } from "react";
+import { useState, useEffect } from "react"; // useCallback ?
 import { Button, Frame, Input } from "@react95/core";
 
 import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
 import MessageBox from "./chat_window/MessageBox";
-import ChatSettingBox from "./chat_window/ChatSettingBox";
-import ChatUserListBox from "./chat_window/ChatUserListBox";
+import SettingMenuBox from "./chat_window/SettingMenuBox";
+import UserListMenuBox from "./chat_window/UserListMenuBox";
+import { MessageInfo, UserInfo, ChatRoomInfo } from "@/types/ChatInfoType";
 
-// import type { GroupRoomStatusProps } from "./types/ChatProps";
+import useMessageForm from "@/hooks/chat/useMessageForm";
+import useMenuBox from "@/hooks/useMenuBox";
+import type { MenuItemInfo } from "@/hooks/useMenuBox";
 
-// // TMP data
-// const roomStatus: GroupRoomStatusProps = {
-//   id: 1,
-//   chatType: "group",
-//   title: "hi hello 내가 누군지 아니 ! 트센이다 트센이다 트센이다 트센이다",
-//   password: true,
-//   private: false,
-//   numOfUser: 3,
-// }; //TMP
-// => message box
+// chatRoomData : chatRoomInfo // ? 빼기
+const ChatGroupWindow = ({
+  className,
+  chatRoomData,
+}: {
+  className?: string;
+  chatRoomData: ChatRoomInfo;
+}) => {
+  const [messageList, setMessageList] = useState<MessageInfo[]>([]);
+  
+  const [userInfo, setUserInfo] = useState<UserInfo>({
+    id: -1,
+    name: "test",
+  });
+  const { inputRef, sentMessage, handleFormSubmit } = useMessageForm({
+    chatRoomData,
+    // userInfo: userInfo,
+  });
 
-function ChatGroupWindow({ className }: { className?: string }) {
-  const [message, setMessage] = useState<string[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const resetInputMessage = () => {
-    inputRef.current!.value = "";
-  };
-
-  const handleSendMessage = useCallback(() => {
-    setMessage([...message, inputRef.current?.value as string]);
-    resetInputMessage();
-  }, [message]);
-
-  const handleFormSubmit = useCallback(
-    (event: ChangeEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      handleSendMessage();
-    },
-    [handleSendMessage]
-  );
-
-  // menu bar items
-  const [showSettingBox, setShowSettingBox] = useState<boolean>(false);
-  const [showUserListBox, setshowUserListBox] = useState<boolean>(false);
-
-  const handleSettingBoxButton = () => {
-    setShowSettingBox((showSettingBox) => !showSettingBox);
-    if (showUserListBox) {
-      setshowUserListBox(false);
+  useEffect(() => {
+    console.log("CHECK : ChatGroupWindow : MOUNT");
+    return () => {
+      console.log("CHECK : ChatGroupWindow : UNMOUNT");
     }
-  };
+  }, []);
+  console.log("CHECK : ChatGroupWindow : RENDER");
 
-  const handleUserListBoxButton = () => {
-    setshowUserListBox((showUserListBox) => !showUserListBox);
-    if (showSettingBox) {
-      setShowSettingBox(false);
+  useEffect(() => {
+    if (sentMessage?.message !== "") {
+      // set received message from server
+      // socket io
+      setMessageList((messageList) => [...messageList, sentMessage]);
     }
-  };
+  }, [sentMessage]);
 
-  const menuItems = [
-    { name: "Settings", handleClick: handleSettingBoxButton },
-    { name: "User-List", handleClick: handleUserListBoxButton },
+  const menuItmes: MenuItemInfo[] = [
+    { name: "Settings" },
+    { name: "User-List" },
   ];
+
+  const { menuItemsWithHandlers, showMenuBox } = useMenuBox(menuItmes);
 
   return (
     <Window title="Chatting Room | 방제" className={className}>
       {/* menu bar */}
-      <MenuBar menu={menuItems} />
+      <MenuBar menu={menuItemsWithHandlers} />
       {/* main */}
       <div className="flex flex-row flex-1 overflow-auto ">
         {/* chat box */}
@@ -77,7 +66,7 @@ function ChatGroupWindow({ className }: { className?: string }) {
             className="flex flex-row flex-1 overflow-auto p-1"
             boxShadow="in"
           >
-            <MessageBox message={message} />
+            <MessageBox messageList={messageList} />
           </Frame>
           <form onSubmit={handleFormSubmit} className="flex flex-row p-1">
             <Input
@@ -89,11 +78,11 @@ function ChatGroupWindow({ className }: { className?: string }) {
           </form>
         </div>
         {/* menu box */}
-        {showSettingBox ? <ChatSettingBox /> : null}
-        {showUserListBox ? <ChatUserListBox /> : null}
+        {showMenuBox[0] ? <SettingMenuBox /> : null}
+        {showMenuBox[1] ? <UserListMenuBox /> : null}
       </div>
     </Window>
   );
-}
+};
 
 export default ChatGroupWindow;
