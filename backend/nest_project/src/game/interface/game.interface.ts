@@ -9,7 +9,7 @@ export interface Player
 // 내 프로필, 상대 프로필
 // ongoing score
 // game type: 래더, 오리지널, 커스텀(종류, 속도)
-export interface GameInfo
+export interface MatchInfo
 {
 	matchId: number, // database 관리? or 서버 코드 내에서 임시 변수로 관리? // 데이터베이스에는 serial match_id
 	roomName: string,

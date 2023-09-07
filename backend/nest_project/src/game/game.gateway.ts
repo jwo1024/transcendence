@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { Player, GameInfo, GameField } from './interface/game.interface';
+import { Player, MatchInfo, GameField } from './interface/game.interface';
 import { PlayerEntity } from './entities/player.entity';
 import { GameService } from './game.service';
 
@@ -9,13 +9,14 @@ import { map } from 'rxjs/operators';
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
-///////////////////////typeorm config 설정하기!!!!!!!!!!
+/////////////////////// typeorm config 설정하기!!!!!!!!!!
+/////////////////////// front socket io 설정하기!!!!!!!!!
 
 
 async function startGame() // setGame()
 {
 	// game mode 확인, 설정
-	// GameInfo, Gamefield 값 설정
+	// MatchInfo, Gamefield 값 설정
 	// 
 }
 
@@ -83,9 +84,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 		const player: Player = await this.gameService.createPlayer(socket.id);
 		console.log(player);
-		const player2: Player = await this.gameService.getPlayer(42);
-		console.log("되나?");
-		console.log(player2);
 	}
 	async handleDisconnect(socket: Socket)
 	{
@@ -119,9 +117,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	@SubscribeMessage('playGame')
 	async playGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
 	{
-		const gameInfo: GameInfo =
+		const matchInfo: MatchInfo =
 		{
 			matchId: 0,
+			// matchTime: Date.now(),
 			roomName: "Game Room",
 			playerLeft: playerList[0],
 			playerRight: playerList[1],
@@ -132,7 +131,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		};
 
 		// 특정 rooms에게만 이벤트 발생
-		if (socket.id === gameInfo.playerLeft) // left side
+		if (socket.id === matchInfo.playerLeft) // left side
 		{
 			// socket.on();
 		}
