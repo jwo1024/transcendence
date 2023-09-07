@@ -17,7 +17,7 @@
 	4. set "showMenuBox" to where you want to show the menu box like below
 		<>
 			{showMenuBox[0] ? <SettingMenuBox /> : null}
-	    	{showMenuBox[1] ? <UserListMenuBox /> : null}
+	    {showMenuBox[1] ? <UserListMenuBox /> : null}
 		</> 
 */ //---------------------------------------------------------------------------//
 

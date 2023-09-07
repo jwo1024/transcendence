@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Window from "@/components/common/Window";
 import { Button, Input, Avatar, Frame } from "@react95/core";
-import { useEffect, useState, useRef, use } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
+import { useRouter } from "next/router";
 
 interface User42Dto {
   id: number;
@@ -43,6 +44,7 @@ const SignUpPage = () => {
   const [user42Dto, setUser42Dto] = useState<User42Dto | null>(null);
   const nicknameInputRef = useRef<HTMLInputElement>(null);
   const [nickNameIsValid, setNickNameIsValid] = useState<boolean | null>(null);
+  const router = useRouter();
 
   const isUser42Dto = (data: any): data is User42Dto => {
     return (
@@ -66,26 +68,37 @@ const SignUpPage = () => {
       !params.has("first_name") ||
       !params.has("last_name") ||
       !params.has("campus")
-    )
-      return;
-    setUser42Dto({
-      id: Number(params.get("id")),
-      login: params.get("login") as string,
-      email: params.get("email") as string,
-      first_name: params.get("first_name") as string,
-      last_name: params.get("last_name") as string,
-      campus: params.get("campus") as string,
-    });
+    ) {
+      setUser42Dto({
+        id: 98123,
+        login: "jiwolee",
+        email: "jiwolee@student.42seoul.kr",
+        first_name: "Jiwoo",
+        last_name: "Lee",
+        campus: "Seoul",
+      });
+    } else {
+      setUser42Dto({
+        id: Number(params.get("id")),
+        login: params.get("login") || "",
+        email: params.get("email") || "",
+        first_name: params.get("first_name") || "",
+        last_name: params.get("last_name") || "",
+        campus: params.get("campus") || "",
+      });
+    }
   }, []);
 
   // send SignUpDto to backend
   const onSubmitNickName = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (nicknameInputRef.current?.value === "") {
-      setNickNameIsValid(false);
-      return;
-    }
+  };
 
+  const onSubmitAvatar = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
+
+  const handleClickSignUP = () => {
     fetch("http://localhost:3001/api/signup", {
       method: "POST",
       body: JSON.stringify({
@@ -97,41 +110,18 @@ const SignUpPage = () => {
     })
       .then((res) => {
         if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
-        console.log("res", "NCIK RES : " + res);
-        console.log(res.json);
         return res.json();
       })
       .then((data) => {
-        console.log(data);
-        // if nickname was valid
-        if (data.message === "OK") setNickNameIsValid(true);
+        if (data.message === "OK") {
+          setNickNameIsValid(true);
+          // tmp 기존 데이터 삭제 후 재설정
+          if (localStorage.getItem("user")) localStorage.removeItem("user");
+          localStorage.setItem("user", data.data);
+          router.push("http://localhost:3001/menu");
+        }
       })
       .catch((err) => console.log("FAILED" + err));
-  };
-
-  const onSubmitAvatar = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // fetch("http://localhost:3001/api/signup", {
-    //   method: "POST",
-    //   body: JSON.stringify({
-    //     id: user42Dto?.id,
-    //     nickname: nicknameInputRef.current?.value,
-    //     enable2FA: false,
-    //     data2FA: "what should i put here?",
-    //   }),
-    // })
-    //   .then((res) => {
-    //     if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
-    //     console.log("res", "NCIK RES : " + res);
-    //     console.log(res.json);
-    //     return res.json();
-    //   })
-    //   .then((data) => {
-    //     console.log(data);
-    //     // if nickname was valid
-    //     if (data.message === "OK") setNickNameIsValid(true);
-    //   })
-    //   .catch((err) => console.log("FAILED" + err));
   };
 
   return (
@@ -178,15 +168,24 @@ const SignUpPage = () => {
           <form onSubmit={onSubmitAvatar}>
             <label>AVATAR 이미지 업로드 </label>
             <div className="flex flex-row items-center">
-              <Avatar src="https://github.com/React95.png" alt="photo" />
-              <div className="flex flex-col m-1">
+              <Frame className=" w-20 h-20" boxShadow="in" w="" h="">
+                <img
+                  src={"https://github.com/React95.png"}
+                  alt="photo"
+                  className="object-contain w-full f-full"
+                />
+              </Frame>
+              {/* <Avatar src="https://github.com/React95.png" alt="photo" /> */}
+              <div className="flex flex-col m-1 ">
                 <Input
                   placeholder="Avatar"
                   type="file"
                   accept=".jpg, .png, image/jpeg, image/png"
-                  className="flex-1 text-gray-200 file:mr-4 
+                  className=" w-full text-gray-200 file:mr-4 
                     file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold
                   file:bg-gray-100 file:text-blue-700 hover:file:bg-gray-300"
+                  w=""
+                  h=""
                 />
                 <Button className="px-5">Upload</Button>
               </div>
@@ -197,7 +196,7 @@ const SignUpPage = () => {
           {/* Sign - Up */}
           <div className=" text-center">
             <Link href="/">
-              <Button>Sign - up</Button>
+              <Button onClick={handleClickSignUP}>Sign - up</Button>
             </Link>
           </div>
         </div>

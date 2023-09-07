@@ -10,7 +10,7 @@ import useMenuBox from "@/hooks/useMenuBox";
 import type { MenuItemInfo } from "@/hooks/useMenuBox";
 
 const WaitingRoomWindow = ({ className }: { className?: string }) => {
-  const menuItems: MenuItemInfo[] = [{ name: "set-new-chat" }];
+  const menuItems: MenuItemInfo[] = [{ name: "New Chat" }];
 
   const { menuItemsWithHandlers, showMenuBox } = useMenuBox(menuItems);
 
@@ -29,7 +29,6 @@ const WaitingRoomWindow = ({ className }: { className?: string }) => {
         </Frame>
         {/* menu box */}
         {showMenuBox[0] ? <MakeNewChatMenu /> : null}
-        {showMenuBox[1] ? <MakeNewChatMenu /> : null}
       </div>
     </Window>
   );

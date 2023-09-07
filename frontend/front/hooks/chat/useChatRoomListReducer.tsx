@@ -31,31 +31,16 @@ const reducer = (state: ChatRoomListInfo, action: Action) => {
       return state;
   }
 };
-
 const useChatRoomListReducer = () => {
   const [state, dispatch] = useReducer(reducer, { list: [] });
 
   useEffect(() => {
-    console.log("useEffect");
-
-    fetch("/api/chat_list")
-      .then((res) => {
-        console.log("then1");
-
-        if (res.ok) {
-          console.log("then2 res.ok");
-
-          res.json().then((data) => {
-            console.log("then3 res.json()");
-
-            dispatch({ type: "ADD_LIST", lists: data });
-          });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    console.log("CHECK : useChatRoomListReducer : MOUNT");
+    return () => {
+      console.log("CHECK : useChatRoomListReducer : UNMOUNT");
+    };
   }, []);
+  console.log("CHECK : useChatRoomListReducer : RENDER");
 
   const addState = ({ roomData }: { roomData: ChatRoomInfo }) => {
     dispatch({ type: "ADD", room: roomData });
@@ -65,11 +50,11 @@ const useChatRoomListReducer = () => {
     dispatch({ type: "REMOVE", id: roomId });
   };
 
-  // const addListState = ({ addlist }: { addlist: ChatRoomListInfo }) => {
-  //   dispatch({ type: "ADD_LIST", lists: addlist });
-  // };
+  const addListState = ({ addList }: { addList: ChatRoomListInfo }) => {
+    dispatch({ type: "ADD_LIST", lists: addList });
+  };
 
-  return { state, addState, removeState } as const;
+  return { state, addState, removeState, addListState } as const;
 };
 
 export default useChatRoomListReducer;

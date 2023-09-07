@@ -5,6 +5,7 @@ import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
 import MessageBox from "./chat_window/MessageBox";
 import SettingMenuBox from "./chat_window/SettingMenuBox";
+import { MessageInfo, UserInfo, ChatRoomInfo } from "@/types/ChatInfoType";
 
 import useMessageForm from "@/hooks/chat/useMessageForm";
 import useMenuBox from "@/hooks/useMenuBox";
@@ -12,13 +13,35 @@ import type { MenuItemInfo } from "@/hooks/useMenuBox";
 
 const friendName = "jiwolee"; /// tmp data
 
-const ChatGroupWindow = ({ className }: { className?: string }) => {
-  const [message, setMessage] = useState<string[]>([]);
-  const { inputRef, sentMessage, handleFormSubmit } = useMessageForm();
+const ChatGroupWindow = ({
+  className,
+  chatRoomData,
+}: {
+  className?: string;
+  chatRoomData: ChatRoomInfo;
+}) => {
+  const [messageList, setMessageList] = useState<MessageInfo[]>([]);
+  const { inputRef, sentMessage, handleFormSubmit } = useMessageForm({
+    chatRoomData,
+  });
+
 
   useEffect(() => {
-    if (sentMessage !== "") {
-      setMessage((message) => [...message, sentMessage]);
+    // getMessageFrom Server .. socket io
+    // console.log("ChatGroupWindow.tsx : useEffect : getMessageFrom Server");
+    console.log("CHECK : ChtDmWindow : MOUNT");
+    return () => {
+      console.log("CHECK : ChtDmWindow : UNMOUNT");
+    }
+  }, []);
+  console.log("CHECK : ChtDmWindow : RENDER");
+
+
+  useEffect(() => {
+    // set received message from server
+    // socket io
+    if (sentMessage?.message !== "") {
+      setMessageList((messageList) => [...messageList, sentMessage]);
     }
   }, [sentMessage]);
 
@@ -38,7 +61,7 @@ const ChatGroupWindow = ({ className }: { className?: string }) => {
             className="flex flex-row flex-1 overflow-auto p-1"
             boxShadow="in"
           >
-            <MessageBox message={message} friendName={friendName} />
+            <MessageBox messageList={messageList} friendName={friendName} />
           </Frame>
           <form onSubmit={handleFormSubmit} className="flex flex-row p-1">
             <Input

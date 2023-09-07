@@ -1,18 +1,71 @@
 import { Button, Frame } from "@react95/core";
 
 import useChatRoomListReducer from "@/hooks/chat/useChatRoomListReducer";
-import type { ChatRoomInfo } from "@/types/ChatInfoType";
+import type { ChatRoomInfo, ChatRoomListInfo } from "@/types/ChatInfoType";
+import { useEffect } from "react";
 
 const ChatRoomListBox = () => {
-  const { state, addState, removeState } = useChatRoomListReducer();
+  const { state, addState, removeState, addListState } =
+    useChatRoomListReducer();
 
-  const handleClick = (chatGroup: ChatRoomInfo) => {
+  useEffect(() => {
+    addChatRoomList();
+    console.log("CHECK : ChatRoomListBox : MOUNT");
+    return () => {
+      console.log("CHECK : ChatRoomListBox : UNMOUNT");
+    };
+  }, []);
+  console.log("CHECK : ChatRoomListBox : RENDER");
+
+  const addChatRoom = () => {
+    // get data from server
+    const roomData: ChatRoomInfo = {
+      id: 10,
+      chatType: "group",
+      title: "test",
+      isPublic: true,
+      password: false,
+      numOfUser: 1,
+    };
+    addState({ roomData });
+  };
+
+  const addChatRoomList = () => {
+    fetch("/api/chat_list")
+      .then((res) => {
+        console.log("then1");
+        if (res.ok) {
+          console.log("then2 res.ok");
+          res.json().then((data) => {
+            console.log("then3 res.json()");
+            const addList: ChatRoomListInfo = data;
+            // if data structure is not correct, this line will cause error
+            addListState({ addList });
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const removeChatRoom = () => {
+    // get data from server
+    const roomId = 10;
+    removeState({ roomId });
+  };
+
+  const handleClickJoin = (chatGroup: ChatRoomInfo) => {
     console.log(chatGroup);
-    if (chatGroup.password)
+    if (chatGroup.password) {
       console.log("비밀번호가 있습니다. 비밀번호를 입력해주세요");
-    else console.log("비밀번호가 없습니다. 바로 입장합니다."); // tmp
-    // backend에 해당 채팅방 참여 요청
+      // 비밀번호 입력시 input값 암호화해야함
+    } else console.log("비밀번호가 없습니다. 바로 입장합니다."); // tmp
+    // send request to backend to join chat room
+
     // 해당 채팅방 창 열고 참여하기
+    // TODO : 채팅방 리스트 => 채팅방참여로 연결하기 + 현재 머무는 채팅방 리스트 관리 (localstorage)
+    // TODO : 채팅방창에서 유저 클릭시 추가되는 기능 구현
   };
 
   return (
@@ -35,7 +88,7 @@ const ChatRoomListBox = () => {
           </span>
           <Button
             className="w-28 h-3/4 "
-            onClick={() => handleClick(chatGroup)}
+            onClick={() => handleClickJoin(chatGroup)}
           >
             참여하기
           </Button>
