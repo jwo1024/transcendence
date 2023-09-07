@@ -1,14 +1,15 @@
 import React, { useRef, useEffect } from "react";
-
 import { Frame } from "@react95/core";
+
 import NameTag from "../common/NameTag";
+import type { MessageInfo } from "@/types/ChatInfoType";
 
 interface StatusBlockProps {
   status?: string[];
 }
 
 interface MessageBoxProps {
-  message?: string[];
+  messageList?: MessageInfo[];
   friendName?: string;
 }
 
@@ -26,19 +27,23 @@ const StatusBlockList = ({ status }: StatusBlockProps) => {
   );
 };
 
-const MessageBox = ({ message, friendName }: MessageBoxProps) => {
+const MessageBox = ({ messageList, friendName }: MessageBoxProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [roomStatus, setRoomStatus] = React.useState<string[]>([]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [message]);
+  }, [messageList]);
 
   useEffect(() => {
     {
       friendName
         ? setRoomStatus([friendName + "와 Private 한 DM방"])
         : setRoomStatus(["방제", "비밀번호 있음", "인원 [3명]"]);
+    }
+    console.log("CHECK : MessageBox : MOUNT");
+    return () => {
+      console.log("CHECK : MessageBox : UNMOUNT");
     }
   }, []);
 
@@ -51,17 +56,17 @@ const MessageBox = ({ message, friendName }: MessageBoxProps) => {
       bg="white"
     >
       <StatusBlockList status={roomStatus} />
-      {message?.map((message, index) => {
+      {messageList?.map((messageInfo, index) => {
         return (
           // message overflow 처리하기
           <div
             className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "
             key={index}
           >
-            <NameTag>name</NameTag>
-            <span className="text-ellipsis break-all ">{message}</span>
+            <NameTag>{messageInfo.user.name}</NameTag>
+            <span className="text-ellipsis break-all ">{messageInfo.message}</span>
             <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
-              22.22.22 22:22:22
+              {messageInfo.createdAt}
             </span>
           </div>
         );
