@@ -54,7 +54,12 @@ interface Ball {
   color: string;
 }
 
-const PongGame: React.FC = () => {
+interface PongGameProps {
+  paddleLeftY: number,
+  paddleRightY: number
+}
+
+const PongGame: React.FC<PongGameProps> = ({paddleLeftY, paddleRightY}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(
     canvasRef.current
