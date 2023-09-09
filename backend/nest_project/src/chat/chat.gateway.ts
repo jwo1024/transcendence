@@ -44,6 +44,7 @@ import { ProfileService } from './services/profile-service/profile-service.servi
 //DTOs
 import { RoomCreateDTO, RoomJoinDTO } from './dto/room.dto';
 import { RoomEntity } from './entities/room.entity';
+import { MessageDTO } from './dto/message.dto';
 
 
 // @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001", "*" } })
@@ -247,8 +248,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   // }
 
   @SubscribeMessage('Message-add')
-  async onAddMessage(socket: Socket, message: MessageI) {
-    const createdMessage: MessageI = await this.messageService.create({...message, user: socket.data.user});
+  async onAddMessage(socket: Socket, messageDTO: MessageDTO) {
+    const createdMessage: MessageI = await this.messageService.create({... messageDTO, user: socket.data.user});
     const room: RoomI = await this.roomService.getRoom(createdMessage.room.roomId);
     const joinedUsers: JoinedRoomI[] = await this.joinedRoomService.findByRoom(room);
 
@@ -259,7 +260,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   }
 }
 
-//그룹 채팅 -> 화면에서 나가는 순간 room-leave, socket 연결을 끊는다.
+//그룹 채팅 -> 화면에서 나가는 순간 room-leave, 방과 socket 연결을 끊는다.
 //DM -> 지금 구현 대로라면 따로 구현하지 않아도, 상대방 사용자가 onChat 상태가 아닐때도 메세지를 보낼 수 있으며, 
 // 상대방이 chat 상태가 되었을때 DM의 내용들을 확인할 수 있을 것 같다.(DB 덕분.)
 // 상대방 사용자의 현상태를 반영해서 DM을 보낼 수 있고 없고의 경우를 나누는게 오히려 로직이 복잡해 지지 않을까함.

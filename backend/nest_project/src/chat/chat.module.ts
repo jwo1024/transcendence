@@ -21,6 +21,7 @@ import { JoinedRoomService } from './services/joined-room/joined-room.service';
 import { UserService } from './services/user/user.service';
 import { ProfileService } from './services/profile-service/profile-service.service'; // 임시
 import { RoomMapper } from './mapper/room.mapper';
+import { MessageMapper } from './mapper/message.mapper';
 
 
 @Module({
@@ -40,7 +41,7 @@ import { RoomMapper } from './mapper/room.mapper';
   RoomService, ConnectedUserService, JoinedRoomService, 
 	MessageService, UserService, ProfileService,
   //Mappers
-  RoomMapper,
+  RoomMapper, MessageMapper,
 
 ]
 })
