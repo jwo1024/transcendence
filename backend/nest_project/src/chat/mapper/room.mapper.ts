@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { roomType } from "../types/roomTypes";
-import { RoomCreateDTO } from "../dto/room-create.dto";
+import { RoomCreateDTO } from "../dto/room.dto";
 import { RoomEntity } from "../entities/room.entity";
 
 @Injectable()
