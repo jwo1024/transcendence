@@ -59,6 +59,13 @@ const player2: Player = {
 			socketId: "not yet",
 		};
 
+const gamefield: GameField = {
+	paddleLeftY: 42,
+	paddleRightY: 42,
+	ballX: 0,
+	ballY: 0
+}
+
 @Injectable()
 @WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
@@ -129,7 +136,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	server: Server;
 
 	@SubscribeMessage('waitGame')
-	async waitGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
+	async waitGame(@ConnectedSocket() socket: Socket)
 	{
 		console.log("waitGame funtion start!");
 		// const roomName = "Game Room";
@@ -149,7 +156,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	}
 
 	@SubscribeMessage('startGame')
-	async startGame(@ConnectedSocket() socket: Socket, @MessageBody() data)
+	async startGame(@ConnectedSocket() socket: Socket)
 	{
 		// game mode 확인, 설정
 		// MatchInfo, Gamefield 값 설정
@@ -175,6 +182,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 			scoreRight: 0,
 		};
 		// const gameField: GameField = {};
+
+		socket.join(matchInfo.roomName);
 		
 		socket.emit('setMiniProfile', playerLeft, playerRight, () => {
 			console.log("sending mini profile data OK.");
@@ -182,6 +191,26 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 		// 특정 room에게만 이벤트 발생
 		// playGame();
+	}
+
+	@SubscribeMessage('mouseMove')
+	async playerMove(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
+	{
+		// console.log("mouse Move Function ::");
+		// console.log(userY);
+		// return "";
+		if (socket.id === player1.socketId)
+		{
+			gamefield.paddleLeftY = userY;
+			socket.to("Game Room").emit('paddleMove', gamefield);
+			// return gamefield;
+		}
+		else if (socket.id === player2.socketId)
+		{
+			gamefield.paddleRightY = userY;
+			socket.to("Game Room").emit('paddleMove', gamefield);
+			// return gamefield;
+		}
 	}
 
 	@SubscribeMessage('ladderGameQueue')

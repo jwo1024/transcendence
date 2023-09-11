@@ -10,7 +10,7 @@ const socket = io('http://localhost:4000/game');
 
 export default function GamePage() {
 
-  // miniprotile unit test를 위한 temp variables
+  // miniprofile unit test를 위한 temp variables
   const [left, setLeft] = useState({ nickname: "pLeft.nickname", ladder: 23, })
   const [right, setRight] = useState({ nickname: "pRight.nickname", ladder: 42, })
 
@@ -28,7 +28,7 @@ export default function GamePage() {
       <button onClick={startGameHandler}>START GAME</button>
       <Window title="pong game" w="900" h="850">
         <div className="h-screen flex flex-col justify-center items-center">
-          <PongGame paddleLeftY={12} paddleRightY={12}/>
+          <PongGame socket={socket}/* paddleLeftY={12} paddleRightY={12} *//>
           <div className="flex mt-10 w-[800px] items-center justify-between">
             <MiniProfile
               nickname={left.nickname}

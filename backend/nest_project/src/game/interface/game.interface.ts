@@ -25,10 +25,10 @@ export interface MatchInfo
 export interface GameField
 {
 	// canvas
-	canvasLeft: number,
-	canvasRight: number,
-	canvasUp: number,
-	canvasBottom: number,
+	// canvasLeft: number,
+	// canvasRight: number,
+	// canvasUp: number,
+	// canvasBottom: number,
 	paddleLeftY: number,
 	paddleRightY: number,
 	ballX: number,

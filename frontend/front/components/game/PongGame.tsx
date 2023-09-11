@@ -1,4 +1,6 @@
+import { data } from "autoprefixer";
 import React, { useEffect, useRef, useState } from "react";
+import { Socket } from "socket.io-client";
 
 type paddleSize = {
   width: number;
@@ -55,11 +57,10 @@ interface Ball {
 }
 
 interface PongGameProps {
-  paddleLeftY: number,
-  paddleRightY: number
+  socket: Socket
 }
 
-const PongGame: React.FC<PongGameProps> = ({paddleLeftY, paddleRightY}) => {
+const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY */}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(
     canvasRef.current
@@ -178,16 +179,21 @@ const PongGame: React.FC<PongGameProps> = ({paddleLeftY, paddleRightY}) => {
       );
     }
 
+    socket.on('paddleMove', (data) => {
+      user.y = data.paddleLeftY;
+      com.y = data.paddleRightY;
+    });
+
     function update() {
       if (canvas) {
         ball.x += ball.velocityX;
         ball.y += ball.velocityY;
 
         // simple AI
-        com.y += (ball.y - (com.y + com.height / 2)) * 0.1;
-        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-          ball.velocityY = -ball.velocityY;
-        }
+        // com.y += (ball.y - (com.y + com.height / 2)) * 0.1;
+        // if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+        //   ball.velocityY = -ball.velocityY;
+        // }
 
         let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
         if (collision(ball, player)) {
@@ -246,6 +252,7 @@ const PongGame: React.FC<PongGameProps> = ({paddleLeftY, paddleRightY}) => {
       if (canvas) {
         let rect = canvas.getBoundingClientRect();
         user.y = event.clientY - rect.top - user.height / 2;
+        socket.emit("mouseMove", user.y);
       }
     }
 
