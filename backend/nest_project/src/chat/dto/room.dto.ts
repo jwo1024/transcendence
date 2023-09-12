@@ -17,3 +17,10 @@ export class RoomJoinDTO {
   roomPass?: string;
 
 }
+
+export class AdminRelatedDTO 
+{
+  targetUserId: number;
+
+  roomId: number;
+}

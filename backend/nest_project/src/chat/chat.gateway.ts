@@ -22,6 +22,7 @@ import { Repository } from 'typeorm';
 //Entities
 import { UserEntity } from './entities/user.entity';
 // import { RoomEntity } from './entities/room.entity';
+import { RoomEntity } from './entities/room.entity';
 
 //Interfaces
 import { RoomI } from './interfaces/room.interface';
@@ -43,8 +44,8 @@ import { ProfileService } from './services/profile-service/profile-service.servi
 
 //DTOs
 import { RoomCreateDTO, RoomJoinDTO } from './dto/room.dto';
-import { RoomEntity } from './entities/room.entity';
 import { MessageDTO } from './dto/message.dto';
+import { AdminRelatedDTO } from './dto/room.dto';
 
 
 // @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001", "*" } })
@@ -192,7 +193,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   }
   
-
   @SubscribeMessage('Room-join')
   async onJoinRoom(
     @ConnectedSocket() socket: Socket,
@@ -229,30 +229,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // Send last messages from Room to User
     await this.server.to(socket.id).emit('messages', messages);
   }
-  
-  @SubscribeMessage('Room-leave')
-  async onLeaveRoom( @ConnectedSocket() socket: Socket) {
-    // remove connection from JoinedRooms
-    await this.joinedRoomService.deleteBySocketId(socket.id);
+
+  private async deleteRoom(roomId:number)
+  {
+    this.roomService.deleteById(roomId);
   }
   
-  //--- 아직 구현 안한 쪽
-
-   // @SubscribeMessage('chatMessage')
-  // handleMessage(client: Socket, payload: any): void {
-  //   this.logger.log(`Received message: ${payload}`); // 로그를 출력합니다.
-  //   this.logger.log(`Received message`); // 로그를 출력합니다.
-  //   this.server.emit('chatMessage', payload);
-  // }
-
-
-  //현재 방 정보만 가져오는 메서드가 필요할 듯 하다.
-  //유저 정보 변동, 방 정보 변동시 마다 호출되는 용도.
-  // @SubscribeMessage('Rooms-get') 
-  // async onPaginateRoom(socket: Socket) {
-  //   return this.server.to(socket.id).emit('rooms', rooms);
-  // }
-
+  @SubscribeMessage('Room-leave')
+  async onLeaveRoom( @ConnectedSocket() socket: Socket, @MessageBody() roomId: number) {
+    // remove connection from JoinedRooms
+    const roomToleave = await this.roomService.getRoom(roomId);
+    const userId = socket.data.user.id
+    if (!roomId)
+      return ;
+    this.joinedRoomService.deleteBySocketId(socket.id);
+    roomToleave.users = roomToleave.users.filter(toreduce => toreduce.id ===  userId))
+    if (roomToleave.users.length === 0)
+      this.deleteRoom(roomId);
+    //dm에서는 room-leave를 부르지 않는다.
+  }
+  
   @SubscribeMessage('Message-add')
   async onAddMessage(
     @ConnectedSocket() socket: Socket,
@@ -271,14 +267,98 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const joinedUsers: JoinedRoomI[] 
       =  await this.joinedRoomService.findByRoom(room);
 
-    // TODO: Send new Message to all joined Users of the room (currently online)
+    // Send new Message to all joined Users of the room (currently online)
     for(const user of joinedUsers) 
       await this.server.to(user.socketId).emit('messageAdded', createdMessage);
   }
-}
+  
+  //-------방 정보 보내주기------------
 
-//그룹 채팅 -> 화면에서 나가는 순간 room-leave, 방과 socket 연결을 끊는다.
-//DM -> 지금 구현 대로라면 따로 구현하지 않아도, 상대방 사용자가 onChat 상태가 아닐때도 메세지를 보낼 수 있으며, 
-// 상대방이 chat 상태가 되었을때 DM의 내용들을 확인할 수 있을 것 같다.(DB 덕분.)
-// 상대방 사용자의 현상태를 반영해서 DM을 보낼 수 있고 없고의 경우를 나누는게 오히려 로직이 복잡해 지지 않을까함.
-// ->사용자의 현 상태를 매번 userProfile에서 조회해야 하기 때문.
+  private async emitRoomsToAllConnectedUser()
+  {
+    //소켓 연결된 모든 유저들에게 현재 만들어져 있는 방 보여주기.
+    const connectedUsers : ConnectedUserI[] = await this.connectedUserService.getAllUser();
+    for (const connetedUser of connectedUsers) 
+    {
+
+      const rooms = await this.roomService.getRoomsByType(['open', 'protected']); //roomType이 DM, private 이 아닌 애들만.
+      // const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
+        await this.server.to(connetedUser.socketId).emit('visible_rooms', rooms);
+    }
+  } 
+
+  private async emitRoomToUsersInRoom(roomId : number)
+  {
+    const room: RoomI 
+      = await this.roomService.getRoom(roomId);
+    if (!room)
+      return;
+    const joinedUsers: JoinedRoomI[] 
+      =  await this.joinedRoomService.findByRoom(room);
+    for (const user of joinedUsers) 
+      await this.server.to(user.socketId).emit('current-room', room);
+  }
+
+  @SubscribeMessage('Owner-Room-edit')
+  async onEditRoomByOwner(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() editData: RoomCreateDTO, @MessageBody() roomId: number ) 
+  {
+      if ( await this.roomService.isRoomOwner(socket.data.user.userId, roomId) === false)
+        return ; //주인장이 아닌 사람이 한 요청일때 무시
+      const editedRoom = await this.roomService.editRoom(roomId, editData);
+
+
+      // for (const user of createdRoom.users) {
+
+      //   const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
+      //   const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
+  
+      //   for (const connection of connections) {
+      //     await this.server.to(connection.socketId).emit('rooms', rooms);
+      //   }
+  
+      // }
+      // if (editedRoom.roomType === 'open' || editedRoom.roomType === 'protected')
+      //private으로 바뀐 경우, 모든 유저의 채팅 목록에서 사라져야한다. 따라서 위의 if 절은 없앰.
+      this.emitRoomsToAllConnectedUser();
+  }
+  
+  @SubscribeMessage('Admin-add')
+  async onAddAdmin(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminDto: AdminRelatedDTO)
+  {
+    const amIAdmin = await this.roomService.isRoomAdmin(socket.data.user.userId, adminDto.roomId)
+    if (amIAdmin === false)
+      return;
+    this.roomService.addAdmintoRoom(adminDto.roomId, adminDto.targetUserId);
+
+    this.emitRoomToUsersInRoom(adminDto.roomId);
+  }
+    
+    //그룹 채팅 -> 화면에서 나가는 순간 room-leave, 방과 socket 연결을 끊는다.
+    //DM -> 지금 구현 대로라면 따로 구현하지 않아도, 상대방 사용자가 onChat 상태가 아닐때도 메세지를 보낼 수 있으며, 
+    // 상대방이 chat 상태가 되었을때 DM의 내용들을 확인할 수 있을 것 같다.(DB 덕분.)
+    // 상대방 사용자의 현상태를 반영해서 DM을 보낼 수 있고 없고의 경우를 나누는게 오히려 로직이 복잡해 지지 않을까함.
+    // ->사용자의 현 상태를 매번 userProfile에서 조회해야 하기 때문.
+    
+    //--- 아직 구현 안한 쪽
+    
+    // @SubscribeMessage('chatMessage')
+    // handleMessage(client: Socket, payload: any): void {
+      //   this.logger.log(`Received message: ${payload}`); // 로그를 출력합니다.
+      //   this.logger.log(`Received message`); // 로그를 출력합니다.
+      //   this.server.emit('chatMessage', payload);
+      // }
+      
+      
+      //현재 방 정보만 가져오는 메서드가 필요할 듯 하다.
+      //유저 정보 변동, 방 정보 변동시 마다 호출되는 용도.
+      // @SubscribeMessage('Rooms-get') 
+      // async onPaginateRoom(socket: Socket) {
+        //   return this.server.to(socket.id).emit('rooms', rooms);
+        // }
+        
+
+}
