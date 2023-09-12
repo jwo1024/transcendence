@@ -1,10 +1,17 @@
 import { Button } from "@react95/core";
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import Window from "@/components/common/Window";
 import Icon from "@/components/common/Icon";
 import Router from "next/router";
+import { CurrentPageContext } from "@/context/PageContext";
 
 const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
+  const { setCurrentPage } = useContext(CurrentPageContext);
+
+  useEffect(() => {
+    setCurrentPage("Desktop-Page");
+  });
+
   return (
     <Icon
       src="/images/icon-image.png" // public 디렉토리 내의 경로
@@ -16,6 +23,12 @@ const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
 };
 
 const LoginPage = () => {
+  const { setCurrentPage } = useContext(CurrentPageContext);
+
+  useEffect(() => {
+    setCurrentPage("Login-Page");
+  });
+
   const onClick = () => {
     fetch("http://localhost:4000/auth/getUrl")
       .then((res) => {
@@ -34,7 +47,6 @@ const LoginPage = () => {
         <span> THIS IS PONG GAME</span>
         <br />
         <br />
-
         <Button onClick={onClick}> LOG IN </Button>
       </div>
     </Window>

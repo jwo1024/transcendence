@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Button } from "@react95/core";
 
 import ChatGroupWindow from "@/components/chat/ChatGroupWindow";
@@ -8,11 +8,21 @@ import type { ChatRoomInfo } from "@/types/ChatInfoType";
 
 import useChatRoomListReducer from "@/hooks/chat/useChatRoomListReducer";
 
+// import { useSocket } from "@/hooks/chat/useSocket";
+import { CurrentPageContext } from "@/context/PageContext";
+
 const ChatPage = () => {
+  const { setCurrentPage } = useContext(CurrentPageContext);
   const [chatGroup, setChatGroup] = useState<boolean>(true);
   const [waitingRoom, setWaitingRoom] = useState<boolean>(false);
   const [chatDM, setChatDM] = useState<boolean>(false); /// 교체 및 삭제 필요
   const { state, addState, removeState } = useChatRoomListReducer();
+
+  useEffect(() => {
+    setCurrentPage("Chat-Page");
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // tmp
   const showChatGroupButton = () => {
@@ -33,11 +43,6 @@ const ChatPage = () => {
   const handleResize = () => {
     setFelxRow(window.innerWidth > window.innerHeight);
   };
-
-  useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   // join room
   const addJoinRoomList = () => {
@@ -86,10 +91,13 @@ const ChatPage = () => {
           뭔가 순서대로 정보를 가지고 있다가 3개의 창만 보여줬으면 하는데...
         */}
         {waitingRoom ? <WaitingRoomWindow /> : null}
-        {chatGroup ? (
-          <ChatGroupWindow chatRoomData={getJoinRoomInfo(1)} />
+        {/* {chatGroup ? (
+          <ChatGroupWindow
+            chatRoomData={getJoinRoomInfo(1)}
+            customOnClickXOption={customOnClickXOption}
+          />
         ) : null}
-        {chatDM ? <ChatDmWindow chatRoomData={getJoinRoomInfo(2)} /> : null}
+        {chatDM ? <ChatDmWindow chatRoomData={getJoinRoomInfo(2)} /> : null} */}
       </div>
       <Button className="m-1" onClick={showChatGroupButton}>
         tmp chat room

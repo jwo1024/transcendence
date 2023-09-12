@@ -28,6 +28,7 @@ export const typeORMConfig : TypeOrmModule = {
 	[
 				Common, 
 				UserProfile,
+
 				//for chat
 				RoomEntity,
 				ConnectedUserEntity,

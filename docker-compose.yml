@@ -8,7 +8,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+        - ./db:/var/lib/postgresql/data
+      # - db-data:/var/lib/postgresql/data
     networks:
       - backend-db
     environment:
@@ -65,6 +66,8 @@ services:
       - ./frontend/front:/app
     networks:
       - frontend-backend
+    depends_on:
+      - backend-dev
 
 networks:
   backend-db:
@@ -72,5 +75,5 @@ networks:
   frontend-backend:
     driver: bridge
 
-volumes:
-  db-data:
+# volumes:
+#   db-data:
