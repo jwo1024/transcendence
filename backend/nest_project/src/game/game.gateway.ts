@@ -66,6 +66,11 @@ const gamefield: GameField = {
 	ballY: 0
 }
 
+function moveBall(server: Server, matchInfo: MatchInfo)
+{
+	server.to(matchInfo.roomName).emit('moveBall', gamefield);
+}
+
 @Injectable()
 @WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
@@ -185,16 +190,21 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 		socket.join(matchInfo.roomName);
 		
+		// todo: 한쪽이 게임 수락하면, 동시에 양쪽에 뜨도록 server.emit 수정하기
 		socket.emit('setMiniProfile', playerLeft, playerRight, () => {
 			console.log("sending mini profile data OK.");
 		});
 
 		// 특정 room에게만 이벤트 발생
 		// playGame();
+		// movePlayer();
+
+		// 넘겨주는 인자 확인
+		const timer = setInterval(moveBall, 1000, this.server, matchInfo);
 	}
 
 	@SubscribeMessage('mouseMove')
-	async playerMove(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
+	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
 	{
 		// console.log("mouse Move Function ::");
 		// console.log(userY);
@@ -202,13 +212,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		if (socket.id === player1.socketId)
 		{
 			gamefield.paddleLeftY = userY;
-			socket.to("Game Room").emit('paddleMove', gamefield);
+			// console.log(socket.id);
+			// console.log(gamefield.paddleLeftY);
+			this.server.to("Game Room").emit('paddleMove', gamefield);
 			// return gamefield;
 		}
 		else if (socket.id === player2.socketId)
 		{
 			gamefield.paddleRightY = userY;
-			socket.to("Game Room").emit('paddleMove', gamefield);
+			// console.log(socket.id);
+			// console.log(gamefield.paddleRightY);
+			this.server.to("Game Room").emit('paddleMove', gamefield);
 			// return gamefield;
 		}
 	}

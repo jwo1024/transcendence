@@ -123,6 +123,14 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
       }
     }
 
+    socket.on('paddleMove', (data) => {
+      user.y = data.paddleLeftY;
+      com.y = data.paddleRightY;
+      // console.log(socket.id);
+      // console.log(user.y);
+      // console.log(com.y);
+    });
+
     function drawCircle(x: number, y: number, r: number, color: string) {
       if (ctx) {
         ctx.fillStyle = color;
@@ -179,11 +187,6 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
       );
     }
 
-    socket.on('paddleMove', (data) => {
-      user.y = data.paddleLeftY;
-      com.y = data.paddleRightY;
-    });
-
     function update() {
       if (canvas) {
         ball.x += ball.velocityX;
@@ -191,9 +194,10 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
 
         // simple AI
         // com.y += (ball.y - (com.y + com.height / 2)) * 0.1;
-        // if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-        //   ball.velocityY = -ball.velocityY;
-        // }
+        
+        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+          ball.velocityY = -ball.velocityY;
+        }
 
         let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
         if (collision(ball, player)) {
@@ -251,8 +255,9 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
     function movePaddle(event: any) {
       if (canvas) {
         let rect = canvas.getBoundingClientRect();
-        user.y = event.clientY - rect.top - user.height / 2;
-        socket.emit("mouseMove", user.y);
+        // user.y = event.clientY - rect.top - user.height / 2;
+        const mouseY = event.clientY - rect.top - user.height / 2;
+        socket.emit("mouseMove", mouseY);
       }
     }
 
