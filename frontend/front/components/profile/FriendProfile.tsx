@@ -24,8 +24,8 @@ interface ProfileProps {
 const FriendProfile: React.FC<ProfileProps> = ({ selectedFriend }) => {
   const myProfile: boolean = true;
   return (
-    <Window title="Friend Profile" w="300" h="300">
-      <div className=" flex flex-col items-center justify-between p-4 space-y-4">
+    <Window title="Friend Profile" w="320" h="260">
+      <div className=" flex flex-col items-center justify-between p-4 pb-1">
         <div className="flex items-center space-x-8">
           <img
             src={selectedFriend.avatarSrc}
