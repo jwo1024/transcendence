@@ -16,12 +16,14 @@ import type { MenuItemInfo } from "@/hooks/useMenuBox";
 const ChatGroupWindow = ({
   className,
   chatRoomData,
+  customOnClickXOption,
 }: {
   className?: string;
   chatRoomData: ChatRoomInfo;
+  customOnClickXOption?: () => void;
 }) => {
   const [messageList, setMessageList] = useState<MessageInfo[]>([]);
-  
+
   const [userInfo, setUserInfo] = useState<UserInfo>({
     id: -1,
     name: "test",
@@ -35,7 +37,7 @@ const ChatGroupWindow = ({
     console.log("CHECK : ChatGroupWindow : MOUNT");
     return () => {
       console.log("CHECK : ChatGroupWindow : UNMOUNT");
-    }
+    };
   }, []);
   console.log("CHECK : ChatGroupWindow : RENDER");
 
@@ -55,7 +57,11 @@ const ChatGroupWindow = ({
   const { menuItemsWithHandlers, showMenuBox } = useMenuBox(menuItmes);
 
   return (
-    <Window title="Chatting Room | 방제" className={className}>
+    <Window
+      title="Chatting Room | 방제"
+      className={className}
+      customOnClickXOption={customOnClickXOption}
+    >
       {/* menu bar */}
       <MenuBar menu={menuItemsWithHandlers} />
       {/* main */}

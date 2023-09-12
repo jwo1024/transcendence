@@ -15,7 +15,7 @@ const WaitingRoomWindow = ({ className }: { className?: string }) => {
   const { menuItemsWithHandlers, showMenuBox } = useMenuBox(menuItems);
 
   return (
-    <Window title="Waiting Room" className={className}>
+    <Window title="Waiting Room" className={className} xOption={false}>
       {/* menu bar */}
       <MenuBar menu={menuItemsWithHandlers} />
       {/* main */}
