@@ -36,7 +36,7 @@ export class AuthController {
       res.cookie('user42Dto', JSON.stringify(userDataFrom42), {
         httpOnly: false,
       });
-      await this.authService.downloadDefaultAvatar(userDataFrom42.image_url, userDataFrom42.id, token.accessToken); 
+      await this.authService.downloadDefaultAvatar(userDataFrom42.image_url, userDataFrom42.id, accessTokenOf42User); 
       res.redirect('http://localhost:3001/signup');
     }
   }

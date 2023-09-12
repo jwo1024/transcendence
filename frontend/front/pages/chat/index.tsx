@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
@@ -48,7 +47,42 @@ function ChatPage() {
   // });
   // }, []);
 
+  // join room
+  const addJoinRoomList = () => {
+    // get data from sever
+    const roomData: ChatRoomInfo = {
+      id: 10,
+      chatType: "group",
+      title: "test",
+      isPublic: true,
+      password: false,
+      numOfUser: 1,
+    }; // tmp data
+    addState({ roomData });
+    // addState(newJoinRoom);
+  };
+
+  const deleteJoinRoomList = () => {
+    const roomId = 10;
+    removeState({ roomId });
+  };
+
+  // TODO : useChatRoomListReducer.tsx 로 관리하기
+  const getJoinRoomInfo = (id: number) => {
+    const joinRoomList: ChatRoomInfo = {
+      id: -1,
+      chatType: "group",
+      title: "test",
+      isPublic: true,
+      password: false,
+      numOfUser: 1,
+    }; // tmp data
+    const target = state.list.find((room: ChatRoomInfo) => room.id === id);
+    return target ? target : joinRoomList;
+  };
+
   return (
+<!-- <<<<<<< feat/make_chat_room_methods_#46
 	<div>
 	  <div>
 		{messages.map((msg, index) => (
@@ -64,6 +98,35 @@ function ChatPage() {
 		<button onClick={handleSendMessage}>Send</button>
 	  </div>
 	</div>
+======= -->
+    <div className="m-2 max-w-screen ">
+      <div
+        className={felxRow ? "flex flex-row h-90vh" : "flex flex-col h-90vh"}
+      >
+        {/* TODO : set ChatRoomInfo and show window */}
+        {/*
+          for waiting room data
+          joinRoomList : ChatRoomInfo[];
+
+          뭔가 순서대로 정보를 가지고 있다가 3개의 창만 보여줬으면 하는데...
+        */}
+        {waitingRoom ? <WaitingRoomWindow /> : null}
+        {chatGroup ? (
+          <ChatGroupWindow chatRoomData={getJoinRoomInfo(1)} />
+        ) : null}
+        {chatDM ? <ChatDmWindow chatRoomData={getJoinRoomInfo(2)} /> : null}
+      </div>
+      <Button className="m-1" onClick={showChatGroupButton}>
+        tmp chat room
+      </Button>
+      <Button className="m-1" onClick={showWaitingRoomButton}>
+        tmp waiting room
+      </Button>
+      <Button className="m-1" onClick={showChatDMButton}>
+        tmp DM room
+      </Button>
+    </div>
+// >>>>>>> main
   );
 }
 
@@ -144,4 +207,9 @@ export default ChatPage;
     //   );
     // };
 
-    // export default ChatPage;
+
+// 클릭을한다 => 서버에 여기에 들어가고싶어요를 요청한다
+// 그다음에 join 에 성공한다면 joinlist 에 등록을 한다. => 창을 띄운다.
+
+// 이미 조인이 되어있다면 => 그냥 들어간다.
+// 아마도

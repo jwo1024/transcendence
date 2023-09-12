@@ -3,7 +3,7 @@ import SelectButton from "@/components/common/SelectButton";
 import type { FrameButtonProps } from "@/components/common/SelectButton";
 import MenuBoxLayout from "../common/MenuBoxLayout";
 
-const MakeNewChatGroup = () => {
+const MakeNewChatMenu = () => {
   const frameElement: FrameButtonProps[] = [
     { children: "공개방", handleClickCustom: () => console.log("공개방 클릭") },
     { children: "비공개방" },
@@ -31,4 +31,4 @@ const MakeNewChatGroup = () => {
   );
 };
 
-export default MakeNewChatGroup;
+export default MakeNewChatMenu;

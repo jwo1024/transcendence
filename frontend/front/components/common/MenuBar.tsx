@@ -32,3 +32,4 @@ const MenuBar = ({ menu }: MenuBarProps) => {
 };
 
 export default MenuBar;
+export type { ListProps };

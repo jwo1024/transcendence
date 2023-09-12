@@ -1,4 +1,5 @@
 
+// chat room
 interface ChatRoomInfo {
 	chatType: "group";
   id: number;
@@ -8,7 +9,7 @@ interface ChatRoomInfo {
   numOfUser: number;
 }
 
-type ChatRoomListInfo = {
+interface ChatRoomListInfo {
   list: ChatRoomInfo[];
 };
 
@@ -18,16 +19,18 @@ interface DMRoomInfo {
   friendName: string;
 }
 
+
+// message
 interface UserInfo {
   id: number;
-  userName: string;
+  name: string;
 }
 
 interface MessageInfo {
   chatRoomId: number;
   user : UserInfo;
   message: string;
-  createdAt: string;
+  createdAt: string; // DATE
 }
 
 export type {

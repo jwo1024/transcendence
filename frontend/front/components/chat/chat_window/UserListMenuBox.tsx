@@ -83,7 +83,7 @@ const ButtonList = () => {
   );
 };
 
-const ChatUserListBox = () => {
+const UserListMenuBox = () => {
   return (
     <MenuBoxLayout>
       <Fieldset className="flex flex-col p-2 w-full h-min" legend="User List">
@@ -97,4 +97,4 @@ const ChatUserListBox = () => {
   );
 };
 
-export default ChatUserListBox;
+export default UserListMenuBox;
