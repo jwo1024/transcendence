@@ -83,7 +83,7 @@ const SignUpPage = () => {
 
   return (
     <div className="flex flex-col  h-90vh items-center justify-center">
-      <Window title="Sign in Page" w="300" h="480">
+      <Window title="Sign in Page" w="300" h="480" xOption={false}>
         <div className="flex flex-col space-y-3 m-3 items-right">
           {/* User Info Block */}
           <InfoBlock user42Dto={user42Dto} setUser42Dto={setUser42Dto} />

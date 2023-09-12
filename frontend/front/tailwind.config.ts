@@ -18,6 +18,7 @@ const config: Config = {
         "90vh": "90vh",
         "80vh": "80vh",
         "80%": "80%",
+        "30px": "30px",
       },
       minHeight: {
         "80vh": "80vh",
@@ -30,11 +31,14 @@ const config: Config = {
         "max-w-screen": "100vw",
       },
       padding: {
-        "p-2px" : "2px",
+        "2px" : "2px",
       },
       borderWidth: {
         "border-0.5" : "0.5px",
         "border-1" : "1px",
+      },
+      bottom: {
+        "28px" : "28px",
       },
     },
   },
