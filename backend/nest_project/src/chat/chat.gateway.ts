@@ -192,8 +192,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   }
   
+
   @SubscribeMessage('Room-join')
-  async onJoinRoom(socket: Socket, room: RoomJoinDTO) {
+  async onJoinRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() room: RoomJoinDTO) {
    if ( !(this.roomService.isRoomExist(room.roomId)))
     {
       //존재하지 않는 roomId 요청일 경우 무시
@@ -211,21 +214,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
    }
 
    //join process -> 이전대화 불러와서 새로 들어온 사용자에게 보내주기.
-    const messages = await this.messageService.findMessagesForRoom(await roomFromDB, { limit: 10, page: 1 });
+    const messages = 
+      await this.messageService.findMessagesForRoom(
+        await roomFromDB, { limit: 10, page: 1 }
+        );
       // messages.meta.currentPage = messages.meta.currentPage - 1;
       this.logger.log(`messages : ${messages.items}, ${messages.meta.itemCount}`);
       // Save Connection to Room
-    const temp =  await this.joinedRoomService.create({ socketId: socket.id, user: socket.data.user, room: await roomFromDB });
+    const temp =  await this.joinedRoomService.create(
+        { socketId: socket.id, user: socket.data.user, room: await roomFromDB });
     this.logger.log(`2-1. Joined obj : ${temp.room.roomName}, ${temp.socketId}, ${temp.user.nickname}, ${temp.id}`)
     // this.logger.log(`2-2. Joined in room : ${await roomFromDB.joinedUsers}`)
       
     // Send last messages from Room to User
     await this.server.to(socket.id).emit('messages', messages);
-
   }
   
   @SubscribeMessage('Room-leave')
-  async onLeaveRoom(socket: Socket) {
+  async onLeaveRoom( @ConnectedSocket() socket: Socket) {
     // remove connection from JoinedRooms
     await this.joinedRoomService.deleteBySocketId(socket.id);
   }
@@ -248,15 +254,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   // }
 
   @SubscribeMessage('Message-add')
-  async onAddMessage(socket: Socket, messageDTO: MessageDTO) {
-    const createdMessage: MessageI = await this.messageService.create({... messageDTO, user: socket.data.user});
-    const room: RoomI = await this.roomService.getRoom(createdMessage.room.roomId);
-    const joinedUsers: JoinedRoomI[] = await this.joinedRoomService.findByRoom(room);
+  async onAddMessage(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() messageDTO: MessageDTO) {
+    
+    if ( !(this.roomService.isRoomExist(messageDTO.roomId)))
+    {
+      //존재하지 않는 roomId 요청일 경우 무시
+      return ;
+    }
+
+    const createdMessage: MessageI 
+      = await this.messageService.create(messageDTO, socket.data.user);
+    const room: RoomI 
+      = await this.roomService.getRoom(createdMessage.room.roomId);
+    const joinedUsers: JoinedRoomI[] 
+      =  await this.joinedRoomService.findByRoom(room);
 
     // TODO: Send new Message to all joined Users of the room (currently online)
-    for(const user of joinedUsers) {
+    for(const user of joinedUsers) 
       await this.server.to(user.socketId).emit('messageAdded', createdMessage);
-    }
   }
 }
 

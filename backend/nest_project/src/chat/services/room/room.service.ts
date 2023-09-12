@@ -68,6 +68,13 @@ export class RoomService {
     return false;
   }
 
+  async isRoomOwner(userId: number, roomId: number) : Promise<boolean> {
+    const room = await this.getRoom(roomId);
+    if (room.roomOwner === userId)
+      return true;
+    return false;
+  }
+
     //roomType이 protected일 경우 비밀번호가 맞아도 초대된 사용자가 아니면 못들어감(무시)
     //roomType이 private인 경우, 비밀번호가 맞지 않으면 못들어감(무시)
   isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : boolean {

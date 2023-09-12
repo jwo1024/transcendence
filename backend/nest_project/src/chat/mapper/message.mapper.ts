@@ -1,16 +1,21 @@
 import { Injectable } from "@nestjs/common";
+
+//Datas
 import { MessageDTO } from "../dto/message.dto"; 
 import { MessageEntity } from "../entities/message.entity"; 
-import { MessageService } from "../services/message.service";
+
+//Services
 import { RoomService } from "../services/room/room.service";
 import { UserService } from "../services/user/user.service";
+
+//Mappers
 import { RoomMapper } from "./room.mapper";
+
 
 @Injectable()
 export class MessageMapper{
 
   constructor (
-    private readonly messageService : MessageService,
     private readonly roomService : RoomService,
     private readonly userService : UserService,
     private roomMapper : RoomMapper,
