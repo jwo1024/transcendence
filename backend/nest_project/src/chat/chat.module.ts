@@ -21,6 +21,10 @@ import { JoinedRoomService } from './services/joined-room/joined-room.service';
 import { UserService } from './services/user/user.service';
 import { ProfileService } from './services/profile-service/profile-service.service'; // 임시
 
+//Mappers
+import { RoomMapper } from './mapper/room.mapper';
+import { MessageMapper } from './mapper/message.mapper';
+
 
 @Module({
   imports: [
@@ -34,8 +38,17 @@ import { ProfileService } from './services/profile-service/profile-service.servi
     ])
   ],
   providers: [
-	ChatGateway, RoomService, ConnectedUserService, JoinedRoomService, 
-	MessageService, UserService, ProfileService,
+    ChatGateway, 
+    //services
+    RoomService,
+    ConnectedUserService,
+    JoinedRoomService, 
+    MessageService,
+    UserService,
+    ProfileService,
+    //Mappers
+    RoomMapper, 
+    MessageMapper,
 ]
 })
 export class ChatModule { }

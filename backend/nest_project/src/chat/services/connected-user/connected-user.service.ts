@@ -21,7 +21,7 @@ export class ConnectedUserService {
 
   async findByUser(user: UserI): Promise<ConnectedUserI[]> {
     return this.connectedUserRepository.find({ 
-      where : user,
+      where: {user: { id: user.id}}
     });
   }
 

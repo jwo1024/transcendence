@@ -16,12 +16,10 @@ export class RoomEntity {
   @Column()
   roomType: roomType;
 
-  @Column()
-  isPublic: boolean;
+  @Column({default: null})
+  roomPass: string;
 
-  @Column()
-  roomPass?: string;
-
+  // @Column({default: -1})
   @Column()
   roomOwner: number;
 
@@ -41,7 +39,7 @@ export class RoomEntity {
   @OneToMany(() => MessageEntity, message => message.room)
   messages: MessageEntity[];
 
-  @CreateDateColumn()
+  @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
   created_at: Date;
 
   // @UpdateDateColumn()
