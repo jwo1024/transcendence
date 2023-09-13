@@ -21,7 +21,7 @@ export class UserService {
 		//   const passwordHash: string = await this.hashPassword(newUser.password);
 		//   newUser.password = passwordHash;
 			const user = await this.userRepository.save(this.userRepository.create(newUser));
-			return this.findOne(user.id);
+			return this.findOneById(user.id);
 		// } else {
 		//   throw new HttpException('Email is already in use', HttpStatus.CONFLICT);
 		// }
@@ -42,11 +42,26 @@ export class UserService {
 	//   return this.authService.comparePasswords(password, storedPasswordHash);
 	// }
 
-	private async findOne(id: number): Promise<UserI> {
+	private async findOneById(id: number): Promise<UserI> 
+	{
 		return this.userRepository.findOne({ 
-		where: {id},
-	});
+			where: {id},
+		});
 	}
+
+	async findOneByNickname(nickname: string): Promise<UserI> 
+	{
+		return this.userRepository.findOne({ 
+			where: {nickname},
+		});
+	}
+
+	// async isValidUserByNickname(nickname: string) : Promise<number> 
+	// {
+	// 	if (await this.findOneByNickname(nickname) !=undefined)
+	// 		return (await this.findOneByNickname(nickname)).id;
+	// 	return (-1);
+	// }
 
 	public getOne(id: number): Promise<UserI> {
 		return this.userRepository.findOneOrFail({
