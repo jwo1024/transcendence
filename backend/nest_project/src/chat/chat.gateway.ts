@@ -453,7 +453,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
     
     @SubscribeMessage('Admin-mute')
-    onMuteSomeone(
+    async onMuteSomeone(
       @ConnectedSocket() socket: Socket,
       @MessageBody() adminDto: AdminRelatedDTO)
     {
@@ -469,7 +469,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       const targetSocket = await this.connectedUserService.findByUser(targetUserI);
       this.server.to(targetSocket.socketId).emit('got-muted', formattedTime);
     }
-  }
+
 
 
   //--- 아직 구현 안한 쪽
