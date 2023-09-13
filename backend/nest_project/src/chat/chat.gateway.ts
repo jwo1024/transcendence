@@ -232,7 +232,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       { socketId: socketTheOther.socketId, user: socketTheOther.user, room: createdRoom });
     
     //상대방과 나에게 현재 만들어진 room 정보를 포함해 전체 Joinedroom 보냄
-    this.emitRoomToUsersInRoom(createdRoom.roomId);
+    this.emitAllRoomsToUsersInRoom(createdRoom.roomId);
   }
 
 
@@ -283,10 +283,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // remove connection from JoinedRooms
     const roomToleave = await this.roomService.getRoom(roomId);
     const userId = socket.data.user.id
-    if (!roomId)
+    if (!roomToleave)
       return ;
     this.joinedRoomService.deleteBySocketId(socket.id);
-    roomToleave.users = roomToleave.users.filter(toreduce => toreduce.id ===  userId))
+    roomToleave.users = roomToleave.users.filter(toreduce => toreduce.id ===  userId);
     if (roomToleave.users.length === 0)
       this.deleteRoom(roomId);
     //dm에서는 room-leave를 부르지 않는다.
@@ -330,7 +330,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   } 
 
-  private async emitRoomToUsersInRoom(roomId : number)
+  private async emitOneRoomToUsersInRoom(roomId : number)
   {
     const room: RoomI 
       = await this.roomService.getRoom(roomId);
@@ -340,6 +340,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       =  await this.joinedRoomService.findByRoom(room);
     for (const user of joinedUsers) 
       await this.server.to(user.socketId).emit('current-room', room);
+  }
+
+    //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
+  private async emitAllRoomsToUsersInRoom(roomId : number)
+  {
+    const room: RoomI 
+      = await this.roomService.getRoom(roomId);
+    if (!room)
+      return;
+    const joinedUsers: JoinedRoomI[] 
+      =  await this.joinedRoomService.findByRoom(room);
+      for (const user of joinedUsers) 
+    {
+      await this.server.to(user.socketId).emit('me-joining-rooms', user.room);
+    }
   }
  //----------------------------------
 
@@ -377,16 +392,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return;
     this.roomService.addAdmintoRoom(adminDto.roomId, adminDto.targetUserId);
 
-    this.emitRoomToUsersInRoom(adminDto.roomId);
+    this.emitOneRoomToUsersInRoom(adminDto.roomId);
   }
     
-    //그룹 채팅 -> 화면에서 나가는 순간 room-leave, 방과 socket 연결을 끊는다.
-    //DM -> 지금 구현 대로라면 따로 구현하지 않아도, 상대방 사용자가 onChat 상태가 아닐때도 메세지를 보낼 수 있으며, 
-    // 상대방이 chat 상태가 되었을때 DM의 내용들을 확인할 수 있을 것 같다.(DB 덕분.)
-    // 상대방 사용자의 현상태를 반영해서 DM을 보낼 수 있고 없고의 경우를 나누는게 오히려 로직이 복잡해 지지 않을까함.
-    // ->사용자의 현 상태를 매번 userProfile에서 조회해야 하기 때문.
+  @SubscribeMessage('Admin-kick')
+  async onKickSomeone(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() adminDto: AdminRelatedDTO
+  )
+  {
+    if (this.roomService.isRoomOwner(adminDto.targetUserId, adminDto.roomId))
+      return ; //target이 주인장인 경우 무시
+    if (socket.data.user.id === adminDto.targetUserId)
+      return ; //본인을 퇴장시키는 경우 무시 //증말 싫다 이런 사용자.....ㅠ
+    if (await this.roomService.isRoomAdmin(socket.data.user.id, adminDto.roomId) === false)
+      return ; //요청한 user가 admin이 아닌 경우 무시
     
-    //--- 아직 구현 안한 쪽
+
+      //퇴장처리(onLeaveRoom과 겹치는 부분 리팩토링시 함수로 빼기
+
+      const roomToleave = await this.roomService.getRoom(adminDto.roomId);
+      if (!roomToleave)
+        return ;
+      const userId = adminDto.targetUserId;
+      this.joinedRoomService.deleteBySocketId(socket.id);
+      roomToleave.users = roomToleave.users.filter(toReduce => toReduce.id ===  userId);
+      //admin-kick은 본인을 퇴장 시키는 경우는 없기에, 항상 1명 이상의 사용자가 방에 남아있게 된다.
+    }
+
+
+    
+  
+  //--- 아직 구현 안한 쪽
+
+  //소켓이 끊기는 순간 handledissconnection에서 room-leave와 connected-socket 데이터 정리를 잘 해야함!!! 꼭 테스트 할것
     
     // @SubscribeMessage('chatMessage')
     // handleMessage(client: Socket, payload: any): void {
@@ -394,14 +433,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       //   this.logger.log(`Received message`); // 로그를 출력합니다.
       //   this.server.emit('chatMessage', payload);
       // }
-      
-      
-      //현재 방 정보만 가져오는 메서드가 필요할 듯 하다.
-      //유저 정보 변동, 방 정보 변동시 마다 호출되는 용도.
-      // @SubscribeMessage('Rooms-get') 
-      // async onPaginateRoom(socket: Socket) {
-        //   return this.server.to(socket.id).emit('rooms', rooms);
-        // }
-        
 
 }
