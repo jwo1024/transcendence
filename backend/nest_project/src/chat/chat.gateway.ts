@@ -452,7 +452,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitOneRoomToUsersInRoom(adminDto.roomId);
     }
     
+    @SubscribeMessage('Admin-mute')
+    onMuteSomeone(
+      @ConnectedSocket() socket: Socket,
+      @MessageBody() adminDto: AdminRelatedDTO)
+    {
+      if (await this.onAdminMethods(adminDto.roomId, socket.data.user.id, adminDto.targetUserId) === false)
+      return ; //무시 케이스들
+
+      //현재는 아예 데이터 베이스를 건들이지 않음.
+      //mute에 걸리더라도 사용자가 나갔다가 들어오면 mute 풀릴 것.
+      const now = new Date();
+      const formattedTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;      
   
+      const targetUserI = await this.userService.getOne(adminDto.targetUserId);
+      const targetSocket = await this.connectedUserService.findByUser(targetUserI);
+      this.server.to(targetSocket.socketId).emit('got-muted', formattedTime);
+    }
+  }
+
+
   //--- 아직 구현 안한 쪽
 
   //소켓이 끊기는 순간 handledissconnection에서 room-leave와 connected-socket 데이터 정리를 잘 해야함!!! 꼭 테스트 할것
