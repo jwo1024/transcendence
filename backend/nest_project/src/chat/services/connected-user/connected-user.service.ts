@@ -23,9 +23,8 @@ export class ConnectedUserService {
     return await this.connectedUserRepository.find();
   }
 
-
-  async findByUser(user: UserI): Promise<ConnectedUserI[]> {
-    return this.connectedUserRepository.find({ 
+  async findByUser(user: UserI): Promise<ConnectedUserI> {
+    return this.connectedUserRepository.findOne({ 
       where: {user: { id: user.id}}
     });
   }

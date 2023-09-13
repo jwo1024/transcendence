@@ -166,7 +166,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   //--------메서드 시작-------------------------
 
-  //For Room
+  //For Room(단체 채팅방 만들기용 메서드)
   @SubscribeMessage('Room-create')
   async chatRoomCreate(
         @ConnectedSocket() socket: Socket,
@@ -193,6 +193,49 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   }
   
+  //For DM(개인 채팅용 방 만들기 메서드)
+  @SubscribeMessage('DM-create')
+  async chatDMCreate(
+        @ConnectedSocket() socket: Socket,
+        @MessageBody() room:RoomCreateDTO, @MessageBody() userNickname: string)
+        // room:RoomCreateDTO) 
+  {
+    if (room.roomType != 'dm')
+    {
+      return ; //dm룸 만드는 명령이 아닌 경우 무시
+    }
+    const userTheOther = await this.userService.findOneByNickname(userNickname);
+    if ( userTheOther === undefined)
+    {
+      return ; //valid하지 않은 사용자 nickname을 넘긴경우 무시
+    }
+
+    const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
+
+    //방을 만든 사용자를 생성된 방에 join 시킴()
+    await this.joinedRoomService.create(
+      { socketId: socket.id, user: socket.data.user, room: createdRoom });
+    
+    //초대할 상대방 소켓 정보 가져오기
+    const socketTheOther = await this.connectedUserService.findByUser(userTheOther);
+    if (socketTheOther === undefined)
+    {
+      this.deleteRoom(createdRoom.roomId); //만든 방 삭제
+
+      // ++ joinedRoom entity(216번줄 생성)은 위의 room 지우면서 자동으로 사라질것으로 예상하나 테스트 후 아니라면 삭제 코드 작성
+      
+      return ;//상대방이 연결된 상태가 아닐때 dm 못 만듬.
+    }
+
+    //상대방 사용자를 초대
+    await this.joinedRoomService.create(
+      { socketId: socketTheOther.socketId, user: socketTheOther.user, room: createdRoom });
+    
+    //상대방과 나에게 현재 만들어진 room 정보를 포함해 전체 Joinedroom 보냄
+    this.emitRoomToUsersInRoom(createdRoom.roomId);
+  }
+
+
   @SubscribeMessage('Room-join')
   async onJoinRoom(
     @ConnectedSocket() socket: Socket,
@@ -232,7 +275,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   private async deleteRoom(roomId:number)
   {
-    this.roomService.deleteById(roomId);
+    await this.roomService.deleteById(roomId);
   }
   
   @SubscribeMessage('Room-leave')
@@ -298,6 +341,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     for (const user of joinedUsers) 
       await this.server.to(user.socketId).emit('current-room', room);
   }
+ //----------------------------------
 
   @SubscribeMessage('Owner-Room-edit')
   async onEditRoomByOwner(
@@ -307,7 +351,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       if ( await this.roomService.isRoomOwner(socket.data.user.userId, roomId) === false)
         return ; //주인장이 아닌 사람이 한 요청일때 무시
       const editedRoom = await this.roomService.editRoom(roomId, editData);
-
 
       // for (const user of createdRoom.users) {
 
