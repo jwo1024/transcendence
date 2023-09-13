@@ -18,8 +18,7 @@ export class UserService {
 		try {
 		// const exists: boolean = await this.mailExists(newUser.email);
 		// if (!exists) {
-		//   const passwordHash: string = await this.hashPassword(newUser.password);
-		//   newUser.password = passwordHash;
+		
 			const user = await this.userRepository.save(this.userRepository.create(newUser));
 			return this.findOneById(user.id);
 		// } else {
@@ -34,14 +33,6 @@ export class UserService {
 		return paginate<UserEntity>(this.userRepository, options);
 	}
 
-	// private async hashPassword(password: string): Promise<string> {
-	//   return this.authService.hashPassword(password);
-	// }
-
-	// private async validatePassword(password: string, storedPasswordHash: string): Promise<any> {
-	//   return this.authService.comparePasswords(password, storedPasswordHash);
-	// }
-
 	private async findOneById(id: number): Promise<UserI> 
 	{
 		return this.userRepository.findOne({ 
@@ -55,14 +46,7 @@ export class UserService {
 			where: {nickname},
 		});
 	}
-
-	// async isValidUserByNickname(nickname: string) : Promise<number> 
-	// {
-	// 	if (await this.findOneByNickname(nickname) !=undefined)
-	// 		return (await this.findOneByNickname(nickname)).id;
-	// 	return (-1);
-	// }
-
+	
 	public getOne(id: number): Promise<UserI> {
 		return this.userRepository.findOneOrFail({
 		where: {id},

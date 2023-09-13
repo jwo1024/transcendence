@@ -250,7 +250,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // this.logger.log(`exist : ${await this.roomService.isRoomExist(room.roomId)}`)
     const roomFromDB = this.roomService.getRoom(room.roomId);
     this.logger.log(`1. roomFromDB : ${(await roomFromDB).roomName}, ${(await roomFromDB).roomOwner}`)
-    if (!(this.roomService.isValidForJoin(await roomFromDB, room)))
+    if (!( await this.roomService.isValidForJoin(await roomFromDB, room)))
     {
       //roomType이 protected일 경우 비밀번호가 맞아도 초대된 사용자가 아니면 못들어감(무시)
       //roomType이 private인 경우, 비밀번호가 맞지 않으면 못들어감(무시)
