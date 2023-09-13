@@ -21,8 +21,13 @@ export default function ProfilePage() {
   const [friendsProfile, setFriendsProfile] = useState(true);
   const [friendList, setFriendList] = useState(true);
 
-  const user = localStorage.getItem("user");
-  const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+  const [myNickName, setMyNickName] = useState("Loading...");
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+    setMyNickName(user_obj.nickname);
+  }, [myNickName]);
 
   const showMyProfile = () => {
     setMyProfile((current) => !current);
@@ -52,7 +57,7 @@ export default function ProfilePage() {
         <div className="flex flex-col justify-between h-[626px]">
           {myProfile ? (
             <MyProfile
-              nickname={user_obj.nickname}
+              nickname={myNickName}
               ladder={2134}
               win={23}
               lose={17}

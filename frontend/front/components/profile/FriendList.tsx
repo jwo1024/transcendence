@@ -18,15 +18,42 @@ interface FriendListProps {
   handleProfileClick: (friend: user) => void;
 }
 
+// const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
+//   // load friend list....
+//   const [friendsList, setFriendsList] = useState<users>([]);
+//   useEffect(() => {
+//     fetch("http://localhost:3001/api/friendList")
+//       .then((res) => res.json())
+//       .then((res) => {
+//         setFriendsList(res);
+//       });
+//   }, []);
 const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
-  // load friend list....
   const [friendsList, setFriendsList] = useState<users>([]);
-  useEffect(() => {
+
+  const fetchFriendList = () => {
     fetch("http://localhost:3001/api/friendList")
-      .then((res) => res.json())
+      .then((res) => {
+        console.log(res);
+        return res.json();
+      })
       .then((res) => {
         setFriendsList(res);
-      });
+      })
+      .catch(() => console.log("bad response"));
+  };
+
+  useEffect(() => {
+    // 초기 로딩
+    fetchFriendList();
+
+    // 5초마다 업데이트
+    const intervalId = setInterval(fetchFriendList, 3000);
+
+    // 컴포넌트가 언마운트될 때 interval을 정리(cleanup)
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
 
   // request plus friend
