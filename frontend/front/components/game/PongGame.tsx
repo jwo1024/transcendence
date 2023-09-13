@@ -131,6 +131,7 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
       // console.log(com.y);
     });
 
+
     function drawCircle(x: number, y: number, r: number, color: string) {
       if (ctx) {
         ctx.fillStyle = color;
@@ -159,10 +160,13 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
 
     function resetBall() {
       if (canvas) {
-        ball.x = CanvasSize.width / 2;
-        ball.y = CanvasSize.height / 2;
+        socket.emit('resetBall', (data: any) => {
+          ball.x = data.ballX;
+          ball.y = data.ballY;
+          ball.velocityX = data.ballXvelocity;
+        });
         ball.speed = BallSpec.speed;
-        ball.velocityX = BallSpec.speed;
+        // ball.velocityX = BallSpec.speed;
       }
     }
 
@@ -189,15 +193,20 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
 
     function update() {
       if (canvas) {
-        ball.x += ball.velocityX;
-        ball.y += ball.velocityY;
+        socket.emit('updateCanvas', (data: any) => {
+          ball.x = data.ballX;
+          ball.y = data.ballY;
+          ball.velocityY = data.ballYvelocity;
+        });
+        // ball.x += ball.velocityX;
+        // ball.y += ball.velocityY;
 
         // simple AI
         // com.y += (ball.y - (com.y + com.height / 2)) * 0.1;
         
-        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-          ball.velocityY = -ball.velocityY;
-        }
+        // if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+        //   ball.velocityY = -ball.velocityY;
+        // }
 
         let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
         if (collision(ball, player)) {
@@ -207,17 +216,20 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
 
           let direction = ball.x + ball.radius < canvas.width / 2 ? 1 : -1;
 
+          //
           ball.velocityX = direction * ball.speed * Math.cos(angleRad);
           ball.velocityY = ball.speed * Math.sin(angleRad);
+          // todo: 위의 값들 백엔드에서 값 변경하는 것으로 수정해야 함
+          socket.emit('collision', ball.velocityX, ball.velocityY, (data: any) => {});
 
           ball.speed += 0.1;
         }
 
         if (ball.x - ball.radius < 0) {
-          com.score++;
+          // com.score++;
           resetBall();
         } else if (ball.x + ball.radius > canvas.width) {
-          user.score++;
+          // user.score++;
           resetBall();
         }
       }

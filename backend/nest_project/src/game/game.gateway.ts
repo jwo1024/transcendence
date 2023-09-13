@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { Player, MatchInfo, GameField } from './interface/game.interface';
-import { PlayerEntity } from './entities/player.entity';
 import { GameService } from './game.service';
 
 import { from, Observable } from 'rxjs';
@@ -10,7 +9,6 @@ import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect,
 import { Socket, Server } from 'socket.io';
 
 /////////////////////// typeorm config 설정하기!!!!!!!!!!
-/////////////////////// front socket io 설정하기!!!!!!!!!
 
 
 // 래더 큐 잡는 로직
@@ -60,16 +58,19 @@ const player2: Player = {
 		};
 
 const gamefield: GameField = {
+	// canvas 크기 바뀔 경우 고려해서 수정 필요
+	canvasWidth: 800,
+	canvasHeight: 600,
 	paddleLeftY: 42,
 	paddleRightY: 42,
-	ballX: 0,
-	ballY: 0
+	ballX: 800 / 2,
+	ballY: 600 / 2,
+	ballXvelocity: 3,
+	ballYvelocity: 3,
+	ballRadius: 10
 }
 
-function moveBall(server: Server, matchInfo: MatchInfo)
-{
-	server.to(matchInfo.roomName).emit('moveBall', gamefield);
-}
+
 
 @Injectable()
 @WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
@@ -190,17 +191,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 		socket.join(matchInfo.roomName);
 		
-		// todo: 한쪽이 게임 수락하면, 동시에 양쪽에 뜨도록 server.emit 수정하기
+		// todo: 한쪽이 게임 수락하면, 동시에 양쪽에 뜨도록 server.to(roomName).emit()으로 수정하기
 		socket.emit('setMiniProfile', playerLeft, playerRight, () => {
 			console.log("sending mini profile data OK.");
 		});
 
-		// 특정 room에게만 이벤트 발생
+		// 특정 room에만 이벤트 발생
 		// playGame();
 		// movePlayer();
 
 		// 넘겨주는 인자 확인
-		const timer = setInterval(moveBall, 1000, this.server, matchInfo);
 	}
 
 	@SubscribeMessage('mouseMove')
@@ -225,6 +225,41 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 			this.server.to("Game Room").emit('paddleMove', gamefield);
 			// return gamefield;
 		}
+	}
+
+	@SubscribeMessage('resetBall')
+	async resetBall(@ConnectedSocket() socket: Socket)
+	{
+		gamefield.ballX = gamefield.canvasWidth / 2;
+		gamefield.ballY = gamefield.canvasHeight / 2;
+		gamefield.ballXvelocity = 3;
+		return gamefield;
+	}
+
+	@SubscribeMessage('updateCanvas')
+	async renderCanvas(@ConnectedSocket() socket: Socket)
+	{
+		gamefield.ballX += gamefield.ballXvelocity;
+		gamefield.ballY += gamefield.ballYvelocity;
+		
+		if (gamefield.ballY + gamefield.ballRadius > gamefield.canvasHeight
+			|| gamefield.ballY - gamefield.ballRadius < 0)
+		{
+			gamefield.ballYvelocity = -gamefield.ballYvelocity;
+		}
+
+		return gamefield;
+	}
+
+	@SubscribeMessage('collision')
+	async paddleCollision(@ConnectedSocket() socket: Socket, @MessageBody() x: number,
+							@MessageBody() y: number)
+	{
+		console.log(x);
+		gamefield.ballXvelocity = x;
+		gamefield.ballYvelocity = y;
+
+		return gamefield;
 	}
 
 	@SubscribeMessage('ladderGameQueue')

@@ -29,8 +29,13 @@ export interface GameField
 	// canvasRight: number,
 	// canvasUp: number,
 	// canvasBottom: number,
+	canvasWidth: number,
+	canvasHeight: number,
 	paddleLeftY: number,
 	paddleRightY: number,
 	ballX: number,
 	ballY: number,
+	ballXvelocity: number,
+	ballYvelocity: number,
+	ballRadius: number
 }
