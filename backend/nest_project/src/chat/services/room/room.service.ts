@@ -9,7 +9,7 @@ import { roomType } from 'src/chat/types/roomTypes';
 import { RoomEntity } from '../../entities/room.entity'; 
 import { RoomI } from '../../interfaces/room.interface'; 
 import { UserI } from '../../interfaces/user.interface'; 
-import { RoomCreateDTO, RoomJoinDTO } from '../../dto/room.dto';
+import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO } from '../../dto/room.dto';
 
 import { RoomMapper } from '../../mapper/room.mapper';
 
@@ -97,6 +97,13 @@ export class RoomService {
     return false;
   }
 
+  async isBannedUser(userId: number, roomId: number) : Promise<boolean> {
+    const room = await this.getRoom(roomId);
+    if (room.roomBanned.find(target => target === userId))
+      return true;
+    return false;
+  }
+
   async editRoom(roomId: number, newData : RoomCreateDTO) : Promise<RoomI> 
   {
     const editedRoom = await this.getRoom(roomId);
@@ -111,6 +118,15 @@ export class RoomService {
     editedRoom.roomPass = newData.roomPass;
     
     return  this.roomRepository.save(editedRoom);
+  }
+
+  async addUserToBanList( adminDto : AdminRelatedDTO) : Promise<RoomI> 
+  {
+    const editedRoom = await this.getRoom(adminDto.roomId);
+    if (editedRoom.roomBanned.find(target => target === adminDto.targetUserId))
+      return this.getRoom(adminDto.roomId); //이미 ban 처리 되어있다면 업데이트 없이 무시
+    editedRoom.roomBanned.push(adminDto.targetUserId);
+    return this.roomRepository.save(editedRoom);
   }
 
   async addAdmintoRoom(roomId: number, targetId : number) : Promise<RoomI>

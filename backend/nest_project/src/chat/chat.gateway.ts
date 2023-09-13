@@ -183,15 +183,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     //현 서버에 소켓 연결된 모든 채팅 사용자에게 room 정보를 보냄
     for (const user of createdRoom.users) {
 
-      const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
+      const connection: ConnectedUserI = await this.connectedUserService.findByUser(user);
       const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
 
-      for (const connection of connections) {
+      // for (const connection of connections) { // 한 유저당 하나의 소켓만 들어온다고 가정하고 바뀐부분
         await this.server.to(connection.socketId).emit('rooms', rooms);
       }
-
     }
-  }
   
   //For DM(개인 채팅용 방 만들기 메서드)
   @SubscribeMessage('DM-create')
@@ -239,38 +237,41 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   @SubscribeMessage('Room-join')
   async onJoinRoom(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() room: RoomJoinDTO) {
-   if ( !(this.roomService.isRoomExist(room.roomId)))
+    @MessageBody() room: RoomJoinDTO) 
+  {
+    if ( !(this.roomService.isRoomExist(room.roomId)))
+      {
+        //존재하지 않는 roomId 요청일 경우 무시
+        return ;
+      }
+    if ( await this.roomService.isBannedUser(socket.data.user.id, room.roomId))
+      return ; //ban 처리된 유저이면 요청 무시
+    // this.logger.log("RoomJoin:-start---------")
+    // this.logger.log(`exist : ${await this.roomService.isRoomExist(room.roomId)}`)
+    const roomFromDB = this.roomService.getRoom(room.roomId);
+    this.logger.log(`1. roomFromDB : ${(await roomFromDB).roomName}, ${(await roomFromDB).roomOwner}`)
+    if (!(this.roomService.isValidForJoin(await roomFromDB, room)))
     {
-      //존재하지 않는 roomId 요청일 경우 무시
+      //roomType이 protected일 경우 비밀번호가 맞아도 초대된 사용자가 아니면 못들어감(무시)
+      //roomType이 private인 경우, 비밀번호가 맞지 않으면 못들어감(무시)
       return ;
     }
-  // this.logger.log("RoomJoin:-start---------")
-  // this.logger.log(`exist : ${await this.roomService.isRoomExist(room.roomId)}`)
-   const roomFromDB = this.roomService.getRoom(room.roomId);
-  this.logger.log(`1. roomFromDB : ${(await roomFromDB).roomName}, ${(await roomFromDB).roomOwner}`)
-   if (!(this.roomService.isValidForJoin(await roomFromDB, room)))
-   {
-    //roomType이 protected일 경우 비밀번호가 맞아도 초대된 사용자가 아니면 못들어감(무시)
-    //roomType이 private인 경우, 비밀번호가 맞지 않으면 못들어감(무시)
-    return ;
-   }
 
-   //join process -> 이전대화 불러와서 새로 들어온 사용자에게 보내주기.
-    const messages = 
-      await this.messageService.findMessagesForRoom(
-        await roomFromDB, { limit: 10, page: 1 }
-        );
-      // messages.meta.currentPage = messages.meta.currentPage - 1;
-      this.logger.log(`messages : ${messages.items}, ${messages.meta.itemCount}`);
-      // Save Connection to Room
-    const temp =  await this.joinedRoomService.create(
-        { socketId: socket.id, user: socket.data.user, room: await roomFromDB });
-    this.logger.log(`2-1. Joined obj : ${temp.room.roomName}, ${temp.socketId}, ${temp.user.nickname}, ${temp.id}`)
-    // this.logger.log(`2-2. Joined in room : ${await roomFromDB.joinedUsers}`)
-      
-    // Send last messages from Room to User
-    await this.server.to(socket.id).emit('messages', messages);
+    //join process -> 이전대화 불러와서 새로 들어온 사용자에게 보내주기.
+      const messages = 
+        await this.messageService.findMessagesForRoom(
+          await roomFromDB, { limit: 10, page: 1 }
+          );
+        // messages.meta.currentPage = messages.meta.currentPage - 1;
+        this.logger.log(`messages : ${messages.items}, ${messages.meta.itemCount}`);
+        // Save Connection to Room
+      const temp =  await this.joinedRoomService.create(
+          { socketId: socket.id, user: socket.data.user, room: await roomFromDB });
+      this.logger.log(`2-1. Joined obj : ${temp.room.roomName}, ${temp.socketId}, ${temp.user.nickname}, ${temp.id}`)
+      // this.logger.log(`2-2. Joined in room : ${await roomFromDB.joinedUsers}`)
+        
+      // Send last messages from Room to User
+      await this.server.to(socket.id).emit('messages', messages);
   }
 
   private async deleteRoom(roomId:number)
@@ -394,23 +395,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     this.emitOneRoomToUsersInRoom(adminDto.roomId);
   }
-    
+
+  private async onAdminMethods(roomId : number, meId : number, targetUserId : number) : Promise<boolean>
+  {
+    if (this.roomService.isRoomOwner(targetUserId, roomId))
+    return false; //target이 주인장인 경우 무시
+  if (meId === targetUserId)
+    return false; //본인을 퇴장시키는 경우 무시 //증말 싫다 이런 사용자.....ㅠ
+  if (await this.roomService.isRoomAdmin(meId, roomId) === false)
+    return false; //요청한 user가 admin이 아닌 경우 무시
+  }
+
   @SubscribeMessage('Admin-kick')
   async onKickSomeone(
     @ConnectedSocket() socket: Socket,
     @MessageBody() adminDto: AdminRelatedDTO
   )
   {
-    if (this.roomService.isRoomOwner(adminDto.targetUserId, adminDto.roomId))
-      return ; //target이 주인장인 경우 무시
-    if (socket.data.user.id === adminDto.targetUserId)
-      return ; //본인을 퇴장시키는 경우 무시 //증말 싫다 이런 사용자.....ㅠ
-    if (await this.roomService.isRoomAdmin(socket.data.user.id, adminDto.roomId) === false)
-      return ; //요청한 user가 admin이 아닌 경우 무시
+    if (await this.onAdminMethods(adminDto.roomId, socket.data.user.id, adminDto.targetUserId) === false)
+      return ;//무시 케이스들
     
-
-      //퇴장처리(onLeaveRoom과 겹치는 부분 리팩토링시 함수로 빼기
-
+      //퇴장처리(onLeaveRoom과 겹치는 부분 리팩토링시 함수로 빼기)
       const roomToleave = await this.roomService.getRoom(adminDto.roomId);
       if (!roomToleave)
         return ;
@@ -423,7 +428,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitOneRoomToUsersInRoom(adminDto.roomId);
     }
 
+    @SubscribeMessage('Admin-Ban')
+    async onBanSomeone(
+      @ConnectedSocket() socket: Socket,
+      @MessageBody() adminDto: AdminRelatedDTO
+    )
+    {
+      if (await this.onAdminMethods(adminDto.roomId, socket.data.user.id, adminDto.targetUserId) === false)
+        return ; //무시 케이스들
+      
+      // target을 현재 방의 banlist에 추가
+      const updatedRoom = await this.roomService.addUserToBanList(adminDto);
 
+       //퇴장처리(onLeaveRoom과 겹치는 부분 리팩토링시 함수로 빼기)
+       const roomToleave = await this.roomService.getRoom(adminDto.roomId);
+       if (!roomToleave)
+         return ;
+       const userId = adminDto.targetUserId;
+       this.joinedRoomService.deleteBySocketId(socket.id);
+       roomToleave.users = roomToleave.users.filter(toReduce => toReduce.id ===  userId);
+
+       //현재 방 유저에게 현재 방 정보 제공
+      this.emitOneRoomToUsersInRoom(adminDto.roomId);
+    }
     
   
   //--- 아직 구현 안한 쪽
