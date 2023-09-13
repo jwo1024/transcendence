@@ -418,6 +418,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.joinedRoomService.deleteBySocketId(socket.id);
       roomToleave.users = roomToleave.users.filter(toReduce => toReduce.id ===  userId);
       //admin-kick은 본인을 퇴장 시키는 경우는 없기에, 항상 1명 이상의 사용자가 방에 남아있게 된다.
+
+      //현재 방 유저에게 현재 방 정보 제공
+      this.emitOneRoomToUsersInRoom(adminDto.roomId);
     }
 
 
