@@ -217,6 +217,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     {
       return ; //valid하지 않은 사용자 nickname을 넘긴경우 무시
     }
+    //내가 블락한 상대일 경우 실패(일단은 무시)
+    const currentBlockList = await (await this.userService.getOne(socket.data.user.id)).block_list;
+    if (currentBlockList.find(finding => userTheOther.id))
+    {
+      return ;
+    }
+    //내가 블락된 상대일 경우 실패(일단은 무시)
+    if (userTheOther.block_list.find(finding => socket.data.user.id))
+    {
+      return ;
+    }
 
     const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
 
