@@ -548,5 +548,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   //--- 아직 구현 안한 쪽
 
   //소켓이 끊기는 순간 handledissconnection에서 room-leave와 connected-socket 데이터 정리를 잘 해야함!!! 꼭 테스트 할것
-    
+
 }
