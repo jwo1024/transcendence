@@ -10,11 +10,21 @@ export class RoomCreateDTO {
 
 }
 
-export class RoomJoinDTO {
+export class RoomJoinDTO 
+{
 
   roomId: number;
 
   roomPass?: string;
+
+}
+
+export class RoomInviteDTO 
+{
+
+  targetUserId: number;
+
+  roomId: number;
 
 }
 
