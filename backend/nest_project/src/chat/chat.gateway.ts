@@ -270,8 +270,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.logger.log(`2-1. Joined obj : ${temp.room.roomName}, ${temp.socketId}, ${temp.user.nickname}, ${temp.id}`)
       // this.logger.log(`2-2. Joined in room : ${await roomFromDB.joinedUsers}`)
         
+    //이벤트명 동적생성
+      const currentRoomId = (await roomFromDB).roomId;
+        this.logger.log('messages${currentRoomId}');
       // Send last messages from Room to User
-      await this.server.to(socket.id).emit('messages', messages);
+      await this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
+      // await this.server.to(socket.id).emit('messages${currentRoomId}', messages);
   }
 
   private async deleteRoom(roomId:number)
@@ -312,8 +316,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       =  await this.joinedRoomService.findByRoom(room);
 
     // Send new Message to all joined Users of the room (currently online)
+    const currentRoomId = room.roomId;
+    
     for(const user of joinedUsers) 
-      await this.server.to(user.socketId).emit('messageAdded', createdMessage);
+      await this.server.to(user.socketId).emit(`messageAdded_{$currentRoomId}`, createdMessage);
   }
   
   //-------방 정보 보내주기------------
@@ -339,8 +345,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return;
     const joinedUsers: JoinedRoomI[] 
       =  await this.joinedRoomService.findByRoom(room);
+    
+    const currentRoomId = room.roomId; 
     for (const user of joinedUsers) 
-      await this.server.to(user.socketId).emit('current-room', room);
+      await this.server.to(user.socketId).emit(`current-room_{currentRoomId}`, room);
   }
 
     //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
