@@ -32,6 +32,9 @@ export interface GameField
 	paddleLeftY: number,
 	paddleRightX: number,
 	paddleRightY: number,
+	//score
+	scoreLeft: number,
+	scoreRight: number,
 	// ball
 	ballX: number,
 	ballY: number,

@@ -92,6 +92,8 @@ const gameField: GameField = {
 	paddleLeftY: 42,
 	paddleRightX: 800 - 10, // 캔버스의 x축 오른쪽 끝
 	paddleRightY: 42,
+	scoreLeft: 0,
+	scoreRight: 0,
 	ballX: 800 / 2,
 	ballY: 600 / 2,
 	ballRadius: 10,
@@ -156,7 +158,7 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 
 	if (gameField.ballX - gameField.ballRadius < 0)
 	{
-		++matchInfo.scoreRight;
+		++gameField.scoreRight;
 		//resetBall();
 		gameField.ballX = gameField.canvasWidth / 2;
 		gameField.ballY = gameField.canvasHeight / 2;
@@ -166,7 +168,7 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 	}
 	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
 	{
-		++matchInfo.scoreLeft;
+		++gameField.scoreLeft;
 		//resetBall();
 		gameField.ballX = gameField.canvasWidth / 2;
 		gameField.ballY = gameField.canvasHeight / 2;
