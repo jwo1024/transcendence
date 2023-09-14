@@ -168,6 +168,11 @@ export class RoomService {
     return false;
   }
 
+    async savechangedOwner(room: RoomI)
+    {
+      return await this.roomRepository.save(room);
+    }
+
   async getRoomsByType(allowedRoomTypes : roomType[]): Promise<RoomEntity[]> {
     return await this.roomRepository.find({
       where: {

@@ -327,6 +327,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     await this.roomService.deleteById(roomId);
   }
   
+  private async changeOwner(room :RoomI)
+  {
+    if (room.roomAdmins.length > 0)
+      room.roomOwner = room.roomAdmins[0];
+    else
+      room.roomOwner = room.users[0].id;
+    await this.roomService.savechangedOwner(room);
+  }
+
   @SubscribeMessage('Room-leave')
   async onLeaveRoom( @ConnectedSocket() socket: Socket, @MessageBody() roomId: number) {
     // remove connection from JoinedRooms
@@ -334,10 +343,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const userId = socket.data.user.id
     if (!roomToleave)
       return ;
-    this.joinedRoomService.deleteBySocketId(socket.id);
     roomToleave.users = roomToleave.users.filter(toreduce => toreduce.id ===  userId);
+    this.joinedRoomService.deleteBySocketId(socket.id);
+    //주인장일 경우 계승하고 나감
     if (roomToleave.users.length === 0)
       this.deleteRoom(roomId);
+    else
+    {
+      if (userId === roomToleave.roomOwner)
+        this.changeOwner(roomToleave);
+    }
     //dm에서는 room-leave를 부르지 않는다.
   }
   
@@ -420,18 +435,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         return ; //주인장이 아닌 사람이 한 요청일때 무시
       const editedRoom = await this.roomService.editRoom(roomId, editData);
 
-      // for (const user of createdRoom.users) {
-
-      //   const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
-      //   const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
-  
-      //   for (const connection of connections) {
-      //     await this.server.to(connection.socketId).emit('rooms', rooms);
-      //   }
-  
-      // }
-      // if (editedRoom.roomType === 'open' || editedRoom.roomType === 'protected')
-      //private으로 바뀐 경우, 모든 유저의 채팅 목록에서 사라져야한다. 따라서 위의 if 절은 없앰.
       this.emitRoomsToAllConnectedUser();
   }
   
@@ -532,15 +535,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       socket.emit("my-block-list", (await newData).block_list);
     }
 
+    @SubscribeMessage('remove-user-block')
+    async onUndoBlockSomeone(
+      @ConnectedSocket() socket: Socket,
+      @MessageBody() targetId: number)
+    {
+      const newData = this.userService.undoBlockList(socket.data.user.id, targetId);
+      
+      socket.emit("my-block-list", (await newData).block_list);
+    }
+
   //--- 아직 구현 안한 쪽
 
   //소켓이 끊기는 순간 handledissconnection에서 room-leave와 connected-socket 데이터 정리를 잘 해야함!!! 꼭 테스트 할것
     
-    // @SubscribeMessage('chatMessage')
-    // handleMessage(client: Socket, payload: any): void {
-      //   this.logger.log(`Received message: ${payload}`); // 로그를 출력합니다.
-      //   this.logger.log(`Received message`); // 로그를 출력합니다.
-      //   this.server.emit('chatMessage', payload);
-      // }
-
 }

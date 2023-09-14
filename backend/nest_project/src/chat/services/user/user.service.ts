@@ -62,6 +62,15 @@ export class UserService {
 		return await this.userRepository.save(newMyData); //update는 못쓰는지 궁금함
 	}
 
+	public async undoBlockList(myId: number, targetId:number) : Promise<UserI>
+	{
+		const newMyData = await this.getOne(myId);
+		if (! newMyData.block_list.find(finding => finding === targetId))
+			return newMyData; //이미 없는 경우
+		newMyData.block_list = newMyData.block_list.filter(finding => finding === targetId);
+		return await this.userRepository.save(newMyData); //update는 못쓰는지 궁금함
+	}
+
 	async deleteById(id: number) {
 		return this.userRepository.delete({ id });
 	  }
