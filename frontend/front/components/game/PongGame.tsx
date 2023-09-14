@@ -110,6 +110,23 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // event lister
+
+    socket.on('paddleMove', (data) => {
+      user.y = data.paddleLeftY;
+      com.y = data.paddleRightY;
+    });
+    
+    socket.on('updateCanvas', (data) => {
+      ball.x = data.ballX;
+      ball.y = data.ballY;
+      ball.velocityX = data.ballXvelocity;
+      ball.velocityY = data.ballYvelocity;
+      ball.speed = data.ballSpeed;
+    });
+    
+    // rendering function
+
     function drawRect(
       x: number,
       y: number,
@@ -122,24 +139,6 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
         ctx.fillRect(x, y, w, h);
       }
     }
-
-    socket.on('paddleMove', (data) => {
-      user.y = data.paddleLeftY;
-      com.y = data.paddleRightY;
-      // console.log(socket.id);
-      // console.log(user.y);
-      // console.log(com.y);
-    });
-
-    socket.on('updateCanvas', (data) => {
-      ball.x = data.ballX;
-      ball.y = data.ballY;
-      ball.velocityX = data.ballXvelocity;
-      ball.velocityY = data.ballYvelocity;
-      ball.speed = data.ballSpeed;
-      render();
-    });
-
 
     function drawCircle(x: number, y: number, r: number, color: string) {
       if (ctx) {
@@ -285,13 +284,13 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     canvas.addEventListener("mousemove", movePaddle);
 
     // 게임 루프 시작
-    // const intervalId = setInterval(() => {
-    //   update();
-    //   render();
-    // }, 1000 / framePerSecond);
+    const intervalId = setInterval(() => {
+      update();
+      render();
+    }, 1000 / framePerSecond);
 
     // 컴포넌트가 언마운트되면 clearInterval을 사용하여 게임 루프를 정리합니다.
-    // return () => clearInterval(intervalId);
+    return () => clearInterval(intervalId);
   }, [canvas]);
 
   return (

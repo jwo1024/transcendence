@@ -144,7 +144,7 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 	if (await collision(tempBall, tempPaddle))
 	{
 		const collidePoint =
-			(tempPaddle.y + tempPaddle.height / 2) / (tempPaddle.height / 2);
+			(tempBall.y - (tempPaddle.y + tempPaddle.height / 2)) / (tempPaddle.height / 2);
 		const angleRad = (Math.PI / 4) * collidePoint;
 		const direction = tempBall.x + tempBall.radius < gameField.canvasWidth / 2 ? 1 : -1;
 
@@ -161,6 +161,8 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 		gameField.ballX = gameField.canvasWidth / 2;
 		gameField.ballY = gameField.canvasHeight / 2;
 		gameField.ballXvelocity = 3;
+		gameField.ballYvelocity = 3;
+		gameField.ballSpeed = 3;
 	}
 	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
 	{
@@ -169,6 +171,8 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 		gameField.ballX = gameField.canvasWidth / 2;
 		gameField.ballY = gameField.canvasHeight / 2;
 		gameField.ballXvelocity = 3;
+		gameField.ballYvelocity = 3;
+		gameField.ballSpeed = 3;
 	}
 
 	// console.log(`emit ballX : ${gameField.ballX},  ballY: ${gameField.ballY}`);
@@ -321,7 +325,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// playGame();
 		// movePlayer();
 
-		const timer = setInterval(playGame, 50, this.server, matchInfo, gameField);
+		const timer = setInterval(playGame, 30, this.server, matchInfo, gameField);
 
 		// 넘겨주는 인자 확인
 	}
@@ -329,24 +333,42 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	@SubscribeMessage('mouseMove')
 	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
 	{
-		// console.log("mouse Move Function ::");
-		// console.log(userY);
-		// return "";
+		// need to take parameters [ matchInfo, gameField ]
+
 		if (socket.id === player1.socketId)
 		{
-			gameField.paddleLeftY = userY;
-			// console.log(socket.id);
-			// console.log(gameField.paddleLeftY);
+			if (userY < 0)
+			{
+				gameField.paddleLeftY = 0;
+			}
+			else if (userY > 500)
+			{
+				gameField.paddleLeftY = 500;
+			}
+			else
+			{
+				gameField.paddleLeftY = userY;
+			}
 			this.server.to("Game Room").emit('paddleMove', gameField);
-			// return gameField;
 		}
 		else if (socket.id === player2.socketId)
 		{
-			gameField.paddleRightY = userY;
+			if (userY < 0)
+			{
+				gameField.paddleRightY = 0;
+			}
+			else if (userY > 500)
+			{
+				gameField.paddleRightY = 500;
+			}
+			else
+			{
+				gameField.paddleRightY = userY;
+			}
+			// gameField.paddleRightY = userY;
 			// console.log(socket.id);
 			// console.log(gameField.paddleRightY);
 			this.server.to("Game Room").emit('paddleMove', gameField);
-			// return gameField;
 		}
 	}
 
