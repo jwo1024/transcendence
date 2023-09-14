@@ -25,17 +25,33 @@ export interface MatchInfo
 export interface GameField
 {
 	// canvas
-	// canvasLeft: number,
-	// canvasRight: number,
-	// canvasUp: number,
-	// canvasBottom: number,
 	canvasWidth: number,
 	canvasHeight: number,
+	// paddle (== player)
+	paddleLeftX: number,
 	paddleLeftY: number,
+	paddleRightX: number,
 	paddleRightY: number,
+	// ball
 	ballX: number,
 	ballY: number,
+	ballRadius: number,
 	ballXvelocity: number,
 	ballYvelocity: number,
-	ballRadius: number
+	ballSpeed: number,
+}
+
+export interface Ball
+{
+	x: number,
+	y: number,
+	radius: number,
+}
+
+export interface Paddle
+{
+	x: number,
+	y: number,
+	width: number,
+	height: number,
 }

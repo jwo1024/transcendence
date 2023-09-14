@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { Player, MatchInfo, GameField } from './interface/game.interface';
+import { Player, MatchInfo, GameField, Ball, Paddle } from './interface/game.interface';
 import { GameService } from './game.service';
 
 import { from, Observable } from 'rxjs';
@@ -33,6 +33,33 @@ async function joinGameRoom(playerLeft: Socket, playerRight: Socket)
 	playerRight.join("game room"/* matchId */);
 }
 
+async function collision(b: Ball, p: Paddle)
+{
+	const paddleLocation =
+	{
+	  top: p.y,
+	  bottom: p.y + p.height,
+	  left: p.x,
+	  right: p.x + p.width,
+	};
+
+	const ballLocation =
+	{
+	  top: b.y - b.radius,
+	  bottom: b.y + b.radius,
+	  left: b.x - b.radius,
+	  right: b.x + b.radius,
+	};
+
+	return (
+	  ballLocation.right > paddleLocation.left &&
+	  ballLocation.left < paddleLocation.right &&
+	  ballLocation.top < paddleLocation.bottom &&
+	  ballLocation.bottom > paddleLocation.top
+	);
+  }
+
+
 // const playerList: string[] = [];
 
 // async function tempSetPlayers(id: number)
@@ -57,19 +84,96 @@ const player2: Player = {
 			socketId: "not yet",
 		};
 
-const gamefield: GameField = {
+const gameField: GameField = {
 	// canvas 크기 바뀔 경우 고려해서 수정 필요
 	canvasWidth: 800,
 	canvasHeight: 600,
+	paddleLeftX: 0, // 캔버스의 x축 왼쪽 끝
 	paddleLeftY: 42,
+	paddleRightX: 800 - 10, // 캔버스의 x축 오른쪽 끝
 	paddleRightY: 42,
 	ballX: 800 / 2,
 	ballY: 600 / 2,
+	ballRadius: 10,
 	ballXvelocity: 3,
 	ballYvelocity: 3,
-	ballRadius: 10
+	ballSpeed: 10,
 }
 
+
+async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameField)
+{
+	// location of ball
+	// console.log(`ballX : ${gameField.ballX},  ballY: ${gameField.ballY}`);
+	gameField.ballX += gameField.ballXvelocity;
+	gameField.ballY += gameField.ballYvelocity;
+	// console.log(`after ballX : ${gameField.ballX},  ballY: ${gameField.ballY}`);
+
+	// collision with ball and top & bottom of canvas
+	if (gameField.ballY + gameField.ballRadius > gameField.canvasHeight
+		|| gameField.ballY - gameField.ballRadius < 0)
+	{
+		gameField.ballYvelocity = -gameField.ballYvelocity;
+	}
+
+	// collision with ball and paddle
+	const tempBall: Ball =
+	{
+		x: gameField.ballX,
+		y: gameField.ballY,
+		radius: gameField.ballRadius,
+	}
+	const tempPaddle: Paddle =
+	{
+		x: 0,
+		y: 0,
+		width: 10,
+		height: 100,
+	}
+	if (gameField.ballX + gameField.ballRadius < gameField.canvasWidth / 2)
+	{
+		tempPaddle.x = gameField.paddleLeftX;
+		tempPaddle.y = gameField.paddleLeftY;
+	}
+	else
+	{
+		tempPaddle.x = gameField.paddleRightX;
+		tempPaddle.y = gameField.paddleRightY;
+	}
+
+	if (await collision(tempBall, tempPaddle))
+	{
+		const collidePoint =
+			(tempPaddle.y + tempPaddle.height / 2) / (tempPaddle.height / 2);
+		const angleRad = (Math.PI / 4) * collidePoint;
+		const direction = tempBall.x + tempBall.radius < gameField.canvasWidth / 2 ? 1 : -1;
+
+		gameField.ballXvelocity = direction * gameField.ballSpeed * Math.cos(angleRad);
+		gameField.ballYvelocity = gameField.ballSpeed * Math.sin(angleRad);
+
+		gameField.ballSpeed += 0.1;
+	}
+
+	if (gameField.ballX - gameField.ballRadius < 0)
+	{
+		++matchInfo.scoreRight;
+		//resetBall();
+		gameField.ballX = gameField.canvasWidth / 2;
+		gameField.ballY = gameField.canvasHeight / 2;
+		gameField.ballXvelocity = 3;
+	}
+	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
+	{
+		++matchInfo.scoreLeft;
+		//resetBall();
+		gameField.ballX = gameField.canvasWidth / 2;
+		gameField.ballY = gameField.canvasHeight / 2;
+		gameField.ballXvelocity = 3;
+	}
+
+	// console.log(`emit ballX : ${gameField.ballX},  ballY: ${gameField.ballY}`);
+	server.to(matchInfo.roomName).emit('updateCanvas', gameField);
+}
 
 
 @Injectable()
@@ -175,6 +279,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		console.log("start Game ::");
 		console.log(playerLeft);
 		console.log(playerRight);
+
 		const matchInfo: MatchInfo =
 		{
 			matchId: 42, // dataBase 연동
@@ -188,8 +293,24 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 			scoreRight: 0,
 		};
 		// const gameField: GameField = {};
+		// const gameField: GameField = {
+		// 	// canvas 크기 바뀔 경우 고려해서 수정 필요
+		// 	canvasWidth: 800,
+		// 	canvasHeight: 600,
+		// 	paddleLeftX: 0, // 캔버스의 x축 왼쪽 끝
+		// 	paddleLeftY: 42,
+		// 	paddleRightX: 800 - 10, // 캔버스의 x축 오른쪽 끝
+		// 	paddleRightY: 42,
+		// 	ballX: 800 / 2,
+		// 	ballY: 600 / 2,
+		// 	ballRadius: 10,
+		// 	ballXvelocity: 3,
+		// 	ballYvelocity: 3,
+		// 	ballSpeed: 10,
+		// }
 
 		socket.join(matchInfo.roomName);
+		console.log(`socket ${socket.id} join room of [${matchInfo.roomName}]`);
 		
 		// todo: 한쪽이 게임 수락하면, 동시에 양쪽에 뜨도록 server.to(roomName).emit()으로 수정하기
 		socket.emit('setMiniProfile', playerLeft, playerRight, () => {
@@ -199,6 +320,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// 특정 room에만 이벤트 발생
 		// playGame();
 		// movePlayer();
+
+		const timer = setInterval(playGame, 50, this.server, matchInfo, gameField);
 
 		// 넘겨주는 인자 확인
 	}
@@ -211,56 +334,56 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// return "";
 		if (socket.id === player1.socketId)
 		{
-			gamefield.paddleLeftY = userY;
+			gameField.paddleLeftY = userY;
 			// console.log(socket.id);
-			// console.log(gamefield.paddleLeftY);
-			this.server.to("Game Room").emit('paddleMove', gamefield);
-			// return gamefield;
+			// console.log(gameField.paddleLeftY);
+			this.server.to("Game Room").emit('paddleMove', gameField);
+			// return gameField;
 		}
 		else if (socket.id === player2.socketId)
 		{
-			gamefield.paddleRightY = userY;
+			gameField.paddleRightY = userY;
 			// console.log(socket.id);
-			// console.log(gamefield.paddleRightY);
-			this.server.to("Game Room").emit('paddleMove', gamefield);
-			// return gamefield;
+			// console.log(gameField.paddleRightY);
+			this.server.to("Game Room").emit('paddleMove', gameField);
+			// return gameField;
 		}
 	}
 
-	@SubscribeMessage('resetBall')
-	async resetBall(@ConnectedSocket() socket: Socket)
-	{
-		gamefield.ballX = gamefield.canvasWidth / 2;
-		gamefield.ballY = gamefield.canvasHeight / 2;
-		gamefield.ballXvelocity = 3;
-		return gamefield;
-	}
+	// @SubscribeMessage('resetBall')
+	// async resetBall(@ConnectedSocket() socket: Socket)
+	// {
+	// 	gameField.ballX = gameField.canvasWidth / 2;
+	// 	gameField.ballY = gameField.canvasHeight / 2;
+	// 	gameField.ballXvelocity = 3;
+	// 	return gameField;
+	// }
 
-	@SubscribeMessage('updateCanvas')
-	async renderCanvas(@ConnectedSocket() socket: Socket)
-	{
-		gamefield.ballX += gamefield.ballXvelocity;
-		gamefield.ballY += gamefield.ballYvelocity;
+	// @SubscribeMessage('updateCanvas')
+	// async renderCanvas(@ConnectedSocket() socket: Socket)
+	// {
+	// 	gameField.ballX += gameField.ballXvelocity;
+	// 	gameField.ballY += gameField.ballYvelocity;
 		
-		if (gamefield.ballY + gamefield.ballRadius > gamefield.canvasHeight
-			|| gamefield.ballY - gamefield.ballRadius < 0)
-		{
-			gamefield.ballYvelocity = -gamefield.ballYvelocity;
-		}
+	// 	if (gameField.ballY + gameField.ballRadius > gameField.canvasHeight
+	// 		|| gameField.ballY - gameField.ballRadius < 0)
+	// 	{
+	// 		gameField.ballYvelocity = -gameField.ballYvelocity;
+	// 	}
 
-		return gamefield;
-	}
+	// 	return gameField;
+	// }
 
-	@SubscribeMessage('collision')
-	async paddleCollision(@ConnectedSocket() socket: Socket, @MessageBody() x: number,
-							@MessageBody() y: number)
-	{
-		console.log(x);
-		gamefield.ballXvelocity = x;
-		gamefield.ballYvelocity = y;
+	// @SubscribeMessage('collision')
+	// async paddleCollision(@ConnectedSocket() socket: Socket, @MessageBody() x: number,
+	// 						@MessageBody() y: number)
+	// {
+	// 	// console.log(x);
+	// 	gameField.ballXvelocity = x;
+	// 	gameField.ballYvelocity = y;
 
-		return gamefield;
-	}
+	// 	return gameField;
+	// }
 
 	@SubscribeMessage('ladderGameQueue')
 	ladderQueueMatch(@ConnectedSocket() socket: Socket)
@@ -293,62 +416,3 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	// }
 
 }
-
-
-
-
-
-
-// temp --------------------
-// import React from "react";
-// import { ThemeProvider } from "@react95/core";
-// import Window from "@/components/common/Window";
-// import MiniProfile from "@/components/game/MiniProfile";
-// import PongGame from "@/components/game/PongGame";
-
-// import io from 'socket.io-client';
-// const socket = io('http://localhost:4000/game'); 
-
-// const left = { nickname: "pLeft.nickname", ladder: 0, };
-// const right = { nickname: "pRight.nickname", ladder: 0, };
-
-//   const startGameHandler = () => {
-//     socket.emit('startGame');
-//     socket.on('setMiniProfile', (pLeft, pRight, callback) => {
-//       left.nickname = pLeft.nickname;
-//       left.ladder = pLeft.level;
-//       right.nickname = pRight.nickname;
-//       right.ladder = pRight.level;
-//       callback();
-//     });
-//   };
-
-// export default function GamePage() {
-//   return (
-//     <div className="flex items-center justify-center h-screen">
-//       <button onClick={startGameHandler}>START GAME</button>
-//       <Window title="pong game" w="900" h="850">
-//         <div className="h-screen flex flex-col justify-center items-center">
-//           <PongGame />
-//           <div className="flex mt-10 w-[800px] items-center justify-between">
-//             <MiniProfile
-//               nickname={left.nickname}
-//               ladder={left.ladder}
-//               win={23}
-//               lose={17}
-//               avatarSrc="https://github.com/React95.png"
-//             />
-//             <img className="h-40 mx-10" src="versus.png" />
-//             <MiniProfile
-//               nickname={right.nickname}
-//               ladder={right.ladder}
-//               win={23}
-//               lose={17}
-//               avatarSrc="https://github.com/React95.png"
-//             />
-//           </div>
-//         </div>
-//       </Window>
-//     </div>
-//   );
-// }

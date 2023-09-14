@@ -131,6 +131,15 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
       // console.log(com.y);
     });
 
+    socket.on('updateCanvas', (data) => {
+      ball.x = data.ballX;
+      ball.y = data.ballY;
+      ball.velocityX = data.ballXvelocity;
+      ball.velocityY = data.ballYvelocity;
+      ball.speed = data.ballSpeed;
+      render();
+    });
+
 
     function drawCircle(x: number, y: number, r: number, color: string) {
       if (ctx) {
@@ -158,46 +167,46 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
       }
     }
 
-    function resetBall() {
-      if (canvas) {
-        socket.emit('resetBall', (data: any) => {
-          ball.x = data.ballX;
-          ball.y = data.ballY;
-          ball.velocityX = data.ballXvelocity;
-        });
-        ball.speed = BallSpec.speed;
-        // ball.velocityX = BallSpec.speed;
-      }
-    }
+    // function resetBall() {
+    //   if (canvas) {
+    //     socket.emit('resetBall', (data: any) => {
+    //       ball.x = data.ballX;
+    //       ball.y = data.ballY;
+    //       ball.velocityX = data.ballXvelocity;
+    //     });
+    //     ball.speed = BallSpec.speed;
+    //     // ball.velocityX = BallSpec.speed;
+    //   }
+    // }
 
-    function collision(b: Ball, p: Paddle) {
-      const paddleLocation = {
-        top: p.y,
-        bottom: p.y + p.height,
-        left: p.x,
-        right: p.x + p.width,
-      };
-      const ballLocation = {
-        top: b.y - b.radius,
-        bottom: b.y + b.radius,
-        left: b.x - b.radius,
-        right: b.x + b.radius,
-      };
-      return (
-        ballLocation.right > paddleLocation.left &&
-        ballLocation.left < paddleLocation.right &&
-        ballLocation.top < paddleLocation.bottom &&
-        ballLocation.bottom > paddleLocation.top
-      );
-    }
+    // function collision(b: Ball, p: Paddle) {
+    //   const paddleLocation = {
+    //     top: p.y,
+    //     bottom: p.y + p.height,
+    //     left: p.x,
+    //     right: p.x + p.width,
+    //   };
+    //   const ballLocation = {
+    //     top: b.y - b.radius,
+    //     bottom: b.y + b.radius,
+    //     left: b.x - b.radius,
+    //     right: b.x + b.radius,
+    //   };
+    //   return (
+    //     ballLocation.right > paddleLocation.left &&
+    //     ballLocation.left < paddleLocation.right &&
+    //     ballLocation.top < paddleLocation.bottom &&
+    //     ballLocation.bottom > paddleLocation.top
+    //   );
+    // }
 
     function update() {
       if (canvas) {
-        socket.emit('updateCanvas', (data: any) => {
-          ball.x = data.ballX;
-          ball.y = data.ballY;
-          ball.velocityY = data.ballYvelocity;
-        });
+        // socket.emit('updateCanvas', (data: any) => {
+        //   ball.x = data.ballX;
+        //   ball.y = data.ballY;
+        //   ball.velocityY = data.ballYvelocity;
+        // });
         // ball.x += ball.velocityX;
         // ball.y += ball.velocityY;
 
@@ -208,30 +217,30 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
         //   ball.velocityY = -ball.velocityY;
         // }
 
-        let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
-        if (collision(ball, player)) {
-          let collidePoint =
-            (ball.y - (player.y + player.height / 2)) / (player.height / 2);
-          let angleRad = (Math.PI / 4) * collidePoint;
+        // let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
+        // if (collision(ball, player)) {
+        //   let collidePoint =
+        //     (ball.y - (player.y + player.height / 2)) / (player.height / 2);
+        //   let angleRad = (Math.PI / 4) * collidePoint;
 
-          let direction = ball.x + ball.radius < canvas.width / 2 ? 1 : -1;
+        //   let direction = ball.x + ball.radius < canvas.width / 2 ? 1 : -1;
 
-          //
-          ball.velocityX = direction * ball.speed * Math.cos(angleRad);
-          ball.velocityY = ball.speed * Math.sin(angleRad);
+        //   //
+        //   ball.velocityX = direction * ball.speed * Math.cos(angleRad);
+        //   ball.velocityY = ball.speed * Math.sin(angleRad);
           // todo: 위의 값들 백엔드에서 값 변경하는 것으로 수정해야 함
           // socket.emit('collision', ball.velocityX, ball.velocityY, (data: any) => {});
 
-          ball.speed += 0.1;
-        }
+        //   ball.speed += 0.1;
+        // }
 
-        if (ball.x - ball.radius < 0) {
-          // com.score++;
-          resetBall();
-        } else if (ball.x + ball.radius > canvas.width) {
-          // user.score++;
-          resetBall();
-        }
+        // if (ball.x - ball.radius < 0) {
+        //   // com.score++;
+        //   resetBall();
+        // } else if (ball.x + ball.radius > canvas.width) {
+        //   // user.score++;
+        //   resetBall();
+        // }
       }
     }
 
@@ -262,7 +271,7 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
       render();
     }
 
-    setInterval(game, 1000 / framePerSecond);
+    // setInterval(game, 1000 / framePerSecond);
 
     function movePaddle(event: any) {
       if (canvas) {
@@ -276,13 +285,13 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
     canvas.addEventListener("mousemove", movePaddle);
 
     // 게임 루프 시작
-    const intervalId = setInterval(() => {
-      update();
-      render();
-    }, 1000 / framePerSecond);
+    // const intervalId = setInterval(() => {
+    //   update();
+    //   render();
+    // }, 1000 / framePerSecond);
 
     // 컴포넌트가 언마운트되면 clearInterval을 사용하여 게임 루프를 정리합니다.
-    return () => clearInterval(intervalId);
+    // return () => clearInterval(intervalId);
   }, [canvas]);
 
   return (
