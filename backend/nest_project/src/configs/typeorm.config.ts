@@ -8,6 +8,7 @@ import { ConnectedUserEntity } from '../chat/entities/connected-user.entity';
 import { MessageEntity } from '../chat/entities/message.entity'; 
 import { JoinedRoomEntity } from '../chat/entities/joined-room.entity'; 
 import { UserEntity } from '../chat/entities/user.entity';
+import { PlayerEntity } from "src/game/entities/player.entity";
 
 export const typeORMConfig : TypeOrmModule = {
 	logging: {
@@ -35,6 +36,9 @@ export const typeORMConfig : TypeOrmModule = {
 				MessageEntity,
 				JoinedRoomEntity,
 				UserEntity,
+
+				//for game
+				PlayerEntity,
 	],
 
 	synchronize: true
