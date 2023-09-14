@@ -488,7 +488,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.server.to(targetSocket.socketId).emit('got-muted', formattedTime);
     }
 
-
+    @SubscribeMessage('add-user-block')
+    async onblockSomeone(
+      @ConnectedSocket() socket: Socket,
+      @MessageBody() targetId: number)
+    {
+      const newData = this.userService.addBlockList(socket.data.user.id, targetId);
+      
+      socket.emit("my-block-list", (await newData).block_list);
+    }
 
   //--- 아직 구현 안한 쪽
 

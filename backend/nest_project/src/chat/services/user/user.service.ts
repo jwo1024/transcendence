@@ -53,6 +53,15 @@ export class UserService {
 	});
 	}
 
+	public async addBlockList(myId: number, targetId:number) : Promise<UserI>
+	{
+		const newMyData = await this.getOne(myId);
+		if (newMyData.block_list.find(finding => finding === targetId))
+			return newMyData; //이미 있는 경우
+		newMyData.block_list.push(targetId);
+		return await this.userRepository.save(newMyData); //update는 못쓰는지 궁금함
+	}
+
 	async deleteById(id: number) {
 		return this.userRepository.delete({ id });
 	  }
