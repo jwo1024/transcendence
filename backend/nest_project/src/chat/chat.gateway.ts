@@ -14,7 +14,7 @@ import {
           OnModuleInit,
           UnauthorizedException 
         } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { OneToMany, Repository } from 'typeorm';
 
 //Types
 // import { roomType } from './types/roomTypes';
@@ -47,6 +47,9 @@ import { RoomCreateDTO, RoomJoinDTO } from './dto/room.dto';
 import { MessageDTO } from './dto/message.dto';
 import { AdminRelatedDTO } from './dto/room.dto';
 
+import * as jwt from 'jsonwebtoken';
+import { create } from 'domain';
+
 
 // @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001", "*" } })
 @WebSocketGateway({ namespace: '/chat', cors: { origin: "*"} })
@@ -65,7 +68,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       private profileService : ProfileService,
       private connectedUserService: ConnectedUserService,
       private joinedRoomService: JoinedRoomService,
-      private messageService: MessageService
+      private messageService: MessageService,
         ) { };
   
   //required by OnModuleInit
@@ -79,9 +82,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   //required by OnGatewayConnection
   async handleConnection(socket: Socket) {
     try {
-      //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
-      // const decodedToken = await this.authService.verifyJwt(socket.handshake.headers.authorization);
-      // const user: UserI = await this.userService.getOne(decodedToken.user.id);
+      // //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
+      // const token = socket.handshake.headers.authorization;
+      // const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
+
+              // const decodedToken 
+              // = await this.authService.verifyJwt(socket.handshake.headers.authorization);
+              // const userProfile: UserI = await this.userService.getOne(decodedToken.user.id);
       // if (!user) {
         // return this.disconnect(socket);
       // } else {
@@ -179,7 +186,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     //방을 만든 사용자를 생성된 방에 join 시킴
     this.onJoinRoom(socket, {roomId: createdRoom.roomId, roomPass: createdRoom.roomPass});
-
+    // 방을 만든 사용자에게 현재 방의 정보 제공 
+    await this.server.to(socket.id).emit('new_join_room', createdRoom);
+    // const currentRoomId = createdRoom.roomId;
+    // await this.server.to(socket.id).emit(`messages_${currentRoomId}`, createdRoom);
     //현 서버에 소켓 연결된 모든 채팅 사용자에게 room 정보를 보냄
     for (const user of createdRoom.users) {
 
@@ -189,7 +199,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       // for (const connection of connections) { // 한 유저당 하나의 소켓만 들어온다고 가정하고 바뀐부분
         await this.server.to(connection.socketId).emit('rooms', rooms);
       }
-    }
+  }
   
   //For DM(개인 채팅용 방 만들기 메서드)
   @SubscribeMessage('DM-create')
@@ -331,7 +341,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     for (const connetedUser of connectedUsers) 
     {
 
-      const rooms = await this.roomService.getRoomsByType(['open', 'protected']); //roomType이 DM, private 이 아닌 애들만.
+      const rooms = await this.roomService.getRoomsByType(['open']); //roomType이 DM, private 이 아닌 애들만.
       // const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
         await this.server.to(connetedUser.socketId).emit('visible_rooms', rooms);
     }

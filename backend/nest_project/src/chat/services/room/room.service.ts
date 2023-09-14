@@ -156,11 +156,10 @@ export class RoomService {
   }
 
 
-  //roomType이 protected일 경우 비밀번호가 맞아도 초대된 사용자가 아니면 못들어감(무시)
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
   async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
-    if ( roomFromDB.roomType === 'open')
-      return true;
+    if ( roomFromDB.roomType === 'private')
+      return false;
     // if ( roomFromDB.roomType === 'protected' && joinDTO.roomPass === roomFromDB.roomPass)
     if (joinDTO.roomPass)
       joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
