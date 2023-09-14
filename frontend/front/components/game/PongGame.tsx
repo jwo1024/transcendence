@@ -65,30 +65,30 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(
     canvasRef.current
   );
-  const [user, setUser] = useState<Paddle>({
+  const user = {
     x: 0,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
     height: PaddleSize.height,
     color: "white",
     score: 0,
-  });
-  const [com, setCom] = useState<Paddle>({
+  };
+  const com = {
     x: CanvasSize.width - PaddleSize.width,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
     height: PaddleSize.height,
     color: "white",
     score: 0,
-  });
-  const [net, setNet] = useState<Net>({
+  };
+  const net = {
     x: CanvasSize.width / 2 - 2 / 2,
     y: 0,
     width: 2,
     height: 10,
     color: "red",
-  });
-  const [ball, setBall] = useState<Ball>({
+  };
+  const ball = {
     x: CanvasSize.width / 2,
     y: CanvasSize.height / 2,
     radius: BallSpec.radius,
@@ -96,8 +96,8 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
     velocityX: BallSpec.speed,
     velocityY: BallSpec.speed,
     color: "white",
-  });
-  const [framePerSecond] = useState(50);
+  };
+  const framePerSecond = 50;
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -220,7 +220,7 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
           ball.velocityX = direction * ball.speed * Math.cos(angleRad);
           ball.velocityY = ball.speed * Math.sin(angleRad);
           // todo: 위의 값들 백엔드에서 값 변경하는 것으로 수정해야 함
-          socket.emit('collision', ball.velocityX, ball.velocityY, (data: any) => {});
+          // socket.emit('collision', ball.velocityX, ball.velocityY, (data: any) => {});
 
           ball.speed += 0.1;
         }
@@ -283,7 +283,7 @@ const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY *
 
     // 컴포넌트가 언마운트되면 clearInterval을 사용하여 게임 루프를 정리합니다.
     return () => clearInterval(intervalId);
-  }, [canvas, user, com, net, ball, framePerSecond]);
+  }, [canvas]);
 
   return (
     <canvas
