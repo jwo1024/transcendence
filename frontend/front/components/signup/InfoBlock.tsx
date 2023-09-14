@@ -1,17 +1,11 @@
 import { Frame } from "@react95/core";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import Cookies from "js-cookie";
-
 import { User42Dto } from "@/types/User42Dto";
 
-const InfoBlockLayout = ({
-  menu,
-  value,
-}: {
+interface InfoBlockLayoutProps {
   menu?: string;
   value?: string;
-}) => {
+}
+const InfoBlockLayout = ({ menu, value }: InfoBlockLayoutProps) => {
   return (
     <div className="flex flex-row ">
       <Frame
@@ -31,35 +25,10 @@ const InfoBlockLayout = ({
   );
 };
 
-const InfoBlock = ({
-  user42Dto,
-  setUser42Dto,
-}: {
+interface InfoBlockProps {
   user42Dto: User42Dto | null;
-  setUser42Dto: React.Dispatch<React.SetStateAction<User42Dto | null>>;
-}) => {
-  const router = useRouter();
-
-  useEffect(() => {
-    const cookie_user = Cookies.get("user42Dto");
-    if (cookie_user) {
-      const data = JSON.parse(cookie_user);
-      setUser42Dto({
-        id: data.id,
-        login: data.login,
-        email: data.email,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        campus: data.campus,
-      });
-    } else {
-      console.log("cookie_user is null");
-      router.push(
-        `http://localhost:3001/error/signup?error=failed_get_user42dto_cookie`
-      ); // cant't find user42Dto in cookie
-    }
-  }, []);
-
+}
+const InfoBlock = ({ user42Dto }: InfoBlockProps) => {
   return (
     <div>
       안녕하세요 ! {user42Dto?.login} 님

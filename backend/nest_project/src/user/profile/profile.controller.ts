@@ -65,6 +65,24 @@ export class ProfileController {
         }
     }
     
+    // @Get('images/:id')
+    // async getImage(@Param('id') id: number, @Res() res : Response) {
+    //     try {
+    //         const imagePath = join(__dirname, 'images', `${id}` )
+    //         const user = await this.profileService.getUserProfileById(id)
+    //         if (user && user.avatar) {
+    //             const imageBase64 = user.avatar.toString('base64');
+    //             const imageBuffer = Buffer.from(imageBase64, 'base64');
+    //             res.set('Content-Type', 'image/jpeg');           
+    //             return res.send(imageBuffer);
+    //         } else {
+    //             throw new Error(`[${id}] : Image not found`);
+    //         }
+    //     } catch (err) {
+    //         throw new Error(`[${id}] : Image not found`);
+    //     }
+    // }
+    
     @Post('images/:id')
     @UseInterceptors(FileInterceptor('image')) // 'image'는 파일 필드의 이름입니다.
     async uploadImage(@Param('id') id: string, @UploadedFile() image: Express.Multer.File, @Body() body) {
@@ -82,12 +100,13 @@ export class ProfileController {
     }
     
    @Post('/signup')
-   async signUp(@Req() req, @Body() signUpDto: SignupDto) {
-       if (req.user != signUpDto.id)
+   async signUp(@Req() req, @Body() signUpDto: SignupDto) { 
+    const requserId = req.user.userId;   
+    if (requserId != signUpDto.id)
            throw new Error('invalid user id');
-       const result = await this.profileService.getUserProfileById(req.user);
+       const result = await this.profileService.getUserProfileById(requserId);
        if (result) {
-           console.log('[409 Exception]user(', req.user, ') already exists');
+           console.log('[409 Exception]user(', requserId, ') already exists');
            throw new ConflictException('user already exists');
        }
        this.profileService.signUp(signUpDto, join(__dirname, 'images', `${signUpDto.id}`));
