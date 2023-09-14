@@ -162,7 +162,7 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 		//resetBall();
 		gameField.ballX = gameField.canvasWidth / 2;
 		gameField.ballY = gameField.canvasHeight / 2;
-		gameField.ballXvelocity = 3;
+		gameField.ballXvelocity = -3;
 		gameField.ballYvelocity = 3;
 		gameField.ballSpeed = 3;
 	}
