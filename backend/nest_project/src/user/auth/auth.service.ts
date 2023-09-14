@@ -1,4 +1,4 @@
-import { Injectable, Res, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosResponse } from 'axios';
 import { User42Dto } from './dto/user42.dto';
@@ -6,52 +6,42 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserProfile } from '../profile/user-profile.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-
-
 import * as fs from 'fs';
 import * as path from 'path';
 
-
-/*
-export class SessionService {
-  constructor() {
-    this.sessions = new Map<number, string>();
-  }
-  private sessions: Map<number, string>;
-
-  isDifferentSessionId(userId: number, sessionId: string): boolean {
-    const currentSessionId: string = this.sessions.get(userId);
-
-    return !(currentSessionId === sessionId);
-  }
-
-  setSession(session: any, userId: number) {
-    // 유효성 검사 필요
-    const sessionId = session.id;
-
-    session.userId = userId;
-    //test
-    console.log('SessionService session:', session?.id);
-    this.sessions.set(userId, sessionId);
-  }
-}
-
-*/
-
 @Injectable()
 export class AuthService {
+  private static readonly sessions: Map<number, string> = new Map<number, string>();
+
   constructor(
-    //private sessions: Map<number, string>;
     private configService: ConfigService,
     @InjectRepository(UserProfile)
     private userProfileRepository: Repository<UserProfile>,
     private jwtService: JwtService,
-    ){
-      //this.sessions = new Map<number, string>();
-    }
+    ){}
 
+  private static setSession(userId: number, token: string) {
+    AuthService.sessions.set(userId, token);
+    console.log('session set success : [', userId, ']-', token);
+  }
+
+  public static endSession(userId: number) {
+    AuthService.sessions.delete(userId);
+    console.log('session end success : [', userId, ']-', AuthService.sessions.get(userId));
+  }
   
+  public static getSession(userId: number): string {
+    return AuthService.sessions.get(userId);
+  }
+  
+  public static isSessionExist(userId: number): boolean {
+    return AuthService.sessions.has(userId);
+  }
 
+  public static isTokenValid(userId: number, token: string): boolean {
+    return (token && this.isSessionExist(userId) &&  token === AuthService.sessions.get(userId));
+  }
+  
   getRedirectUrlTo42Auth(): string {
     const clientID = this.configService.get<string>('CLIENT_ID');
     const baseUrl = this.configService.get<string>('OAUTH_API42');
@@ -94,31 +84,19 @@ export class AuthService {
       throw new UnauthorizedException('error in redirectFrom42Auth(getUserDataFrom42)\n\t[accessToken is invalid]');
     }
   }
-
-  async jwtCreation(userId: number): Promise<{ accessToken: string }> {
-    
-    const payload = { userId };
-    try { const accessToken = await this.jwtService.sign(payload);
-    console.log('jwt creation success : [', userId, ']-', accessToken);
-    return { accessToken };
-    }catch (err) {
-      throw new UnauthorizedException('jwt creation failed');
-    }  
-  }
-
-
+  
   async downloadDefaultAvatar(url: string, id:number, accessToken: string): Promise<string> {
     try {
       const response: AxiosResponse = await axios.get(url, {
-       headers: { Authorization: `Bearer ${accessToken}` }, responseType: 'stream' });
-      
-      const uploadDirectory = path.join(__dirname, '..', 'profile', 'images');//this.configService.get<string>("IMAGE_PATH");
-      if (!fs.existsSync(uploadDirectory)) {
-        fs.mkdirSync(uploadDirectory, { recursive: true });
-      }
-      const imagePath = path.join(uploadDirectory, `${id}`);
-      const imageStream = fs.createWriteStream(imagePath);
-      response.data.pipe(imageStream);
+        headers: { Authorization: `Bearer ${accessToken}` }, responseType: 'stream' });
+        
+        const uploadDirectory = path.join(__dirname, '..', 'profile', 'images');//this.configService.get<string>("IMAGE_PATH");
+        if (!fs.existsSync(uploadDirectory)) {
+          fs.mkdirSync(uploadDirectory, { recursive: true });
+        }
+        const imagePath = path.join(uploadDirectory, `${id}`);
+        const imageStream = fs.createWriteStream(imagePath);
+        response.data.pipe(imageStream);
       return new Promise<string>((resolve, reject) => {
         imageStream.on('finish', () => resolve(imagePath));
         imageStream.on('error', reject);
@@ -129,4 +107,16 @@ export class AuthService {
       throw new Error('Error Occured in downloadDefaultProfile');
     }
   }
+  
+  async jwtCreation(userId: number): Promise<{ accessToken: string }> {
+    const payload = { userId };
+    try { const accessToken = await this.jwtService.sign(payload);
+    console.log('jwt creation success : [', userId, ']-', accessToken);
+    AuthService.setSession(userId, accessToken);
+    return { accessToken };
+    }catch (err) {
+      throw new UnauthorizedException('jwt creation failed');
+    }  
+  }
+  
 }

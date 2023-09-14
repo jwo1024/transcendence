@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { In, Repository } from 'typeorm';
-import { UserProfile } from './user-profile.entity';
+import { UserProfile, userStatus } from './user-profile.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupDto } from './dto/signup.dto';
 
@@ -21,6 +21,13 @@ export class ProfileService {
         private userProfileRepository: Repository<UserProfile>,
     ) {}
 
+    async logOn(id: number): Promise<void> {
+        await this.userProfileRepository.update({id: id}, {status: userStatus.online});
+    }
+
+    async logOff(id: number): Promise<void> {
+        await this.userProfileRepository.update({id: id}, {status: userStatus.offline});
+    }
 
     async signUp(signupDto: SignupDto, imagePath: string): Promise<void> {
         const { id, nickname, enable2FA, data2FA } = signupDto;

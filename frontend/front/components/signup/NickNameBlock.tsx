@@ -1,13 +1,12 @@
 import { Input } from "@react95/core";
 import { useRef } from "react";
 
-const NickNameBlock = ({
-  nickName,
-  setNickName,
-}: {
+interface NickNameBlockProps {
   nickName: string | null;
   setNickName: React.Dispatch<React.SetStateAction<string | null>>;
-}) => {
+}
+
+const NickNameBlock = ({ nickName, setNickName }: NickNameBlockProps) => {
   const nickNameInputRef = useRef<HTMLInputElement>();
   const handleBlurInput = () => {
     setNickName(nickNameInputRef.current?.value || "");
