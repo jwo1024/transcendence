@@ -1,11 +1,11 @@
 import MiniProfile from "@/components/game/MiniProfile";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FriendList from "@/components/profile/FriendList";
 import Window from "@/components/common/Window";
 import { ThemeProvider, Button } from "@react95/core";
 import MyProfile from "@/components/profile/MyProfile";
 import FriendProfile from "@/components/profile/FriendProfile";
-
+import { UserInfo } from "@/types/UserInfo";
 // 임시 백엔드 타입용.
 type user = {
   nickname: string;
@@ -20,6 +20,10 @@ export default function ProfilePage() {
   const [myProfile, setMyProfile] = useState(true);
   const [friendsProfile, setFriendsProfile] = useState(true);
   const [friendList, setFriendList] = useState(true);
+
+  const user = localStorage.getItem("user");
+  const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+
   const showMyProfile = () => {
     setMyProfile((current) => !current);
   };
@@ -48,7 +52,7 @@ export default function ProfilePage() {
         <div className="flex flex-col justify-between h-[626px]">
           {myProfile ? (
             <MyProfile
-              nickname="hogkim"
+              nickname={user_obj.nickname}
               ladder={2134}
               win={23}
               lose={17}
