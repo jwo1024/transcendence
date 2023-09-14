@@ -14,7 +14,7 @@ import {
           OnModuleInit,
           UnauthorizedException 
         } from '@nestjs/common';
-import { OneToMany, Repository } from 'typeorm';
+// import { OneToMany, Repository } from 'typeorm';
 
 //Types
 // import { roomType } from './types/roomTypes';
@@ -43,7 +43,7 @@ import { ProfileService } from './services/profile-service/profile-service.servi
 // import { SignupDto } from './dto/signup.dto';
 
 //DTOs
-import { RoomCreateDTO, RoomJoinDTO } from './dto/room.dto';
+import { RoomCreateDTO, RoomJoinDTO, RoomInviteDTO } from './dto/room.dto';
 import { MessageDTO } from './dto/message.dto';
 import { AdminRelatedDTO } from './dto/room.dto';
 
@@ -252,6 +252,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     
     //상대방과 나에게 현재 만들어진 room 정보를 포함해 전체 Joinedroom 보냄
     this.emitAllRoomsToUsersInRoom(createdRoom.roomId);
+  }
+
+  @SubscribeMessage('Room-invite')
+  async onInviteRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() roomInvite: RoomInviteDTO) 
+  {
+    const userEntity = await this.userService.getOne(socket.data.user.id);
+    //내가 차단한 유저 초대시 무시
+    if (userEntity.block_list.find(finding => finding === roomInvite.targetUserId))
+      return ;
+    // 나를 차단한 유저에게 초대 안 보냄(무시)
+    const targetEntity = await this.userService.getOne(roomInvite.targetUserId);
+    if (targetEntity.block_list.find(finding => finding === userEntity.id))
+      return ;
+    
+    // 현재 접속한 유저가 아닐 경우 초대 안 보냄
+    const connection = targetEntity.connections;
+    if (connection.length  === 0)
+      return ; 
+    
+    // 타겟에게 초대 팝업 띄우기용 이벤트
+    this.server.to(targetEntity.connections[0].socketId).emit("invite-to-chat", roomInvite.roomId);
   }
 
 
