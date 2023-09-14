@@ -97,7 +97,7 @@ const gameField: GameField = {
 	ballRadius: 10,
 	ballXvelocity: 3,
 	ballYvelocity: 3,
-	ballSpeed: 10,
+	ballSpeed: 3,
 }
 
 

@@ -60,7 +60,7 @@ interface PongGameProps {
   socket: Socket
 }
 
-const PongGame: React.FC<PongGameProps> = ({socket/* paddleLeftY, paddleRightY */}) => {
+const PongGame: React.FC<PongGameProps> = ({socket}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(
     canvasRef.current
