@@ -62,15 +62,7 @@ async function collision(b: Ball, p: Paddle)
 
 // const playerList: string[] = [];
 
-// async function tempSetPlayers(id: number)
-// {
-// 	const player: Player = await this.gameService.tempCreatePlayer(id);
-// 	return player;
-// }
-// //temp
-// const player1 = tempSetPlayers(0);
-// const player2 = tempSetPlayers(1);
-
+// temp variables for unit test
 const player1: Player = {
 			id: 0,
 			level: 42,
@@ -103,13 +95,11 @@ const gameField: GameField = {
 }
 
 
-async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameField)
+async function playGame(server: Server, matchInfo: MatchInfo/* todo: remove */, gameField: GameField)
 {
 	// location of ball
-	// console.log(`ballX : ${gameField.ballX},  ballY: ${gameField.ballY}`);
 	gameField.ballX += gameField.ballXvelocity;
 	gameField.ballY += gameField.ballYvelocity;
-	// console.log(`after ballX : ${gameField.ballX},  ballY: ${gameField.ballY}`);
 
 	// collision with ball and top & bottom of canvas
 	if (gameField.ballY + gameField.ballRadius > gameField.canvasHeight
@@ -156,6 +146,7 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 		gameField.ballSpeed += 0.1;
 	}
 
+	// check score
 	if (gameField.ballX - gameField.ballRadius < 0)
 	{
 		++gameField.scoreRight;
@@ -177,7 +168,6 @@ async function playGame(server: Server, matchInfo: MatchInfo, gameField: GameFie
 		gameField.ballSpeed = 3;
 	}
 
-	// console.log(`emit ballX : ${gameField.ballX},  ballY: ${gameField.ballY}`);
 	server.to(matchInfo.roomName).emit('updateCanvas', gameField);
 }
 
@@ -299,21 +289,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 			scoreRight: 0,
 		};
 		// const gameField: GameField = {};
-		// const gameField: GameField = {
-		// 	// canvas 크기 바뀔 경우 고려해서 수정 필요
-		// 	canvasWidth: 800,
-		// 	canvasHeight: 600,
-		// 	paddleLeftX: 0, // 캔버스의 x축 왼쪽 끝
-		// 	paddleLeftY: 42,
-		// 	paddleRightX: 800 - 10, // 캔버스의 x축 오른쪽 끝
-		// 	paddleRightY: 42,
-		// 	ballX: 800 / 2,
-		// 	ballY: 600 / 2,
-		// 	ballRadius: 10,
-		// 	ballXvelocity: 3,
-		// 	ballYvelocity: 3,
-		// 	ballSpeed: 10,
-		// }
 
 		socket.join(matchInfo.roomName);
 		console.log(`socket ${socket.id} join room of [${matchInfo.roomName}]`);
@@ -328,8 +303,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// movePlayer();
 
 		const timer = setInterval(playGame, 30, this.server, matchInfo, gameField);
-
-		// 넘겨주는 인자 확인
 	}
 
 	@SubscribeMessage('mouseMove')
@@ -337,77 +310,27 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	{
 		// need to take parameters [ matchInfo, gameField ]
 
+		if (userY < 0)
+		{
+			userY = 0;
+		}
+		else if (userY > 500)
+		{
+			userY = 500;
+		}
+
 		if (socket.id === player1.socketId)
 		{
-			if (userY < 0)
-			{
-				gameField.paddleLeftY = 0;
-			}
-			else if (userY > 500)
-			{
-				gameField.paddleLeftY = 500;
-			}
-			else
-			{
-				gameField.paddleLeftY = userY;
-			}
+			gameField.paddleLeftY = userY;
 			this.server.to("Game Room").emit('paddleMove', gameField);
 		}
 		else if (socket.id === player2.socketId)
 		{
-			if (userY < 0)
-			{
-				gameField.paddleRightY = 0;
-			}
-			else if (userY > 500)
-			{
-				gameField.paddleRightY = 500;
-			}
-			else
-			{
-				gameField.paddleRightY = userY;
-			}
-			// gameField.paddleRightY = userY;
-			// console.log(socket.id);
-			// console.log(gameField.paddleRightY);
+			gameField.paddleRightY = userY;
 			this.server.to("Game Room").emit('paddleMove', gameField);
 		}
 	}
 
-	// @SubscribeMessage('resetBall')
-	// async resetBall(@ConnectedSocket() socket: Socket)
-	// {
-	// 	gameField.ballX = gameField.canvasWidth / 2;
-	// 	gameField.ballY = gameField.canvasHeight / 2;
-	// 	gameField.ballXvelocity = 3;
-	// 	return gameField;
-	// }
-
-	// @SubscribeMessage('updateCanvas')
-	// async renderCanvas(@ConnectedSocket() socket: Socket)
-	// {
-	// 	gameField.ballX += gameField.ballXvelocity;
-	// 	gameField.ballY += gameField.ballYvelocity;
-		
-	// 	if (gameField.ballY + gameField.ballRadius > gameField.canvasHeight
-	// 		|| gameField.ballY - gameField.ballRadius < 0)
-	// 	{
-	// 		gameField.ballYvelocity = -gameField.ballYvelocity;
-	// 	}
-
-	// 	return gameField;
-	// }
-
-	// @SubscribeMessage('collision')
-	// async paddleCollision(@ConnectedSocket() socket: Socket, @MessageBody() x: number,
-	// 						@MessageBody() y: number)
-	// {
-	// 	// console.log(x);
-	// 	gameField.ballXvelocity = x;
-	// 	gameField.ballYvelocity = y;
-
-	// 	return gameField;
-	// }
 
 	@SubscribeMessage('ladderGameQueue')
 	ladderQueueMatch(@ConnectedSocket() socket: Socket)
