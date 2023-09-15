@@ -158,9 +158,6 @@ export class RoomService {
 
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
   async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
-    // if ( roomFromDB.roomType === 'private')
-    //   return false; => 프론트에서 막을 수 있을것 같다??
-    // if ( roomFromDB.roomType === 'protected' && joinDTO.roomPass === roomFromDB.roomPass)
     if (joinDTO.roomPass)
       joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
     if ( roomFromDB.roomPass !== undefined && joinDTO.roomPass === roomFromDB.roomPass)

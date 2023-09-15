@@ -187,6 +187,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.logger.log(`Room-create called : ${room} , ${room.roomName} ${room.roomType}`);
     const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
     this.logger.log(`after call : ${createdRoom.roomName} , ${createdRoom.roomOwner} ${createdRoom.roomId}`);
+    if(!createdRoom)
+    { //방만들기 실패
+      this.emitErrorEvent(socket.id, "the room is not exist now.")
+      return ;
+    }
 
     //방을 만든 사용자를 생성된 방에 join 시킴
     this.onJoinRoom(socket, {roomId: createdRoom.roomId, roomPass: createdRoom.roomPass});
@@ -290,19 +295,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     if ( !(this.roomService.isRoomExist(room.roomId)))
       {
-        //존재하지 않는 roomId 요청일 경우 무시
+        this.emitErrorEvent(socket.id, "the room is not exist now.")
         return ;
       }
     if ( await this.roomService.isBannedUser(socket.data.user.id, room.roomId))
+    {
+      this.emitErrorEvent(socket.id, "this user is banned from the room.")
       return ; //ban 처리된 유저이면 요청 무시
-    // this.logger.log("RoomJoin:-start---------")
-    // this.logger.log(`exist : ${await this.roomService.isRoomExist(room.roomId)}`)
+    }
     const roomFromDB = this.roomService.getRoom(room.roomId);
     this.logger.log(`1. roomFromDB : ${(await roomFromDB).roomName}, ${(await roomFromDB).roomOwner}`)
     if (!( await this.roomService.isValidForJoin(await roomFromDB, room)))
     {
-      //roomType이 protected일 경우 비밀번호가 맞아도 초대된 사용자가 아니면 못들어감(무시)
-      //roomType이 private인 경우, 비밀번호가 맞지 않으면 못들어감(무시)
+      this.emitErrorEvent(socket.id, "not valid password")
       return ;
     }
 
@@ -377,7 +382,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const roomToleave = await this.roomService.getRoom(roomId);
     const userId = socket.data.user.id
     if (!roomToleave)
+    {
+      this.emitErrorEvent(socket.id, "the room is not exist now.")
       return ;
+    }
     roomToleave.users = roomToleave.users.filter(toreduce => toreduce.id ===  userId);
     this.joinedRoomService.deleteBySocketId(socket.id);
     //주인장일 경우 계승하고 나감
@@ -399,6 +407,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     if ( !(this.roomService.isRoomExist(messageDTO.roomId)))
     {
       //존재하지 않는 roomId 요청일 경우 무시
+      this.emitErrorEvent(socket.id, "the room is not exist now.")
       return ;
     }
 
@@ -417,6 +426,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   }
   
   //-------방 정보 보내주기------------
+
+  private async emitErrorEvent(socketId:string, reason: string)
+  {
+    await this.server.to(socketId).emit("failed-somthis", reason);
+  }
 
   private async emitRoomsToAllConnectedUser()
   {
