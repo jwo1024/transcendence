@@ -2,7 +2,7 @@ export interface SignupDto {
   id: number;
   nickname: string;
   enable2FA: boolean;
-  data2FA: string;
+  data2FA?: string;
 }
 
 export interface User42Dto {

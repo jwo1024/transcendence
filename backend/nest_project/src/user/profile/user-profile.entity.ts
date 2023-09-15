@@ -22,7 +22,7 @@ export class UserProfile extends BaseEntity {
     @Column({ type: 'boolean', default: false, nullable: false})
     enable2FA: boolean;
     
-    @Column({ type: 'varchar'})
+    @Column({ type: 'varchar', nullable: true})
     data2FA: string;
     
     @Column({ type: 'integer', array: true, default: []})
@@ -43,6 +43,6 @@ export class UserProfile extends BaseEntity {
     @Column({ type: 'integer', default: 0})
     loses: number;
 
-    @Column({ type: 'bytea'})
+    @Column({ type: 'bytea', default: null})
     avatar: Buffer;
-} 
+}
