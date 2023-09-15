@@ -10,19 +10,21 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { UserEntity } from '../../chat/entities/user.entity';
+import { UserService } from '../../chat/services/user/user.service';
 
 @Module({
   imports: [ ServeStaticModule.forRoot({
     rootPath: join(__dirname, '..', 'profile', 'images'),
   }),
-    TypeOrmModule.forFeature([UserProfile]),
+    TypeOrmModule.forFeature([UserProfile, UserEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: 'plzsaveus',
       signOptions: { expiresIn: 60 * 60,}
     })],
   controllers: [AuthController],
-  providers: [AuthService, ConfigService, ProfileService, JwtStrategy],
+  providers: [AuthService, ConfigService, ProfileService, JwtStrategy,UserService],
   exports: [JwtStrategy, PassportModule]
 
 })

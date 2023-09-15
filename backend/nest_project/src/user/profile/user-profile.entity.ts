@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
+import { BaseEntity, Column, Entity, OneToOne, PrimaryColumn, JoinColumn } from "typeorm";
+
+import { UserEntity } from "../../chat/entities/user.entity";
 
 export enum userStatus {
     offline,
@@ -9,6 +11,11 @@ export enum userStatus {
 
 @Entity()
 export class UserProfile extends BaseEntity {
+
+  @OneToOne(() => UserEntity, userEntity => userEntity.userProfile)
+  @JoinColumn({ name: 'user_profile_id' })
+  userEntity: UserEntity;
+
     @PrimaryColumn({ type: 'integer', unique: true, nullable: false})
     id: number;
 

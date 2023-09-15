@@ -97,27 +97,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         // return this.disconnect(socket);
       // } else {
     this.logger.log(`Try connection: ${socket.id}`); 
-      
-      // //temp profile for test
-      //   const tempProfile: SignupDto = new SignupDto();
-      //   tempProfile.id = 1234;
-      //   tempProfile.nickname = 'surlee';
-      //   tempProfile.enable2FA = false;
-      //   tempProfile.data2FA = '';
-
-        //여기서 만드려고 하니까 오류남. 원래도 chat 진입전 Userprofile에 대응하는 데이터가 있을 것.
-        // const profileUser = await this.profileService.signUp(tempProfile) 
-        // const user
 
     this.logger.log(`before make temp profile `); 
 
 
-        //temp UserI
+        // temp UserI
         const tempUser: UserI = {
+          userProfile: null,
           id: 12344,
           nickname: 'surlee',
           block_list: [],
-          friend_list: [],
+          // friend_list: [],
           rooms: [],
           connections: [],
           joinedRooms: [],
@@ -135,10 +125,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         socket.data.user = user;
 
         const rooms = await this.roomService.getRoomsForUser(user.id);
-        
-        // substract page -1 to match the angular material paginator
-        // rooms.meta.currentPage = rooms.meta.currentPage - 1;
-        // this.logger.log(`load from DB : "${rooms.items}"`); 
         
         // Save connection to DB
         await this.connectedUserService.create({ socketId: socket.id, user });
