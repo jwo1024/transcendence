@@ -316,7 +316,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         
     //이벤트명 동적생성
       const currentRoomId = (await roomFromDB).roomId;
-        this.logger.log('messages${currentRoomId}');
+        this.logger.log(`messages_${currentRoomId}`);
       // Send last messages from Room to User
       await this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
       // await this.server.to(socket.id).emit('messages${currentRoomId}', messages);
@@ -343,6 +343,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                               await roomFromDB, { limit: 10, page: 1 });
 
     await this.server.to(socket.id).emit('messages', messages);
+
+    //이벤트명 동적생성
+    const currentRoomId = (await roomFromDB).roomId;
+    // Send last messages from Room to User
+    await this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
+    
     this.emitOneRoomToOneUser(roomId, socket.id);
   }
 
@@ -402,7 +408,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const currentRoomId = room.roomId;
     
     for(const user of joinedUsers) 
-      await this.server.to(user.socketId).emit(`messageAdded_{$currentRoomId}`, createdMessage);
+      await this.server.to(user.socketId).emit(`messageAdded_${currentRoomId}`, createdMessage);
   }
   
   //-------방 정보 보내주기------------
@@ -431,7 +437,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     
     const currentRoomId = room.roomId; 
     for (const user of joinedUsers) 
-      await this.server.to(user.socketId).emit(`current-room_{currentRoomId}`, room);
+      await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, room);
   }
 
   private async emitOneRoomToOneUser(roomId : number, socketId: string)
@@ -440,7 +446,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       = await this.roomService.getRoom(roomId);
     if (!room)
       return;
-    await this.server.to(socketId).emit('current-room', room);
+    await this.server.to(socketId).emit('current-room_${roomId}', room);
   }
 
     //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
