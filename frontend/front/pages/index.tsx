@@ -9,6 +9,8 @@ const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
   const { setCurrentPage } = useContext(CurrentPageContext);
 
   useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
     setCurrentPage("Desktop-Page");
   });
 

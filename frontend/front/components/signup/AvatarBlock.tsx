@@ -2,92 +2,64 @@ import { Frame, Input, Button } from "@react95/core";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
-interface User42Dto {
-  id: number;
-  login: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  campus: string;
-}
+import type { User42Dto } from "@/types/SignUpType";
 
 const AvatarBlock = ({ user42Dto }: { user42Dto: User42Dto }) => {
   const [avatarURL, setAvatarURL] = useState<string | null>(null);
   const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   useEffect(() => {
-    // get avatar image
-    const cookie_token = Cookies.get("accessToken");
-    if (cookie_token) {
-      const token = JSON.parse(cookie_token);
-      fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/images/${user42Dto?.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-        .then((response) => {
-          if (response.ok) {
-            response.blob().then((blob) => {
+    const token = sessionStorage.getItem("accessToken");
+    if (token) {
+      fetch(`${backendUrl}/profile/images/${user42Dto?.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (res.ok) {
+            res.blob().then((blob) => {
               const url = URL.createObjectURL(blob);
               setAvatarURL(url);
             });
-          } else {
-            console.error("이미지를 불러올 수 없습니다.");
-          }
+          } else setAvatarURL("");
         })
         .catch((error) => {
-          {
-            console.error("이미지를 불러오는 동안 오류 발생: ", error);
-          }
+          setAvatarURL("");
+          console.error("이미지를 불러오는 동안 오류 발생: ", error);
         });
     }
   }, []);
 
-  const onSubmitAvatar = async (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmitAvatar = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData();
     formData.append("image", uploadAvatar as Blob); // 필드 이름을 'image'로 변경
     formData.append("ext", `.${uploadAvatar?.name?.split(".").pop()}`);
-    const cookie = Cookies.get("accessToken");
-    if (cookie) {
-      const token = JSON.parse(cookie);
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/images/${user42Dto?.id}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          }
-        );
-
-        if (response.ok) {
-          console.log("이미지 업로드 성공");
-          // const url = URL.createObjectURL(blob);
-          setAvatarURL(URL.createObjectURL(uploadAvatar as Blob));
-        } else {
-          console.error("이미지 업로드 실패");
-        }
-      } catch (err) {
-        console.error(err);
+    const token = sessionStorage.getItem("accessToken");
+    fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/images/${user42Dto?.id}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       }
-    }
+    )
+      .then((res) => {
+        if (res.ok) {
+          // console.log("이미지 업로드 성공");
+          setAvatarURL(URL.createObjectURL(uploadAvatar as Blob)); // as 써도 괜찮을까?
+        } else setAvatarURL(""); // console.error("이미지 업로드 실패");
+      })
+      .catch((err) => {
+        setAvatarURL("");
+        console.error(err);
+      });
   };
 
   const onChangeAvatarInput = (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     setUploadAvatar(() => (event.target.files ? event.target.files[0] : null));
   };
-
-  useEffect(() => {
-    if (uploadAvatar)
-      console.log("uploadAvatar[][][]", uploadAvatar, uploadAvatar.name);
-    else console.log("uploadAvatar onChaneFailed", uploadAvatar);
-  }, [uploadAvatar]);
 
   return (
     <>
@@ -99,6 +71,7 @@ const AvatarBlock = ({ user42Dto }: { user42Dto: User42Dto }) => {
             alt="photo"
             className="object-cover w-full h-full"
           />
+          {avatarURL === "" ? <span>이미지 에러</span> : null}
         </Frame>
         <form className="flex flex-col m-1" onSubmit={onSubmitAvatar}>
           <Input
