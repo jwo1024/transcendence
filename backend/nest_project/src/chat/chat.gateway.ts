@@ -220,27 +220,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     if (room.roomType != 'dm')
     {
+      this.emitErrorEvent(socket.id, "not dm type");
       return ; //dm룸 만드는 명령이 아닌 경우 무시
     }
     const userTheOther = await this.userService.findOneByNickname(userNickname);
     if ( userTheOther === undefined)
     {
+      this.emitErrorEvent(socket.id, "matching user not found");
       return ; //valid하지 않은 사용자 nickname을 넘긴경우 무시
     }
     //내가 블락한 상대일 경우 실패(일단은 무시)
     const currentBlockList = await (await this.userService.getOne(socket.data.user.id)).block_list;
     if (currentBlockList.find(finding => userTheOther.id))
     {
+      this.emitErrorEvent(socket.id, "you've blocked that user");
       return ;
     }
     //내가 블락된 상대일 경우 실패(일단은 무시)
     if (userTheOther.block_list.find(finding => socket.data.user.id))
     {
+      this.emitErrorEvent(socket.id, "you've been blocked by that user");
       return ;
     }
 
     const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
-
+    if (!createdRoom)
+    {
+      this.emitErrorEvent(socket.id, "failed to creat it. Please retry");
+      return ;
+    }
     //방을 만든 사용자를 생성된 방에 join 시킴()
     await this.joinedRoomService.create(
       { socketId: socket.id, user: socket.data.user, room: createdRoom });
