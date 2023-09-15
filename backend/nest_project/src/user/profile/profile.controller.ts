@@ -8,6 +8,7 @@ import { join } from 'path';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
+import { memoryStorage } from 'multer';
 
 @Controller('profile')
 @UseGuards(AuthGuard())
@@ -29,7 +30,7 @@ export class ProfileController {
     getUserProfileByNickname(@Param('nickname') nickname : string): Promise<UserProfile> {
         return this.profileService.getUserProfileByNickname(nickname);
     }
-    
+     
     @Post('/delete/id/:id')
     deleteUserProfileById(@Param('id') id : number): Promise<void> {
         return this.profileService.deleteUserProfileById(id);
@@ -50,53 +51,32 @@ export class ProfileController {
         return this.profileService.updateUserProfileByNickname(nickname, updateDto);
     }
         
-    @Get('images/:id')
-    async getImage(@Param('id') id: number, @Res() res : Response) {
+
+    @Get('image') //!!!!!!!!!!!!!!!!!!!!!!!!!!! 아무래도 param으로 바꿔야할듯 싶다. 친구 profile도 띄워야하니까
+    async getImage(@Req() req, @Res() res : Response) {
+        const user = await this.profileService.getUserProfileById(req.user.userId);
+        if (!user)
+            throw new BadRequestException('user not found');
+        const imageBase64 = user.avatar.toString('base64');
+        const imageBuffer = Buffer.from(imageBase64, 'base64');
+        res.set('Content-Type', 'image/jpeg');
+        return res.send(imageBuffer);
+    } 
+    
+    @Post('image')
+    @UseInterceptors(FileInterceptor('image', {storage: memoryStorage()})) // 이미지를 메모리에 저장합니다.
+    async uploadImage(@Req() req, @UploadedFile() image: Express.Multer.File) {
         try {
-            const imagePath = join(__dirname, 'images', `${id}` )
-            const user = await this.profileService.getUserProfileById(id)
-            if (user) {
-                await fsp.writeFile(imagePath, user.avatar);
+            if (!image) {
+            console.log('no image uploaded');// 이미지가 업로드되지 않았을 경우 에러 처리
+            throw new Error('No image uploaded');
             }
-            res.set('Content-Type', 'image/jpeg');
-            return res.sendFile(imagePath);
-        } catch (err) {
-            throw new Error( `[${id}] : `+ 'Image not found');
+            console.log('Image uploaded successfully');
+            return await this.profileService.updateAvatar(req.user.userId, image.buffer);            // avatar.buffer에 이미지 데이터가 Buffer 형태로 저장됩니다.
+             } catch (error) {
+        console.log('error in uploadImage : ', error);
+          throw new Error(error.message);
         }
-    }
-    
-    // @Get('images/:id')
-    // async getImage(@Param('id') id: number, @Res() res : Response) {
-    //     try {
-    //         const imagePath = join(__dirname, 'images', `${id}` )
-    //         const user = await this.profileService.getUserProfileById(id)
-    //         if (user && user.avatar) {
-    //             const imageBase64 = user.avatar.toString('base64');
-    //             const imageBuffer = Buffer.from(imageBase64, 'base64');
-    //             res.set('Content-Type', 'image/jpeg');           
-    //             return res.send(imageBuffer);
-    //         } else {
-    //             throw new Error(`[${id}] : Image not found`);
-    //         }
-    //     } catch (err) {
-    //         throw new Error(`[${id}] : Image not found`);
-    //     }
-    // }
-    
-    @Post('images/:id')
-    @UseInterceptors(FileInterceptor('image')) // 'image'는 파일 필드의 이름입니다.
-    async uploadImage(@Param('id') id: string, @UploadedFile() image: Express.Multer.File, @Body() body) {
-        // 파일 제한을 걸자. 이후에 Pipe를 사용하면 좋을 것 같다. ext는 검사할때만 사용하고, 실제 저장할때는 사용하지 않는다.
-        // @CustomValidationPipe(body.ext) 라든지 이런식으로 사용하면 좋을 것 같다.
-        const filePath = join(__dirname, 'images', `${id}` ); 
-  
-        // 이미지 파일을 지정된 경로로 이동 또는 복사
-        await fs.rename(image.path, filePath, err => {
-            if (err) {
-                console.log('fs.rename error in uploadImage');
-                throw new NotImplementedException('이미지 업로드 실패');
-            }
-        });
     }
     
    @Post('/signup')
@@ -109,8 +89,8 @@ export class ProfileController {
            console.log('[409 Exception]user(', requserId, ') already exists');
            throw new ConflictException('user already exists');
        }
-       this.profileService.signUp(signUpDto, join(__dirname, 'images', `${signUpDto.id}`));
+       // 이미지를 잘 받아와야합니다.
+       this.profileService.signUp(signUpDto); //, join(__dirname, 'images', `${signUpDto.id}`));
        return {statusCode: 201, message: 'user creation success'};
    }
-
 }
