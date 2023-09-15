@@ -43,9 +43,12 @@ import { ProfileService } from './services/profile-service/profile-service.servi
 // import { SignupDto } from './dto/signup.dto';
 
 //DTOs
-import { RoomCreateDTO, RoomJoinDTO, RoomInviteDTO } from './dto/room.dto';
+import { RoomCreateDTO, RoomJoinDTO, RoomInviteDTO, SimpleRoomDTO } from './dto/room.dto';
 import { MessageDTO } from './dto/message.dto';
 import { AdminRelatedDTO } from './dto/room.dto';
+
+//Mappers
+import { RoomMapper } from './mapper/room.mapper';
 
 import * as jwt from 'jsonwebtoken';
 import { create } from 'domain';
@@ -69,6 +72,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       private connectedUserService: ConnectedUserService,
       private joinedRoomService: JoinedRoomService,
       private messageService: MessageService,
+      private roomMapper: RoomMapper,
         ) { };
   
   //required by OnModuleInit
@@ -130,11 +134,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         // const user: UserI = await this.userService.getOne(decodedToken.user.id);
         socket.data.user = user;
 
-        const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
+        const rooms = await this.roomService.getRoomsForUser(user.id);
         
         // substract page -1 to match the angular material paginator
         // rooms.meta.currentPage = rooms.meta.currentPage - 1;
-        this.logger.log(`load from DB : "${rooms.items}"`); 
+        // this.logger.log(`load from DB : "${rooms.items}"`); 
         
         // Save connection to DB
         await this.connectedUserService.create({ socketId: socket.id, user });
@@ -191,14 +195,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // const currentRoomId = createdRoom.roomId;
     // await this.server.to(socket.id).emit(`messages_${currentRoomId}`, createdRoom);
     //현 서버에 소켓 연결된 모든 채팅 사용자에게 room 정보를 보냄
-    for (const user of createdRoom.users) {
+    for (const user of createdRoom.users)
+    {
 
       const connection: ConnectedUserI = await this.connectedUserService.findByUser(user);
-      const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
+      const rooms = await this.roomService.getRoomsForUser(user.id);
 
       // for (const connection of connections) { // 한 유저당 하나의 소켓만 들어온다고 가정하고 바뀐부분
         await this.server.to(connection.socketId).emit('rooms', rooms);
-      }
+    }
   }
   
   //For DM(개인 채팅용 방 만들기 메서드)
@@ -419,9 +424,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const connectedUsers : ConnectedUserI[] = await this.connectedUserService.getAllUser();
     for (const connetedUser of connectedUsers) 
     {
-
       const rooms = await this.roomService.getRoomsByType(['open']); //roomType이 DM, private 이 아닌 애들만.
-      // const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
+      // const rooms = await this.roomService.getRoomsForUser(user.id);
         await this.server.to(connetedUser.socketId).emit('visible_rooms', rooms);
     }
   } 
@@ -449,7 +453,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     await this.server.to(socketId).emit('current-room_${roomId}', room);
   }
 
-    //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
+  //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
   private async emitAllRoomsToUsersInRoom(roomId : number)
   {
     const room: RoomI 
@@ -460,7 +464,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       =  await this.joinedRoomService.findByRoom(room);
       for (const user of joinedUsers) 
     {
-      await this.server.to(user.socketId).emit('me-joining-rooms', user.room);
+      const joiningrooms = user.user.rooms;
+      await this.server.to(user.socketId).emit(
+        'me-joining-rooms', 
+        this.roomMapper.Create_simpleDTOArrays(joiningrooms)
+        );
     }
   }
  //----------------------------------
