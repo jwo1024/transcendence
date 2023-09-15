@@ -298,9 +298,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.emitOneRoomToOneUser(roomId, socket.id);
   }
 
-
-
-
   private async deleteRoom(roomId:number)
   {
     await this.roomService.deleteById(roomId);
