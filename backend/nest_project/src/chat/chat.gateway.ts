@@ -274,6 +274,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       await this.server.to(socket.id).emit('messages', messages);
   }
 
+  @SubscribeMessage('Room-enter')
+  async onEnterRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() roomId: number) 
+  {
+    if ( await (this.roomService.isRoomExist(roomId)) === false)
+      {
+        //존재하지 않는 roomId 요청일 경우 무시
+        return ;
+      }
+    if ( await this.roomService.isBannedUser(socket.data.user.id, roomId))
+      return ; //ban 처리된 유저이면 요청 무시
+    // this.logger.log("RoomJoin:-start---------")
+    // this.logger.log(`exist : ${await this.roomService.isRoomExis.roomId)}`)
+    const roomFromDB = this.roomService.getRoom(roomId);
+   
+    //DB에서 messages 불러와서 사용자에게 보내주기.
+    const messages =     await this.messageService.findMessagesForRoom(
+                              await roomFromDB, { limit: 10, page: 1 });
+
+    await this.server.to(socket.id).emit('messages', messages);
+    this.emitOneRoomToOneUser(roomId, socket.id);
+  }
+
+
+
+
   private async deleteRoom(roomId:number)
   {
     await this.roomService.deleteById(roomId);
@@ -343,6 +370,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       await this.server.to(user.socketId).emit('current-room', room);
   }
 
+  private async emitOneRoomToOneUser(roomId : number, socketId: string)
+  {
+    const room: RoomI 
+      = await this.roomService.getRoom(roomId);
+    if (!room)
+      return;
+    await this.server.to(socketId).emit('current-room', room);
+  }
+
     //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
   private async emitAllRoomsToUsersInRoom(roomId : number)
   {
@@ -368,18 +404,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         return ; //주인장이 아닌 사람이 한 요청일때 무시
       const editedRoom = await this.roomService.editRoom(roomId, editData);
 
-      // for (const user of createdRoom.users) {
-
-      //   const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
-      //   const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
-  
-      //   for (const connection of connections) {
-      //     await this.server.to(connection.socketId).emit('rooms', rooms);
-      //   }
-  
-      // }
-      // if (editedRoom.roomType === 'open' || editedRoom.roomType === 'protected')
-      //private으로 바뀐 경우, 모든 유저의 채팅 목록에서 사라져야한다. 따라서 위의 if 절은 없앰.
       this.emitRoomsToAllConnectedUser();
   }
   
