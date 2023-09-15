@@ -34,3 +34,11 @@ export class AdminRelatedDTO
 
   roomId: number;
 }
+
+export class SimpleRoomDTO {
+  roomId: number;
+  roomName: string;
+  roomType: roomType;
+  hasPass: boolean;
+  joinUsersNum: number; 
+}

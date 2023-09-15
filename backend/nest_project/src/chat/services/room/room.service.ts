@@ -9,7 +9,7 @@ import { roomType } from 'src/chat/types/roomTypes';
 import { RoomEntity } from '../../entities/room.entity'; 
 import { RoomI } from '../../interfaces/room.interface'; 
 import { UserI } from '../../interfaces/user.interface'; 
-import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO } from '../../dto/room.dto';
+import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO, SimpleRoomDTO } from '../../dto/room.dto';
 
 import { RoomMapper } from '../../mapper/room.mapper';
 
@@ -158,9 +158,6 @@ export class RoomService {
 
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
   async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
-    // if ( roomFromDB.roomType === 'private')
-    //   return false; => 프론트에서 막을 수 있을것 같다??
-    // if ( roomFromDB.roomType === 'protected' && joinDTO.roomPass === roomFromDB.roomPass)
     if (joinDTO.roomPass)
       joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
     if ( roomFromDB.roomPass !== undefined && joinDTO.roomPass === roomFromDB.roomPass)
@@ -173,24 +170,38 @@ export class RoomService {
       return await this.roomRepository.save(room);
     }
 
-  async getRoomsByType(allowedRoomTypes : roomType[]): Promise<RoomEntity[]> {
-    return await this.roomRepository.find({
+  async getRoomsByType(allowedRoomTypes : roomType[]): Promise<SimpleRoomDTO[]> {
+    const rooms = 
+    await this.roomRepository.find({
       where: {
         roomType: In(allowedRoomTypes),
       },
     });
+    return this.roomMapper.Create_simpleDTOArrays(rooms);
   }
 
-  async getRoomsForUser(userId: number, options: IPaginationOptions): Promise<Pagination<RoomI>> {
-    const query = this.roomRepository
+  async getRoomsForUser(userId: number): Promise<SimpleRoomDTO[]> {
+    const rooms = await this.roomRepository
       .createQueryBuilder('room')
       .leftJoin('room.users', 'users')
       .where('users.id = :userId', { userId })
       .leftJoinAndSelect('room.users', 'all_users')
-      .orderBy('room.created_at', 'DESC');
-
-    return paginate(query, options);
+      .orderBy('room.created_at', 'DESC')
+      .getMany();
+  
+    return this.roomMapper.Create_simpleDTOArrays(rooms);
   }
+
+  // async getRoomsForUser(userId: number, options: IPaginationOptions): Promise<Pagination<RoomI>> {
+  //   const query = this.roomRepository
+  //     .createQueryBuilder('room')
+  //     .leftJoin('room.users', 'users')
+  //     .where('users.id = :userId', { userId })
+  //     .leftJoinAndSelect('room.users', 'all_users')
+  //     .orderBy('room.created_at', 'DESC');
+
+  //   return paginate(query, options);
+  // }
 
   async deleteById(roomId: number) {
 		return this.roomRepository.delete({ roomId });
