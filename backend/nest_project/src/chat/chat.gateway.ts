@@ -39,7 +39,7 @@ import { JoinedRoomService } from './services/joined-room/joined-room.service';
 import { MessageService } from './services/message/message.service';
 
 //temp - profile
-import { ProfileService } from './services/profile-service/profile-service.service';
+import { ProfileService } from '../user/profile/profile.service';
 // import { SignupDto } from './dto/signup.dto';
 
 //DTOs
@@ -87,48 +87,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   async handleConnection(socket: Socket) {
     try {
       // //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
-      // const token = socket.handshake.headers.authorization;
-      // const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
-
-              // const decodedToken 
-              // = await this.authService.verifyJwt(socket.handshake.headers.authorization);
-              // const userProfile: UserI = await this.userService.getOne(decodedToken.user.id);
-      // if (!user) {
-        // return this.disconnect(socket);
-      // } else {
-    this.logger.log(`Try connection: ${socket.id}`); 
-
-    this.logger.log(`before make temp profile `); 
-
-
-        // temp UserI
-        const tempUser: UserI = {
-          userProfile: null,
-          id: 12344,
-          nickname: 'surlee',
-          block_list: [],
-          // friend_list: [],
-          rooms: [],
-          connections: [],
-          joinedRooms: [],
-          messages: [],
-        };
-
-        this.logger.log(`before create db `); 
-
-        //원래 로직은 만드는 것이 아닌, getOne으로 찾아와야 하나 일단 임시
-        const user: UserI = await this.userService.create(tempUser);
-        // const user: UserI = await this.userService.getOne(tempUser.id);
-        this.logger.log(`create User: ${tempUser.id}, ${tempUser.nickname}`); 
-        this.logger.log(`returned User: ${user.id}, ${user.nickname}`); 
+        const token = socket.handshake.headers.authorization;
+        //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
+        const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
+        if (!userId)
+          return this.disconnect(socket);
+        const userProfile = await this.profileService.getUserProfileById(userId);
+        if (!userProfile)
+          return this.disconnect(socket);
+        const userForChat: UserI = await this.userService.getOne(userId);
+        if (!userForChat)
+          return this.disconnect(socket);
+        
+        this.logger.log(`Try connection: ${socket.id}`); 
+                
+        this.logger.log( `Chat User: ${userForChat.id}, ${userForChat.nickname}`); 
         // const user: UserI = await this.userService.getOne(decodedToken.user.id);
-        socket.data.user = user;
+        socket.data.user = userForChat;
 
-        const rooms = await this.roomService.getRoomsForUser(user.id);
+        const rooms = await this.roomService.getRoomsForUser(userForChat.id);
         
         // Save connection to DB
-        await this.connectedUserService.create({ socketId: socket.id, user });
-        this.logger.log(`saved to DB : ${socket.id}, ${user}`); 
+        await this.connectedUserService.create({ socketId: socket.id, user : userForChat });
+        this.logger.log(`saved to DB : ${socket.id}, ${userForChat}`); 
         
         // Only emit rooms to the specific connected client
         return this.server.to(socket.id).emit('rooms', rooms);
