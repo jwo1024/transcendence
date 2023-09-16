@@ -77,12 +77,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   
   //required by OnModuleInit
   async onModuleInit() {
-    // await this.connectedUserService.deleteAll();
-    await this.joinedRoomService.deleteAll();
+
     await this.connectedUserService.deleteAll();
-    await this.userService.deleteAll();
+
   };
 
+  //-------소켓 연결 관련 메서드----------------------
   //required by OnGatewayConnection
   async handleConnection(socket: Socket) {
     try {
@@ -123,13 +123,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   async handleDisconnect(socket: Socket) {
     // // remove connection from DB
     await this.connectedUserService.deleteBySocketId(socket.id);
-    // this.logger.log(`userid : ${socket.data.user.id}`);
-    await this.userService.deleteById(socket.data.user.id);
     socket.disconnect();
   }
 
     private disconnect(socket: Socket) {
     socket.emit('Error', new UnauthorizedException());
+    this.emitErrorEvent(socket.id, "Socket is disconnect.");
     socket.disconnect();
   };
 
@@ -141,8 +140,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
 		this.logger.error(`${socket.id}: `, message);
 	}
-
-  //--------메서드 시작-------------------------
+  //------------------------------------------------------
+  //--------채팅 메서드 시작-------------------------
 
   //For Room(단체 채팅방 만들기용 메서드)
   @SubscribeMessage('Room-create')
@@ -404,7 +403,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   private async emitErrorEvent(socketId:string, reason: string)
   {
-    await this.server.to(socketId).emit("failed-somthis", reason);
+    await this.server.to(socketId).emit("Error-alert", reason);
   }
 
   private async emitRoomsToAllConnectedUser()
