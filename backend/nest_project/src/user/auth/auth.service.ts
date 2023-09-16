@@ -85,22 +85,11 @@ export class AuthService {
     }
   }
   
-  async downloadDefaultAvatar(url: string, id:number, accessToken: string): Promise<string> {
+  async downloadDefaultAvatar(url: string, id:number, accessToken: string): Promise<any> {
     try {
       const response: AxiosResponse = await axios.get(url, {
         headers: { Authorization: `Bearer ${accessToken}` }, responseType: 'stream' });
-        
-        const uploadDirectory = path.join(__dirname, '..', 'profile', 'images');//this.configService.get<string>("IMAGE_PATH");
-        if (!fs.existsSync(uploadDirectory)) {
-          fs.mkdirSync(uploadDirectory, { recursive: true });
-        }
-        const imagePath = path.join(uploadDirectory, `${id}`);
-        const imageStream = fs.createWriteStream(imagePath);
-        response.data.pipe(imageStream);
-      return new Promise<string>((resolve, reject) => {
-        imageStream.on('finish', () => resolve(imagePath));
-        imageStream.on('error', reject);
-      });
+        return response.data;
     }
     catch (error) {
       console.log('Error Occured in downloadDefaultProfile');
