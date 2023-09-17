@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { PlayerEntity } from './entities/player.entity';
 import { Player } from './interface/game.interface';
+
+import { PlayerEntity } from './entities/player.entity';
+import { UserProfile } from 'src/user/profile/user-profile.entity';
 
 @Injectable()
 export class GameService {
 	constructor(
 		@InjectRepository(PlayerEntity) private playerRepository: Repository<PlayerEntity>,
-		private dataSource: DataSource
+		@InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
+		private dataSource: DataSource,
 	) {}
 
+	// todo: remove
 	getWindow() {return "hey";}
 
 	async createPlayer(socketId: string): Promise<Player>

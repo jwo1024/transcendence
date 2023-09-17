@@ -171,12 +171,14 @@ async function playGame(server: Server, matchInfo: MatchInfo/* todo: remove */, 
 	server.to(matchInfo.roomName).emit('updateCanvas', gameField);
 }
 
+// todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 
 @Injectable()
-@WebSocketGateway({ namespace: 'game' }) //웹소켓 리스너 기능 부여하는 데코레이터
-export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+@WebSocketGateway({ namespace: 'ladder_game' }) //웹소켓 리스너 기능 부여하는 데코레이터
+export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
-	private logger = new Logger('GameGateway');
+
+	private logger = new Logger('LadderameGateway');
 	// this.logger.log();
 
 	// variables
@@ -206,7 +208,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	// 연결, 끊길 시 -> secket id 리뉴얼하기
 	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
 	{
-		console.log("Server: connected.");
+		console.log("Ladder Game Server: connected.");
+		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
 		// user의 소켓 id 정보
 
 		// const player: Player = await this.gameService.createPlayer(socket.id);
@@ -353,13 +356,143 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// console.log(clients);
 	}
 
-	// @SubscribeMessage('inviteGame')
-	// inviteGameQueue(@ConnectedSocket() socket: Socket, @MessageBody() oppponent)
-	// {
-	// 	// login 확인
-	// 	// set game
-	// 	// invinte opponent user
-	// 	joinGameRoom(socket, socket/* opponent's socket */);
-	// }
+}
+
+
+@Injectable()
+@WebSocketGateway({ namespace: 'friendly_game' }) //웹소켓 리스너 기능 부여하는 데코레이터
+export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+{
+	private logger = new Logger('FriendlyGameGateway');
+	// this.logger.log();
+
+	// variables
+
+	// constructor
+	constructor(
+		private gameService: GameService,
+	)
+	{}
+
+	// 서버 초기화 필요?
+
+	// 게임 기다리기 (친구 신청)
+		// 친구에게 게임 신청하고 대기 (게임 타입 결정)
+		// 친구로부터 게임 신청 받고 승낙/거절
+	// 게임 설정하는 함수(게임 모드, 타입, 게임info 와 게임field 값 설정)
+	// 게임방을 만들고 두 플레이어를 조인
+	// 게임 시작!
+	// 두 클라이언트에게 데이터 받고 서버에서 양쪽에 일괄 전송
+	// 각 소켓, 각 방에 대한 정보 출력 (디버깅 목적)
+
+	async onModuleInit() {}
+	// 연결, 끊길 시 -> secket id 리뉴얼하기
+	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
+	{
+		console.log("Friendly Game Server: connected.");
+		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
+		// user의 소켓 id 정보
+
+		// const player: Player = await this.gameService.createPlayer(socket.id);
+		// console.log(player);
+
+		if (player1.socketId === "not yet")
+		{
+			player1.socketId = socket.id;
+			console.log(player1);
+		}
+		else if (player2.socketId === "not yet")
+		{
+			player2.socketId = socket.id;
+			console.log(player2);
+		}
+	}
+	async handleDisconnect(socket: Socket)
+	{
+		console.log("Server: disconnected.");
+		// 유저의 소켓 id 삭제?
+		// await this.gameService.deletePlayerBySocketId(socket.id);
+		if (player1.socketId === socket.id)
+		{
+			player1.socketId = "not yet";
+		}
+		if (player2.socketId === socket.id)
+		{
+			player2.socketId = "not yet";
+		}
+	}
+
+	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
+	server: Server;
+
+	@SubscribeMessage('startGame')
+	async startGame(@ConnectedSocket() socket: Socket)
+	{
+		// game mode 확인, 설정
+		// MatchInfo, Gamefield 값 설정
+		
+		// setGame();
+		// const playerLeft: Player = await this.gameService.getPlayerBynickname("odd player");
+		// const playerRight: Player = await this.gameService.getPlayerBynickname("even player");
+		const playerLeft: Player = player1;
+		const playerRight: Player = player2;
+		console.log("start Game ::");
+		console.log(playerLeft);
+		console.log(playerRight);
+
+		const matchInfo: MatchInfo =
+		{
+			matchId: 42, // dataBase 연동
+			// matchTime: Date.now(),
+			roomName: "Game Room", // unique
+			playerLeft: playerLeft,
+			playerRight: playerRight,
+			gameType: "original", //
+			customMode: "default", //
+			scoreLeft: 0,
+			scoreRight: 0,
+		};
+		// const gameField: GameField = {};
+
+		socket.join(matchInfo.roomName);
+		console.log(`socket ${socket.id} join room of [${matchInfo.roomName}]`);
+		
+		// todo: 한쪽이 게임 수락하면, 동시에 양쪽에 뜨도록 server.to(roomName).emit()으로 수정하기
+		socket.emit('setMiniProfile', playerLeft, playerRight, () => {
+			console.log("sending mini profile data OK.");
+		});
+
+		// 특정 room에만 이벤트 발생
+		// playGame();
+		// movePlayer();
+
+		const timer = setInterval(playGame, 30, this.server, matchInfo, gameField);
+	}
+
+	@SubscribeMessage('mouseMove')
+	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
+	{
+		// need to take parameters [ matchInfo, gameField ]
+
+		if (userY < 0)
+		{
+			userY = 0;
+		}
+		else if (userY > 500)
+		{
+			userY = 500;
+		}
+
+		if (socket.id === player1.socketId)
+		{
+			gameField.paddleLeftY = userY;
+			this.server.to("Game Room").emit('paddleMove', gameField);
+		}
+		else if (socket.id === player2.socketId)
+		{
+			gameField.paddleRightY = userY;
+			this.server.to("Game Room").emit('paddleMove', gameField);
+		}
+	}
 
 }

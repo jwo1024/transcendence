@@ -6,7 +6,8 @@ import PongGame from "@/components/game/PongGame";
 
 // socket.io 백엔드와 연결
 import io from 'socket.io-client';
-const socket = io('http://localhost:4000/game'); 
+const socket = io('http://localhost:4000/friendly_game');
+console.log(socket);
 
 export default function GamePage() {
 
@@ -28,7 +29,7 @@ export default function GamePage() {
       <button onClick={startGameHandler}>START GAME</button>
       <Window title="pong game" w="900" h="850">
         <div className="h-screen flex flex-col justify-center items-center">
-          <PongGame socket={socket}/* paddleLeftY={12} paddleRightY={12} *//>
+          <PongGame socket={socket}/>
           <div className="flex mt-10 w-[800px] items-center justify-between">
             <MiniProfile
               nickname={left.nickname}
