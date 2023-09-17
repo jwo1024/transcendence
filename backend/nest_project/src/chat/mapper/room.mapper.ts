@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { roomType } from "../types/roomTypes";
-import { RoomCreateDTO } from "../dto/room.dto";
+import { RoomCreateDTO, SimpleRoomDTO } from "../dto/room.dto";
 import { RoomEntity } from "../entities/room.entity";
 import { RoomI } from "../interfaces/room.interface";
 
@@ -47,5 +47,27 @@ export class RoomMapper{
     
     return entity;
   
+  }
+
+    Create_simpleEntityToDto(entity :RoomEntity){
+    const dto = new SimpleRoomDTO;
+    dto.roomId = entity.roomId;
+    dto.roomName = entity.roomName;
+    dto.roomType = entity.roomType;
+    dto.hasPass = (entity.roomPass !== undefined);
+    dto.joinUsersNum = entity.users.length;
+  
+    return dto;
+  }
+
+  Create_simpleDTOArrays(entityArray :RoomEntity[]){
+    const dtoArray : SimpleRoomDTO[] = [];
+    if (entityArray.length === 0)
+      return dtoArray;
+    for (const roomEntity of entityArray)
+    {
+      dtoArray.push(this.Create_simpleEntityToDto(roomEntity));
+    }
+    return dtoArray;
   }
 }

@@ -6,6 +6,8 @@ import { ThemeProvider, Button } from "@react95/core";
 import MyProfile from "@/components/profile/MyProfile";
 import FriendProfile from "@/components/profile/FriendProfile";
 import { UserInfo } from "@/types/UserInfo";
+import sendAvatar from "@/components/common/sendAvatar";
+
 // 임시 백엔드 타입용.
 type user = {
   nickname: string;
@@ -20,14 +22,29 @@ export default function ProfilePage() {
   const [myProfile, setMyProfile] = useState(true);
   const [friendsProfile, setFriendsProfile] = useState(true);
   const [friendList, setFriendList] = useState(true);
+  const [imageURL, setImageURL] = useState("https://github.com/React95.png");
 
-  const [myNickName, setMyNickName] = useState("Loading...");
+  let user_obj = { nickname: "", ladder: 0, wins: 0, loses: 0 };
 
   useEffect(() => {
     const user = localStorage.getItem("user");
-    const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
-    setMyNickName(user_obj.nickname);
-  }, [myNickName]);
+    user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+    const token = sessionStorage.getItem("accessToken");
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (res.ok) return res.blob();
+        else throw new Error("Failed to fetch image");
+      })
+      .then((blob) => {
+        const imageUrl = URL.createObjectURL(blob);
+        setImageURL(imageUrl);
+      })
+      .catch((error) => {
+        console.error("Error fetching image:", error);
+      });
+  }, []);
 
   const showMyProfile = () => {
     setMyProfile((current) => !current);
@@ -57,11 +74,11 @@ export default function ProfilePage() {
         <div className="flex flex-col justify-between h-[626px]">
           {myProfile ? (
             <MyProfile
-              nickname={myNickName}
-              ladder={2134}
-              win={23}
-              lose={17}
-              avatarSrc="https://github.com/React95.png"
+              nickname={user_obj.nickname}
+              ladder={user_obj.ladder}
+              win={user_obj.wins}
+              lose={user_obj.loses}
+              avatarSrc={imageURL}
             />
           ) : null}
           {friendsProfile ? (

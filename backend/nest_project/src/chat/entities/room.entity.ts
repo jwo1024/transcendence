@@ -42,7 +42,4 @@ export class RoomEntity {
   @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
   created_at: Date;
 
-  // @UpdateDateColumn()
-  // updated_at: Date;
-
 }

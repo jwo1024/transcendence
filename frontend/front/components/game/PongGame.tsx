@@ -1,4 +1,6 @@
+import { data } from "autoprefixer";
 import React, { useEffect, useRef, useState } from "react";
+import { Socket } from "socket.io-client";
 
 type paddleSize = {
   width: number;
@@ -54,35 +56,39 @@ interface Ball {
   color: string;
 }
 
-const PongGame: React.FC = () => {
+interface PongGameProps {
+  socket: Socket
+}
+
+const PongGame: React.FC<PongGameProps> = ({socket}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(
     canvasRef.current
   );
-  const [user, setUser] = useState<Paddle>({
+  const user = {
     x: 0,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
     height: PaddleSize.height,
     color: "white",
     score: 0,
-  });
-  const [com, setCom] = useState<Paddle>({
+  };
+  const com = {
     x: CanvasSize.width - PaddleSize.width,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
     height: PaddleSize.height,
     color: "white",
     score: 0,
-  });
-  const [net, setNet] = useState<Net>({
+  };
+  const net = {
     x: CanvasSize.width / 2 - 2 / 2,
     y: 0,
     width: 2,
     height: 10,
     color: "red",
-  });
-  const [ball, setBall] = useState<Ball>({
+  };
+  const ball = {
     x: CanvasSize.width / 2,
     y: CanvasSize.height / 2,
     radius: BallSpec.radius,
@@ -90,8 +96,8 @@ const PongGame: React.FC = () => {
     velocityX: BallSpec.speed,
     velocityY: BallSpec.speed,
     color: "white",
-  });
-  const [framePerSecond] = useState(50);
+  };
+  const framePerSecond = 50;
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -103,6 +109,28 @@ const PongGame: React.FC = () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // event lister
+
+    socket.on('paddleMove', (data) => {
+      user.y = data.paddleLeftY;
+      com.y = data.paddleRightY;
+    });
+    
+    socket.on('updateCanvas', (data) => {
+      // ball
+      ball.x = data.ballX;
+      ball.y = data.ballY;
+      ball.velocityX = data.ballXvelocity;
+      ball.velocityY = data.ballYvelocity;
+      ball.speed = data.ballSpeed;
+      
+      // socre
+      user.score = data.scoreLeft;
+      com.score = data.scoreRight;
+    });
+    
+    // rendering function
 
     function drawRect(
       x: number,
@@ -143,68 +171,80 @@ const PongGame: React.FC = () => {
       }
     }
 
-    function resetBall() {
-      if (canvas) {
-        ball.x = CanvasSize.width / 2;
-        ball.y = CanvasSize.height / 2;
-        ball.speed = BallSpec.speed;
-        ball.velocityX = BallSpec.speed;
-      }
-    }
+    // function resetBall() {
+    //   if (canvas) {
+    //     socket.emit('resetBall', (data: any) => {
+    //       ball.x = data.ballX;
+    //       ball.y = data.ballY;
+    //       ball.velocityX = data.ballXvelocity;
+    //     });
+    //     ball.speed = BallSpec.speed;
+    //     // ball.velocityX = BallSpec.speed;
+    //   }
+    // }
 
-    function collision(b: Ball, p: Paddle) {
-      const paddleLocation = {
-        top: p.y,
-        bottom: p.y + p.height,
-        left: p.x,
-        right: p.x + p.width,
-      };
-      const ballLocation = {
-        top: b.y - b.radius,
-        bottom: b.y + b.radius,
-        left: b.x - b.radius,
-        right: b.x + b.radius,
-      };
-      return (
-        ballLocation.right > paddleLocation.left &&
-        ballLocation.left < paddleLocation.right &&
-        ballLocation.top < paddleLocation.bottom &&
-        ballLocation.bottom > paddleLocation.top
-      );
-    }
+    // function collision(b: Ball, p: Paddle) {
+    //   const paddleLocation = {
+    //     top: p.y,
+    //     bottom: p.y + p.height,
+    //     left: p.x,
+    //     right: p.x + p.width,
+    //   };
+    //   const ballLocation = {
+    //     top: b.y - b.radius,
+    //     bottom: b.y + b.radius,
+    //     left: b.x - b.radius,
+    //     right: b.x + b.radius,
+    //   };
+    //   return (
+    //     ballLocation.right > paddleLocation.left &&
+    //     ballLocation.left < paddleLocation.right &&
+    //     ballLocation.top < paddleLocation.bottom &&
+    //     ballLocation.bottom > paddleLocation.top
+    //   );
+    // }
 
     function update() {
       if (canvas) {
-        ball.x += ball.velocityX;
-        ball.y += ball.velocityY;
+        // socket.emit('updateCanvas', (data: any) => {
+        //   ball.x = data.ballX;
+        //   ball.y = data.ballY;
+        //   ball.velocityY = data.ballYvelocity;
+        // });
+        // ball.x += ball.velocityX;
+        // ball.y += ball.velocityY;
 
         // simple AI
-        com.y += (ball.y - (com.y + com.height / 2)) * 0.1;
-        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-          ball.velocityY = -ball.velocityY;
-        }
+        // com.y += (ball.y - (com.y + com.height / 2)) * 0.1;
+        
+        // if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+        //   ball.velocityY = -ball.velocityY;
+        // }
 
-        let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
-        if (collision(ball, player)) {
-          let collidePoint =
-            (ball.y - (player.y + player.height / 2)) / (player.height / 2);
-          let angleRad = (Math.PI / 4) * collidePoint;
+        // let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
+        // if (collision(ball, player)) {
+        //   let collidePoint =
+        //     (ball.y - (player.y + player.height / 2)) / (player.height / 2);
+        //   let angleRad = (Math.PI / 4) * collidePoint;
 
-          let direction = ball.x + ball.radius < canvas.width / 2 ? 1 : -1;
+        //   let direction = ball.x + ball.radius < canvas.width / 2 ? 1 : -1;
 
-          ball.velocityX = direction * ball.speed * Math.cos(angleRad);
-          ball.velocityY = ball.speed * Math.sin(angleRad);
+        //   //
+        //   ball.velocityX = direction * ball.speed * Math.cos(angleRad);
+        //   ball.velocityY = ball.speed * Math.sin(angleRad);
+          // todo: 위의 값들 백엔드에서 값 변경하는 것으로 수정해야 함
+          // socket.emit('collision', ball.velocityX, ball.velocityY, (data: any) => {});
 
-          ball.speed += 0.1;
-        }
+        //   ball.speed += 0.1;
+        // }
 
-        if (ball.x - ball.radius < 0) {
-          com.score++;
-          resetBall();
-        } else if (ball.x + ball.radius > canvas.width) {
-          user.score++;
-          resetBall();
-        }
+        // if (ball.x - ball.radius < 0) {
+        //   // com.score++;
+        //   resetBall();
+        // } else if (ball.x + ball.radius > canvas.width) {
+        //   // user.score++;
+        //   resetBall();
+        // }
       }
     }
 
@@ -235,12 +275,14 @@ const PongGame: React.FC = () => {
       render();
     }
 
-    setInterval(game, 1000 / framePerSecond);
+    // setInterval(game, 1000 / framePerSecond);
 
     function movePaddle(event: any) {
       if (canvas) {
         let rect = canvas.getBoundingClientRect();
-        user.y = event.clientY - rect.top - user.height / 2;
+        // user.y = event.clientY - rect.top - user.height / 2;
+        const mouseY = event.clientY - rect.top - user.height / 2;
+        socket.emit("mouseMove", mouseY);
       }
     }
 
@@ -254,7 +296,7 @@ const PongGame: React.FC = () => {
 
     // 컴포넌트가 언마운트되면 clearInterval을 사용하여 게임 루프를 정리합니다.
     return () => clearInterval(intervalId);
-  }, [canvas, user, com, net, ball, framePerSecond]);
+  }, [canvas]);
 
   return (
     <canvas

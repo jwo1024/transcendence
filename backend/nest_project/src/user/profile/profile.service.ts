@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { In, Repository } from 'typeorm';
-import { UserProfile } from './user-profile.entity';
+import { UserProfile, userStatus } from './user-profile.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupDto } from './dto/signup.dto';
 
@@ -21,14 +21,38 @@ export class ProfileService {
         private userProfileRepository: Repository<UserProfile>,
     ) {}
 
+    async logOn(id: number): Promise<void> {
+        await this.userProfileRepository.update({id: id}, {status: userStatus.online});
+    }
 
-    async signUp(signupDto: SignupDto, imagePath: string): Promise<void> {
+    async logOff(id: number): Promise<void> {
+        await this.userProfileRepository.update({id: id}, {status: userStatus.offline});
+    }
+
+    // async signUp(signupDto: SignupDto, imagePath: string): Promise<void> {
+    //     const { id, nickname, enable2FA, data2FA } = signupDto;
+    //     try {
+    //         const imageBuffer = await fsp.readFile(imagePath);
+    //         const userProfile = await this.userProfileRepository.create({
+    //               id, nickname, enable2FA, data2FA, avatar: imageBuffer
+    //           });// Buffer 형식으로 이미지 데이터를 저장합니다.
+    //         await this.userProfileRepository.save(userProfile);
+    //         console.log('wow signup is done! : ', userProfile);
+    //       }
+    //       catch (error) {
+    //         if (error.code === '23505') { // 중복된 닉네임 처리
+    //          throw new ConflictException('duplicated nickname');
+    //         } else {
+    //          throw new Error('unknown error');
+    //         }
+    //     }
+    // }
+    async signUp(signupDto: SignupDto): Promise<void> {
         const { id, nickname, enable2FA, data2FA } = signupDto;
         try {
-              const imageBuffer = await fsp.readFile(imagePath);
-              const userProfile = await this.userProfileRepository.create({
-                  id, nickname, enable2FA, data2FA, avatar: imageBuffer
-              });// Buffer 형식으로 이미지 데이터를 저장합니다.
+            console.log(id, nickname, enable2FA, data2FA);//
+            const userProfile = await this.userProfileRepository.create({
+                  id, nickname, enable2FA, data2FA});
             await this.userProfileRepository.save(userProfile);
             console.log('wow signup is done! : ', userProfile);
           }
@@ -36,10 +60,23 @@ export class ProfileService {
             if (error.code === '23505') { // 중복된 닉네임 처리
              throw new ConflictException('duplicated nickname');
             } else {
+            console.log('error in signup : ', error);// 
              throw new Error('unknown error');
             }
         }
     }
+
+    // async saveAvatar(id: number, imagePath: string): Promise<void> {
+    //     try {
+    //         const imageBuffer = await fsp.readFile(imagePath);
+    //         await this.userProfileRepository.update({id: id}, {avatar: imageBuffer});
+    //         console.log(`wow saveAvatar is done! : ${id}`);
+    //     }
+    //     catch (error) {
+    //         console.log('error in saveAvatar : ', error);
+    //         throw new Error('error in saveAvatar');
+    //     }
+    // }
     
     async getAllUserProfiles(): Promise<UserProfile[]> {
         return this.userProfileRepository.find();
@@ -67,10 +104,14 @@ export class ProfileService {
         userProfile.nickname = nickname;
         userProfile.enable2FA = enable2FA;
         userProfile.data2FA = data2FA;
-        await this.userProfileRepository.save(userProfile);
+        await this.userProfileRepository.save(userProfile); 
         return userProfile;
     }
-    
+
+    async updateAvatar(id : number, avatar : Buffer) : Promise<any> {
+        return this.userProfileRepository.update({id: id}, {avatar: avatar});
+    }
+
     async updateUserProfileByNickname(nickname: string, updateDto: SignupDto): Promise<UserProfile> {
         const { id, enable2FA, data2FA } = updateDto;
         const userProfile = await this.getUserProfileByNickname(nickname);
@@ -81,15 +122,15 @@ export class ProfileService {
         return userProfile;
     }
 
-    async storeImage(imageData: string, path : string): Promise<string> {
-        const imageBuffer = Buffer.from(imageData, 'base64');
-        await new Promise((resolve, reject) => {
-            const stream = fs.createWriteStream(path);
-            stream.write(imageBuffer);
-            stream.end()
-            stream.on('finish', resolve);
-            stream.on('error', reject);           
-        });
-        return path;
-    }
+    // async storeImage(imageData: string, path : string): Promise<string> {
+    //     const imageBuffer = Buffer.from(imageData, 'base64');
+    //     await new Promise((resolve, reject) => {
+    //         const stream = fs.createWriteStream(path);
+    //         stream.write(imageBuffer);
+    //         stream.end()
+    //         stream.on('finish', resolve);
+    //         stream.on('error', reject);           
+    //     });
+    //     return path;
+    // }
 }
