@@ -8,13 +8,9 @@ import { map } from 'rxjs/operators';
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
-/////////////////////// typeorm config 설정하기!!!!!!!!!!
-
-
 // 래더 큐 잡는 로직
 async function queueProcess()
 {
-	console.log("============ ladderGameQueue: queueProcess ================");
 	// ladderQueue[] 안에서 검색
 	// const room_name = "1"; // user.id? unique something
 	// socket.join(room_name);
@@ -65,14 +61,14 @@ async function collision(b: Ball, p: Paddle)
 // temp variables for unit test
 const player1: Player = {
 			id: 0,
-			level: 42,
-			nickname: "even player",
+			ladder: 4242,
+			nickname: "left player",
 			socketId: "not yet",
 		};
 const player2: Player = {
 			id: 1,
-			level: 42,
-			nickname: "odd player",
+			ladder: 4242,
+			nickname: "right player",
 			socketId: "not yet",
 		};
 
@@ -366,20 +362,16 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	private logger = new Logger('FriendlyGameGateway');
 	// this.logger.log();
 
-	// variables
-
 	// constructor
 	constructor(
 		private gameService: GameService,
 	)
 	{}
 
-	// 서버 초기화 필요?
-
 	// 게임 기다리기 (친구 신청)
 		// 친구에게 게임 신청하고 대기 (게임 타입 결정)
 		// 친구로부터 게임 신청 받고 승낙/거절
-	// 게임 설정하는 함수(게임 모드, 타입, 게임info 와 게임field 값 설정)
+	// 게임 설정(게임 모드, 타입, 게임info 와 게임field 값 설정)
 	// 게임방을 만들고 두 플레이어를 조인
 	// 게임 시작!
 	// 두 클라이언트에게 데이터 받고 서버에서 양쪽에 일괄 전송
@@ -387,7 +379,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 
 	async onModuleInit() {}
 	// 연결, 끊길 시 -> secket id 리뉴얼하기
-	async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
+	async handleConnection(socket: Socket)
 	{
 		console.log("Friendly Game Server: connected.");
 		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장

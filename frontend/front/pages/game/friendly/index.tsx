@@ -18,8 +18,8 @@ export default function GamePage() {
   const startGameHandler = () => {
     socket.emit('startGame');
     socket.on('setMiniProfile', (pLeft, pRight, callback) => {
-      setLeft({nickname: pLeft.nickname, ladder:pLeft.level})
-      setRight({nickname: pRight.nickname, ladder:pRight.level})
+      setLeft({nickname: pLeft.nickname, ladder:pLeft.ladder})
+      setRight({nickname: pRight.nickname, ladder:pRight.ladder})
       callback();
     });
   };

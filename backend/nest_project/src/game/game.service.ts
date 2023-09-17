@@ -5,6 +5,8 @@ import { Player } from './interface/game.interface';
 
 import { PlayerEntity } from './entities/player.entity';
 import { UserProfile } from 'src/user/profile/user-profile.entity';
+import { ProfileService } from 'src/user/profile/profile.service';
+import { SignupDto } from 'src/user/profile/dto/signup.dto';
 
 @Injectable()
 export class GameService {
@@ -12,6 +14,7 @@ export class GameService {
 		@InjectRepository(PlayerEntity) private playerRepository: Repository<PlayerEntity>,
 		@InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
 		private dataSource: DataSource,
+		private profileService: ProfileService,
 	) {}
 
 	// todo: remove
@@ -26,34 +29,10 @@ export class GameService {
 
 		const player: PlayerEntity = {
 			id: 42,
-			level: 4242,
+			ladder: 4242,
 			nickname: "default",
 			socketId: socketId,
 		};
-
-		var i = 0;
-		while (1)
-		{
-			if (await this.getPlayer(i) === null)
-			{
-				if (i % 2)
-				{
-					player.id = i;
-					player.level = 42;
-					player.nickname = "odd player" + i;
-					player.socketId = socketId;
-				}
-				else
-				{
-					player.id = i;
-					player.level = 42;
-					player.nickname = "even player" + i;
-					player.socketId = socketId;
-				}
-				break ;
-			}
-			else { i++; }
-		}
 
 		// const player: PlayerEntity = {
 		// 	// id: user.id,
@@ -69,18 +48,6 @@ export class GameService {
 
 		return player;
 	}
-
-	// async tempCreatePlayer(id: number): Promise<Player>
-	// {
-	// 	const player: PlayerEntity = {
-	// 		id: id,
-	// 		level: 42,
-	// 		nickname: "player" + id,
-	// 		socketId: "not yet",
-	// 	};
-
-	// 	return player;
-	// }
 
 	//
 	async getPlayer(playerId: number): Promise<Player>
@@ -117,4 +84,20 @@ export class GameService {
 			socketId: socketId
 		});
 	}
+
+	// test code
+	// async testUser()
+	// {
+	// 	const signUp: SignupDto = {
+	// 		id: 0,
+	// 		nickname: "mango",
+	// 		enable2FA: false,
+	// 		data2FA: "dried mango",
+	// 	}
+
+	// 	const userProf = this.profileService.signUp(signUp, "https://i.namu.wiki/i/u5liMV9Vgtp0Nt4fmxx02gY7zUWjopt68xc-5b237g7ear5eWpamAPT5URpz5NBeR2Q0gEZQpnIzAYlXkLoWl1BdZeuJdagIKYThHPi7G5o3PyiLkkBzXdwy92BCHwB4J_s6_ZZBnpAv7Enj1eMvlA.webp");
+	// 	await this.userProfileRepository.insert(userProf);
+	// }
+
+
 }

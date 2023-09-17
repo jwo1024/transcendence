@@ -1,4 +1,4 @@
-// data source 옵션에 추가해줘야 함 -> entities: [/game/user..]
+// todo: PlayerEntity 필요 없을 것 같음 -> 나중에 삭제
 
 import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { FindOneOptions } from "typeorm";
@@ -15,7 +15,7 @@ export class PlayerEntity {
   nickname: string;
 
   @Column()
-  level: number; // for ladder queue
+  ladder: number; // for ladder queue
 
   @Column()
   socketId: string;
