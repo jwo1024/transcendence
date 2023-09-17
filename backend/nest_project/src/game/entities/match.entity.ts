@@ -1,6 +1,7 @@
 // data source 옵션에 추가해줘야 함 -> entities: [/game/user..]
 
-import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, Timestamp, Unique, UpdateDateColumn } from "typeorm";
+import { UserProfile } from "src/user/profile/user-profile.entity";
+import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, Timestamp, Unique, UpdateDateColumn } from "typeorm";
 import { FindOneOptions } from "typeorm";
 
 @Entity()
@@ -18,10 +19,12 @@ export class MatchEntity
 	game_type: string;
 
 	// many to one?
+	@ManyToOne(() => UserProfile, (user) => user.id) //???
 	@Column({ type: 'integer', nullable: false })
 	win_user_id: number;
 
 	// many to one?
+	@ManyToOne(() => UserProfile, (user) => user.id) //???
 	@Column({ type: 'integer', nullable: false })
 	lose_user_id: number;
 
