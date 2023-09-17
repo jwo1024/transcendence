@@ -7,7 +7,7 @@ import MyProfile from "@/components/profile/MyProfile";
 import FriendProfile from "@/components/profile/FriendProfile";
 import { UserInfo } from "@/types/UserInfo";
 import sendAvatar from "@/components/common/sendAvatar";
-
+import { UserLocalStorage } from "@/types/SignUpType";
 // 임시 백엔드 타입용.
 type user = {
   nickname: string;
@@ -24,11 +24,7 @@ export default function ProfilePage() {
   const [friendList, setFriendList] = useState(true);
   const [imageURL, setImageURL] = useState("https://github.com/React95.png");
 
-  let user_obj = { nickname: "", ladder: 0, wins: 0, loses: 0 };
-
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    user_obj = JSON.parse(localStorage.getItem("user") || "{}");
     const token = sessionStorage.getItem("accessToken");
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -72,15 +68,7 @@ export default function ProfilePage() {
     <div className=" h-screen flex flex-col items-center justify-center space-y-3">
       <div className="flex space-x-4">
         <div className="flex flex-col justify-between h-[626px]">
-          {myProfile ? (
-            <MyProfile
-              nickname={user_obj.nickname}
-              ladder={user_obj.ladder}
-              win={user_obj.wins}
-              lose={user_obj.loses}
-              avatarSrc={imageURL}
-            />
-          ) : null}
+          {myProfile ? <MyProfile avatarSrc={imageURL} /> : null}
           {friendsProfile ? (
             <FriendProfile selectedFriend={selectedFriend} />
           ) : null}

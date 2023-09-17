@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Fieldset,
   Frame,
@@ -8,30 +8,34 @@ import {
   Input,
 } from "@react95/core";
 import Window from "../common/Window";
+import { UserLocalStorage } from "@/types/SignUpType";
 
 interface ProfileProps {
-  nickname: string;
-  ladder: number;
-  win: number;
-  lose: number;
   avatarSrc: string; // 아바타 이미지 경로를 받는 속성 추가
 }
 
-const MyProfile: React.FC<ProfileProps> = ({
-  nickname,
-  ladder,
-  win,
-  lose,
-  avatarSrc,
-}) => {
+const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
+  const [myData, setMydata] = useState<UserLocalStorage>({
+    id: 0,
+    nickname: "",
+    status: 0,
+    ladder: 0,
+    wins: 0,
+    loses: 0,
+  });
   const myProfile: boolean = true;
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+    setMydata(user_obj);
+  }, []);
   return (
     <Window title="My Profile" w="320" h="350">
       <div className=" flex flex-col items-center justify-between p-4">
         <div className="flex items-center space-x-8">
           <img src={avatarSrc} alt="Avatar" className=" w-32 h-32" />
           <div className="flex flex-col items-center space-y-3 w-28">
-            <span className=" text-3xl">{nickname}</span>
+            <span className=" text-3xl">{myData.nickname}</span>
           </div>
         </div>
       </div>
@@ -61,9 +65,9 @@ const MyProfile: React.FC<ProfileProps> = ({
       <div className="p-4 w-full">
         <Fieldset legend="Information">
           <div className="flex flex-col p-2">
-            <div>Ladder: {ladder}</div>
-            <div>Win: {win}</div>
-            <div>Lose: {lose}</div>
+            <div>Ladder: {myData.ladder}</div>
+            <div>Win: {myData.wins}</div>
+            <div>Lose: {myData.loses}</div>
           </div>
         </Fieldset>
       </div>

@@ -12,10 +12,14 @@ export interface User42Dto {
   first_name: string;
   last_name: string;
   campus: string;
-//   image_url: string;
+  //   image_url: string;
 }
 
-export interface UserLocalStoreI {
-    id: number;
-    nickname: string;
+export interface UserLocalStorage {
+  id: number;
+  nickname: string;
+  status: number;
+  ladder: number;
+  wins: number;
+  loses: number;
 }
