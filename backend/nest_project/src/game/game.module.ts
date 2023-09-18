@@ -4,15 +4,15 @@ import { GameService } from './game.service';
 import { FriendlyGameGateway, LadderGameGateway } from './game.gateway';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeORMConfig } from 'src/configs/typeorm.config';
-import { PlayerEntity } from './entities/player.entity';
+import { ConnectedPlayerEntity } from './entities/connectedPlayer.entity';
 import { UserProfile } from 'src/user/profile/user-profile.entity';
 import { ProfileService } from 'src/user/profile/profile.service';
 
-// todo : typeorm config에 PlayerEntity 넣기
+// todo : typeorm config에 ConnectedPlayerEntity 넣기
 
 @Module
 ({
-	imports: [TypeOrmModule.forFeature([PlayerEntity, UserProfile])],
+	imports: [TypeOrmModule.forFeature([ConnectedPlayerEntity, UserProfile])],
 	// exports: [TypeOrmModule],
 	controllers: [GameController],
 	providers: [GameService, LadderGameGateway, FriendlyGameGateway, ProfileService],

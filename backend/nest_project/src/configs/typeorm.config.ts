@@ -8,7 +8,9 @@ import { ConnectedUserEntity } from '../chat/entities/connected-user.entity';
 import { MessageEntity } from '../chat/entities/message.entity'; 
 import { JoinedRoomEntity } from '../chat/entities/joined-room.entity'; 
 import { UserEntity } from '../chat/entities/user.entity';
-import { PlayerEntity } from "src/game/entities/player.entity";
+import { ConnectedPlayerEntity } from "src/game/entities/connectedPlayer.entity";
+import { MatchEntity } from "src/game/entities/match.entity";
+import { HistoryEntity } from "src/game/entities/history.entity";
 
 export const typeORMConfig : TypeOrmModule = {
 	logging: {
@@ -38,7 +40,9 @@ export const typeORMConfig : TypeOrmModule = {
 				UserEntity,
 
 				//for game
-				PlayerEntity,
+				ConnectedPlayerEntity,
+				MatchEntity,
+				HistoryEntity,
 	],
 
 	synchronize: true

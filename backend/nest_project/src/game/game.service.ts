@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Player } from './interface/game.interface';
 
-import { PlayerEntity } from './entities/player.entity';
+import { ConnectedPlayerEntity } from './entities/connectedPlayer.entity';
 import { UserProfile } from 'src/user/profile/user-profile.entity';
 import { ProfileService } from 'src/user/profile/profile.service';
 import { SignupDto } from 'src/user/profile/dto/signup.dto';
@@ -11,8 +11,8 @@ import { SignupDto } from 'src/user/profile/dto/signup.dto';
 @Injectable()
 export class GameService {
 	constructor(
-		@InjectRepository(PlayerEntity) private playerRepository: Repository<PlayerEntity>,
-		@InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
+		@InjectRepository(ConnectedPlayerEntity) private connectedPlayerRepository: Repository<ConnectedPlayerEntity>,
+		// @InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
 		private dataSource: DataSource,
 		private profileService: ProfileService,
 	) {}
@@ -20,40 +20,16 @@ export class GameService {
 	// todo: remove
 	getWindow() {return "hey";}
 
-	async createPlayer(socketId: string): Promise<Player>
+	async createPlayer(id:number, socketId : string): Promise<Player>
 	{
-		// temp code
-		// console.log("create player::");
-		// const test = this.getPlayer(42);
-		// console.log((await test));
-
-		const player: PlayerEntity = {
-			id: 42,
-			ladder: 4242,
-			nickname: "default",
-			socketId: socketId,
-		};
-
-		// const player: PlayerEntity = {
-		// 	// id: user.id,
-		// 	// level: user.level,
-		// 	// nickname: userInfo.nickname,
-		// 	id: 42,
-		// 	level: 4242,
-		// 	nickname: "random player",
-		// 	socketId: socketId,
-		// };
-		// await this.playerRepository.insert(player);
-		await this.playerRepository.insert(player);
-
-		return player;
+		return this.connectedPlayerRepository.save({id : id, socketId: socketId});
 	}
 
 	//
-	async getPlayer(playerId: number): Promise<Player>
+	async getPlayer(id: number): Promise<Player>
 	{
-		return this.playerRepository.findOne({
-			where: { "id": playerId }
+		return this.connectedPlayerRepository.findOne({
+			where: { "id": id }
 			// relations: ['user'] // user 데이터베이스 연결되면 처리
 		});
 	}
@@ -61,30 +37,38 @@ export class GameService {
 	// temp code
 	async getPlayerBySocketId(socketId: string): Promise<Player>
 	{
-		return this.playerRepository.findOne({
+		return this.connectedPlayerRepository.findOne({
 			where: { "socketId": socketId }
 		});
 	}
-	// temp code
-	async getPlayerBynickname(name: string): Promise<Player>
-	{
-		return this.playerRepository.findOne({
-			where: { "nickname": name }
-		});
-	}
+	// // temp code
+	// async getPlayerBynickname(name: string): Promise<Player>
+	// {
+	// 	return this.connectedPlayerRepository.findOne({
+	// 		where: { "nickname": name }
+	// 	});
+	// }
 
 	// todo
 	async deletePlayerBySocketId(socketId: string)
 	// async deletePlayerBySocketId(name: string)
 	{
-		// await this.playerRepository.delete({
+		// await this.connectedPlayerRepository.delete({
 		// 	nickname: name
 		// });
-		await this.playerRepository.softDelete({
+		await this.connectedPlayerRepository.softDelete({
 			socketId: socketId
 		});
 	}
 
+	//
+	async deleteAll() {
+		await this.connectedPlayerRepository
+		  .createQueryBuilder()
+		  .delete()
+		  .execute();
+	  }
+	
 	// test code
 	// async testUser()
 	// {
