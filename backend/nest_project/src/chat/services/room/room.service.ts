@@ -9,9 +9,12 @@ import { roomType } from 'src/chat/types/roomTypes';
 import { RoomEntity } from '../../entities/room.entity'; 
 import { RoomI } from '../../interfaces/room.interface'; 
 import { UserI } from '../../interfaces/user.interface'; 
-import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO } from '../../dto/room.dto';
+import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO, SimpleRoomDTO } from '../../dto/room.dto';
 
 import { RoomMapper } from '../../mapper/room.mapper';
+
+const bcrypt = require('bcrypt');
+
 
 @Injectable()
 export class RoomService {
@@ -24,10 +27,23 @@ export class RoomService {
     private roomMapper: RoomMapper,
     ) { }
 
-  async createRoom(room: RoomCreateDTO, creator: UserI): Promise<RoomI> {
+    async hashPassword(password: string): Promise<string> {
+      return bcrypt.hash(password, 12);
+    }
+  
+    async comparePasswords(password: string, storedPasswordHash: string): Promise<any> {
+      return bcrypt.compare(password, storedPasswordHash);
+    }
 
+
+  async createRoom(room: RoomCreateDTO, creator: UserI): Promise<RoomI> 
+  {
     this.logger.log(`first step : ${room.roomName}, ${room.roomType}`);
-
+   
+    //비밀번호 있다면 hash화 해서 저장
+    if (room.roomPass)
+      room.roomPass = await this.hashPassword(room.roomPass);
+		//   newUser.password = passwordHash;
     const Room_dtoToEntity = this.roomRepository.create(this.roomMapper.Create_dtoToEntity(room));
     const newRoom = await this.addCreatorToRoom(Room_dtoToEntity, creator);
 
@@ -140,35 +156,52 @@ export class RoomService {
   }
 
 
-  //roomType이 protected일 경우 비밀번호가 맞아도 초대된 사용자가 아니면 못들어감(무시)
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
-  isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : boolean {
-    if ( roomFromDB.roomType === 'open')
-      return true;
-    // if ( roomFromDB.roomType === 'protected' && joinDTO.roomPass === roomFromDB.roomPass)
+  async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
+    if (joinDTO.roomPass)
+      joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
     if ( roomFromDB.roomPass !== undefined && joinDTO.roomPass === roomFromDB.roomPass)
       return true;
     return false;
   }
 
-  async getRoomsByType(allowedRoomTypes : roomType[]): Promise<RoomEntity[]> {
-    return await this.roomRepository.find({
+    async savechangedOwner(room: RoomI)
+    {
+      return await this.roomRepository.save(room);
+    }
+
+  async getRoomsByType(allowedRoomTypes : roomType[]): Promise<SimpleRoomDTO[]> {
+    const rooms = 
+    await this.roomRepository.find({
       where: {
         roomType: In(allowedRoomTypes),
       },
     });
+    return this.roomMapper.Create_simpleDTOArrays(rooms);
   }
 
-  async getRoomsForUser(userId: number, options: IPaginationOptions): Promise<Pagination<RoomI>> {
-    const query = this.roomRepository
+  async getRoomsForUser(userId: number): Promise<SimpleRoomDTO[]> {
+    const rooms = await this.roomRepository
       .createQueryBuilder('room')
       .leftJoin('room.users', 'users')
       .where('users.id = :userId', { userId })
       .leftJoinAndSelect('room.users', 'all_users')
-      .orderBy('room.created_at', 'DESC');
-
-    return paginate(query, options);
+      .orderBy('room.created_at', 'DESC')
+      .getMany();
+  
+    return this.roomMapper.Create_simpleDTOArrays(rooms);
   }
+
+  // async getRoomsForUser(userId: number, options: IPaginationOptions): Promise<Pagination<RoomI>> {
+  //   const query = this.roomRepository
+  //     .createQueryBuilder('room')
+  //     .leftJoin('room.users', 'users')
+  //     .where('users.id = :userId', { userId })
+  //     .leftJoinAndSelect('room.users', 'all_users')
+  //     .orderBy('room.created_at', 'DESC');
+
+  //   return paginate(query, options);
+  // }
 
   async deleteById(roomId: number) {
 		return this.roomRepository.delete({ roomId });

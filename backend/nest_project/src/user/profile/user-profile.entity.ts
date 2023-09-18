@@ -1,7 +1,8 @@
 import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
 
-enum userStatus {
+export enum userStatus {
     offline,
+    online,
     inGame,
     inChat
 }
@@ -17,13 +18,11 @@ export class UserProfile extends BaseEntity {
     @Column({ type: 'enum', enum: userStatus, default: userStatus.offline})
     status: userStatus;
     
-    @Column({ type: 'bytea'})
-    avatar: Buffer;
     
     @Column({ type: 'boolean', default: false, nullable: false})
     enable2FA: boolean;
     
-    @Column({ type: 'varchar'})
+    @Column({ type: 'varchar', nullable: true})
     data2FA: string;
     
     @Column({ type: 'integer', array: true, default: []})
@@ -31,7 +30,19 @@ export class UserProfile extends BaseEntity {
     
     @Column({ type: 'integer', array: true, default: []})
     block_list: number[];
-
+    
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
-    created_at: Date;  
-} 
+    created_at: Date;
+    
+    @Column({ type: 'integer', default: 1000})
+    ladder: number;
+    
+    @Column({ type: 'integer', default: 0})
+    wins: number;
+    
+    @Column({ type: 'integer', default: 0})
+    loses: number;
+
+    @Column({ type: 'bytea', default: null})
+    avatar: Buffer;
+}
