@@ -19,6 +19,7 @@ const config: Config = {
         "80vh": "80vh",
         "80%": "80%",
         "30px": "30px",
+        "inherit": "inherit",
       },
       minHeight: {
         "80vh": "80vh",

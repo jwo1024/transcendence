@@ -1,42 +1,68 @@
+///// NEW with BACKEND  /////
+export type roomType = "open" | "private" | "dm";
+
+// waiting room
+export interface SimpRoomI {
+  roomId: number;
+  roomName: string;
+  roomType: roomType;
+  hasPass: boolean;
+  joinUsersNum: number; // only front? not in db
+}
+
+export interface SimpUserI {
+  id: number;
+  nickname: string;
+}
 
 // chat room
-interface ChatRoomInfo {
-	chatType: "group";
-  id: number;
-  title: string;
-  isPublic: boolean;
-  password: boolean;
-  numOfUser: number;
+// make in DTO
+export interface RoomI {
+  roomId: number;
+  roomName: string;
+  roomType: roomType;
+  roomPass?: string;
+  roomOwner: number; //owner user의 id
+  roomAdmins: number[]; //ids
+  roomBanned: number[]; //idsx
+  // users: UserEntity[];
+  // joinedUsers: JinedRoomEntity[];
+  // messages: MessageEntity[];
+  created_at?: Date;
 }
 
-interface ChatRoomListInfo {
-  list: ChatRoomInfo[];
-};
-
-interface DMRoomInfo {
-  chatType: "dm";
-  title: string;
-  friendName: string;
+export interface MessageI {
+  text: string;
+  user: SimpUserI; // just id
+  room: SimpRoomI; //roomId TODO : id만으로 .. !
+  created_at: Date;
 }
 
-
-// message
-interface UserInfo {
-  id: number;
-  name: string;
+// SEND DTO (From Front to Back)
+export interface RoomCreateDTO {
+  roomName: string;
+  roomType: roomType;
+  roomPass?: string;
 }
 
-interface MessageInfo {
-  chatRoomId: number;
-  user : UserInfo;
-  message: string;
-  createdAt: string; // DATE
+export interface RoomJoinDTO {
+  roomId: number;
+  roomPass?: string;
 }
 
-export type {
-  ChatRoomInfo,
-  DMRoomInfo,
-  UserInfo,
-  MessageInfo,
-  ChatRoomListInfo
-};
+export interface MessageDTO {
+  roomId: number;
+  userId: number;
+  text: string;
+} // (보안 문제로 userId 빼는 것 고려중)
+
+export interface RoomCreateDTO {
+  roomName: string;
+  roomType: roomType;
+  roomPass?: string;
+}
+
+export interface RoomInviteDTO {
+  targetUserId: number;
+  roomId: number;
+}

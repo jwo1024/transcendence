@@ -4,57 +4,68 @@
 // index 비교해서 업데이트하는 기능 추가 필요
 // var index = arr3.findIndex(i => i.name == "강호동");
 
-import type { ChatRoomInfo, ChatRoomListInfo } from "@/types/ChatInfoType";
-import { useReducer, useEffect } from "react";
+// import type { ChatRoomInfo, ChatRoomListInfo } from "@/types/ChatInfoType";
+import { useEffect, useReducer } from "react";
+import type { SimpRoomI } from "@/types/ChatInfoType";
+
+interface ChatRoomStateI {
+  state: SimpRoomI[];
+  addState: ({ roomData }: { roomData: SimpRoomI }) => void;
+  removeState: ({ roomId }: { roomId: number }) => void;
+  setListState: ({ roomList }: { roomList: SimpRoomI[] }) => void;
+}
 
 type Action =
-  | { type: "ADD"; room: ChatRoomInfo }
-  | { type: "REMOVE"; id: number }
-  | { type: "ADD_LIST"; lists: ChatRoomListInfo };
+  | { type: "ADD"; room: SimpRoomI }
+  | { type: "REMOVE"; roomId: number }
+  | { type: "SET_LIST"; roomList: SimpRoomI[] };
 
-const reducer = (state: ChatRoomListInfo, action: Action) => {
+const reducer = (state: SimpRoomI[], action: Action) => {
   console.log(state);
   switch (action.type) {
     case "ADD": {
-      return { list: [...state.list, action.room] };
+      if (state.some((item) => item.roomId === action.room.roomId))
+        return state;
+      return [...state, action.room];
     }
     case "REMOVE": {
-      return {
-        list: state.list.filter((item) => item.id !== action.id),
-      };
+      return state.filter((item) => item.roomId !== action.roomId);
     }
-    case "ADD_LIST": {
+    case "SET_LIST": {
       // const newList = state
-      return { list: [...state.list, ...action.lists.list] };
+      if (!action.roomList || action.roomList?.length === 0) return [];
+      return [...action.roomList];
     }
     default:
       return state;
   }
 };
+
 const useChatRoomListReducer = () => {
-  const [state, dispatch] = useReducer(reducer, { list: [] });
+  const [state, dispatch] = useReducer(reducer, [] as SimpRoomI[]);
 
   useEffect(() => {
-    console.log("CHECK : useChatRoomListReducer : MOUNT");
-    return () => {
-      console.log("CHECK : useChatRoomListReducer : UNMOUNT");
-    };
-  }, []);
-  console.log("CHECK : useChatRoomListReducer : RENDER");
+    console.log("useChatRoomListReducer");
+    console.log(state);
+    return () => {};
+  }, [state]);
 
-  const addState = ({ roomData }: { roomData: ChatRoomInfo }) => {
+  const addState = ({ roomData }: { roomData: SimpRoomI }) => {
     dispatch({ type: "ADD", room: roomData });
+    console.log("addState");
+    console.log(state);
   };
 
   const removeState = ({ roomId }: { roomId: number }) => {
-    dispatch({ type: "REMOVE", id: roomId });
+    dispatch({ type: "REMOVE", roomId: roomId });
   };
 
-  const addListState = ({ addList }: { addList: ChatRoomListInfo }) => {
-    dispatch({ type: "ADD_LIST", lists: addList });
+  const setListState = ({ roomList }: { roomList: SimpRoomI[] }) => {
+    dispatch({ type: "SET_LIST", roomList: roomList });
   };
 
-  return { state, addState, removeState, addListState } as const;
+  return { state, addState, removeState, setListState } as const;
 };
 
 export default useChatRoomListReducer;
+export type { SimpRoomI as WaitingRoomI, ChatRoomStateI };
