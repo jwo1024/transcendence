@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Frame, ThemeProvider, List, Input, Button } from "@react95/core";
 import { Fax } from "@react95/icons";
 import Window from "../common/Window";
+import Cookies from "js-cookie";
 
 // 임시 백엔드 타입용.
 type user = {
@@ -18,20 +19,64 @@ interface FriendListProps {
   handleProfileClick: (friend: user) => void;
 }
 
+// const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
+//   // load friend list....
+//   const [friendsList, setFriendsList] = useState<users>([]);
+//   useEffect(() => {
+//     fetch("http://localhost:3001/api/friendList")
+//       .then((res) => res.json())
+//       .then((res) => {
+//         setFriendsList(res);
+//       });
+//   }, []);
 const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
-  // load friend list....
   const [friendsList, setFriendsList] = useState<users>([]);
-  useEffect(() => {
+
+  const fetchFriendList = () => {
     fetch("http://localhost:3001/api/friendList")
-      .then((res) => res.json())
+      .then((res) => {
+        console.log(res);
+        return res.json();
+      })
       .then((res) => {
         setFriendsList(res);
-      });
+      })
+      .catch(() => console.log("bad response"));
+  };
+
+  useEffect(() => {
+    // 초기 로딩
+    fetchFriendList();
+
+    // 5초마다 업데이트
+    const intervalId = setInterval(fetchFriendList, 3000);
+
+    // 컴포넌트가 언마운트될 때 interval을 정리(cleanup)
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
 
   // request plus friend
-  const addFriend = () => {
-    fetch("http://localhost:3001/api/friendsList");
+
+  const addFriend = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // const data = Cookies.get("accessToken");
+    // console.log(data);
+    // if (data) {
+    // const token = JSON.parse(data);
+    // fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/addFriend`, {
+    //   method: "POST",
+    //   headers: {
+    //     Authorization: `bearer ${token}`,
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     // id: user42Dto?.id,
+    //     // nickname: nickName,
+    //   }),
+    // });
+    // }
   };
 
   return (
@@ -58,9 +103,11 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
         </ul>
       </div>
       <div className="flex items-center justify-between p-4 pt-4 border-2 border-white">
-        <Input className=" w-60" />
-        {/* <Button onClick={addFriend}>친구추가</Button> */}
-        <Button>친구추가</Button>
+        <form onSubmit={addFriend}>
+          <Input className=" w-60" />
+          {/* <Button onClick={addFriend}>친구추가</Button> */}
+          <Button>친구추가</Button>
+        </form>
       </div>
     </Window>
   );
