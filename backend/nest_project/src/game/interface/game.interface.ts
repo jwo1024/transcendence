@@ -2,7 +2,7 @@ export interface Player
 {
 	id: number;
 	// nickname: string;
-	// ladder: number; // for ladder queue
+	ladder: number; // for ladder queue
 	socketId: string;
 
 	// 최근 전적 5개의 data(match_id)

@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { GameController } from './game.controller';
 import { GameService } from './game.service';
-import { FriendlyGameGateway, LadderGameGateway } from './game.gateway';
+import { FriendlyGameGateway } from './friendlyGame.gateway';
+import { LadderGameGateway } from './ladderGame.gateway';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeORMConfig } from 'src/configs/typeorm.config';
 import { ConnectedPlayerEntity } from './entities/connectedPlayer.entity';

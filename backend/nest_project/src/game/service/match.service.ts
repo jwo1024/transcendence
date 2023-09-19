@@ -35,13 +35,25 @@ export class MatchService {
 		return this.matchRepository.save({playerLeft : id1, playerRight: id2, game_type: game_type, scoreLeft : 0, scoreRight : 0});
 	}
 
-	// //
 	async getByMatchId(match_id: number): Promise<MatchEntity>
 	{
 		return this.matchRepository.findOne({
 			where: { match_id }
 			// relations: ['user'] // user 데이터베이스 연결되면 처리
 		});
+	}
+
+	async getByPlayerId(player_id: number)/* : Promise<MatchEntity> */
+	{
+		// const match = await this.matchRepository.findOne({
+		// 	where: { playerLeft: player_id }
+		// });
+		
+		// const match = await this.matchRepository.findOne({
+		// 	where: { playerRight: player_id }
+		// });
+
+		// return await ;
 	}
 
 
@@ -88,20 +100,5 @@ export class MatchService {
 	// 	  .delete()
 	// 	  .execute();
 	//   }
-	
-	// // test code
-	// // async testUser()
-	// // {
-	// // 	const signUp: SignupDto = {
-	// // 		id: 0,
-	// // 		nickname: "mango",
-	// // 		enable2FA: false,
-	// // 		data2FA: "dried mango",
-	// // 	}
-
-	// // 	const userProf = this.profileService.signUp(signUp, "https://i.namu.wiki/i/u5liMV9Vgtp0Nt4fmxx02gY7zUWjopt68xc-5b237g7ear5eWpamAPT5URpz5NBeR2Q0gEZQpnIzAYlXkLoWl1BdZeuJdagIKYThHPi7G5o3PyiLkkBzXdwy92BCHwB4J_s6_ZZBnpAv7Enj1eMvlA.webp");
-	// // 	await this.userProfileRepository.insert(userProf);
-	// // }
-
 
 }
