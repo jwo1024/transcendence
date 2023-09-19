@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { Player, MatchInfo, GameField, Ball, Paddle } from './interface/game.interface';
+import { MatchInfo, GameField, Ball, Paddle } from './interface/game.interface';
 import { GameService } from './game.service';
 
 import { from, Observable } from 'rxjs';
@@ -17,6 +17,9 @@ import { MatchEntity } from './entities/match.entity';
 import {MatchService} from './service/match.service';
 import { HistoryService } from './service/history.service';
 import { HistoryEntity } from './entities/history.entity';
+
+import { Player } from './dto/player.dto';
+
 // 래더 큐 잡는 로직
 async function queueProcess()
 {
@@ -66,19 +69,14 @@ async function collision(b: Ball, p: Paddle)
 
 
 
-// const playerList: string[] = [];
 
 // temp variables for unit test
 const player1: Player = {
 			id: 0,
-			// ladder: 4242,
-			// nickname: "left player",
 			socketId: "not yet",
 		};
 const player2: Player = {
 			id: 1,
-			// ladder: 4242,
-			// nickname: "right player",
 			socketId: "not yet",
 		};
 
@@ -194,69 +192,6 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 
-// @Injectable()
-// @WebSocketGateway( {namespace: 'game'} )
-// export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
-// {
-// 	private logger = new Logger('GameGateway');
-// 	constructor(
-// 		private gameService: GameService,
-// 		private profileService: ProfileService,
-// 		private matchService: MatchService,
-// 		// private profileServie:
-// 	){}
-
-// 	async onModuleInit() 
-// 	{
-// 		this.gameService.deleteAll();
-// 	}
-
-
-// 	private disconnect(socket: Socket) {
-// 		// socket.emit('Error', new UnauthorizedException()); //ee
-// 		socket.disconnect();
-// 	  };
-	
-// 	async handleConnection(socket: Socket)
-// 	{
-// 		console.log("Friendly Game Server: connected.");
-// 		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
-// 		// user의 소켓 id 정보
-// 		// //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
-// 		const token = socket.handshake.headers.authorization;
-		
-// 		//userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
-// 		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
-// 		if (!userId)
-// 			return this.disconnect(socket);
-// 		const userProfile = await this.profileService.getUserProfileById(userId);
-// 		if (!userProfile)
-// 			return this.disconnect(socket);
-
-// 		const current  = await this.gameService.createPlayer(userId, socket.id);
-// 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`)
-// 		this.logger.log(`socketId : ${socket.id}`)
-// 	}
-
-// 	async handleDisconnect(socket: Socket)
-// 	{
-// 		console.log("Server: disconnected.");
-// 		// 유저의 소켓 id 삭제?
-// 		// await this.gameService.deletePlayerBySocketId(socket.id);
-// 		// if (player1.socketId === socket.id)
-// 		// {
-// 		// 	player1.socketId = "not yet";
-// 		// }
-// 		// if (player2.socketId === socket.id)
-// 		// {
-// 		// 	player2.socketId = "not yet";
-// 		// }
-// 	}
-
-
-
-// }
-
 
 
 @Injectable()
@@ -268,7 +203,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	// this.logger.log();
 
 	// variables
-	private ladderQueue: Socket[];
+	private ladderQueue: Player[];
 
 	// constructor
 	constructor(
