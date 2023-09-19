@@ -44,8 +44,7 @@ const SignUpPage = () => {
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logon`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
+    }).then((res) => {
         if (res.ok) return res.json();
         else throw new Error("Unkwon Error : ");
       })

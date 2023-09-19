@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { ProfileService } from '../profile/profile.service';
 import { User42Dto } from './dto/user42.dto';
 import { AuthGuard } from '@nestjs/passport';
-import * as jwt from 'jsonwebtoken';
+import { userStatus } from '../profile/user-profile.entity';
 
 class Image42 {
   url: string;
@@ -29,16 +29,16 @@ export class AuthController {
     const accessTokenOf42User = await this.authService.getAccessTokenOf42User(query.code);
     const userDataFrom42: User42Dto = await this.authService.getUserDataFrom42(accessTokenOf42User);
 
-    const imageData : Image42 = new Image42();
-    imageData.url = userDataFrom42.image_url;
-    imageData.token, accessTokenOf42User;
-    this.image42.set(userDataFrom42.id, imageData);
-
     const token = await this.authService.jwtCreation(userDataFrom42.id);
     res.cookie('accessToken', token.accessToken, { httpOnly: false });
     const userProfile = await this.profileService.getUserProfileById( userDataFrom42.id );
-    if (!userProfile)
+    if (!userProfile) {
+      const imageData : Image42 = new Image42();
+      imageData.url = userDataFrom42.image_url;
+      imageData.token = accessTokenOf42User;
+      this.image42.set(userDataFrom42.id, imageData);  
       res.cookie('user42Dto', JSON.stringify(userDataFrom42), { httpOnly: false });
+    }
     res.redirect('http://localhost:3001/signup');
   }
 
@@ -73,23 +73,32 @@ export class AuthController {
     
   @Post('logon') // signup을 나가면서 logon 요청
   @UseGuards(AuthGuard())  // logon은 AuthGuard 거치지만, logout은 거치지 않는다. 왜냐하면 창 닫힐 때는 처리 속도가 빨라야해서 fetch가 아닌 sendBeacon으로 처리하기 때문이다. sendbeacon은 header를 못넣는다. 그래서 AuthGuard를 거치지 않는다.
-  async logOn(@Req() req) {
+  async logOn(@Req() req, @Res() res) {
     const userId = req.user.userId;
+    const accessToken = req.headers.authorization?.split('Bearer ')[1];
     const user = await this.profileService.getUserProfileById(userId);
     if (!user)
       throw new Error('user not found');
     else { 
-      await this.profileService.logOn(userId);
-      const { id, nickname, status, ladder, wins, loses } = user; // 브라우저의 localStorage에 저장될 정보라고 함
-      return { id, nickname, status, ladder, wins, loses };
+      if (user.status !== userStatus.inChat && user.status !== userStatus.inGame) {
+        AuthService.setSession(userId, accessToken);
+        await this.profileService.logOn(userId);
+        const { id, nickname, status, ladder, wins, loses } = user; // 브라우저의 localStorage에 저장될 정보라고 함
+        return res.send({ id, nickname, status, ladder, wins, loses });
+      }
+      else {
+        console.log('user is already in chat or game');
+        res.redirect(`http://localhost:3001/`);
+      }
     } 
   }
 
   @Post('logoff')
+  @UseGuards(AuthGuard())
   async logOff(@Req() req) {
-    console.log(`logoff request`);
-    const accessToken = req.headers.cookie.split('=')[1];
-    const userId = await jwt.decode(accessToken)['userId'];
+    const userId = req.user.userId;
+    const accessToken = req.headers.authorization?.split('Bearer ')[1];
+    console.log(`parsed token[${userId}] : ${accessToken}`);
     if (AuthService.isTokenValid(userId, accessToken)) {
       console.log('token is valid');
       AuthService.endSession(userId);
