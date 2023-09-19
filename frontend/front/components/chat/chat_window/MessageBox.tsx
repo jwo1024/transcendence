@@ -1,52 +1,27 @@
+// Libraries
 import React, { useRef, useEffect } from "react";
 import { Frame } from "@react95/core";
-
+// Components
 import NameTag from "../common/NameTag";
-import type { MessageInfo } from "@/types/ChatInfoType";
-
-interface StatusBlockProps {
-  status?: string[];
-}
+// Types & Hooks & Contexts
+import type { MessageDTO, MessageI, SimpUserI } from "@/types/ChatInfoType";
 
 interface MessageBoxProps {
-  messageList?: MessageInfo[];
-  friendName?: string;
+  messageList?: MessageI[];
+  sentMessage?: MessageDTO;
+  userInfo: SimpUserI;
 }
 
-const StatusBlock = ({ children }: { children: React.ReactNode }) => (
-  <span className="mx-1 my-2 bg-stone-200 p-1 rounded">{children}</span>
-);
-
-const StatusBlockList = ({ status }: StatusBlockProps) => {
-  return (
-    <div className="p-3">
-      {status?.map((status, index) => {
-        return <StatusBlock key={index}>{status}</StatusBlock>;
-      })}
-    </div>
-  );
-};
-
-const MessageBox = ({ messageList, friendName }: MessageBoxProps) => {
+const MessageBox = ({
+  messageList,
+  sentMessage,
+  userInfo,
+}: MessageBoxProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [roomStatus, setRoomStatus] = React.useState<string[]>([]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messageList]);
-
-  useEffect(() => {
-    {
-      friendName
-        ? setRoomStatus([friendName + "와 Private 한 DM방"])
-        : setRoomStatus(["방제", "비밀번호 있음", "인원 [3명]"]);
-    }
-    console.log("CHECK : MessageBox : MOUNT");
-    return () => {
-      console.log("CHECK : MessageBox : UNMOUNT");
-    }
-  }, []);
-
 
   return (
     <Frame
@@ -55,7 +30,6 @@ const MessageBox = ({ messageList, friendName }: MessageBoxProps) => {
       boxShadow="in"
       bg="white"
     >
-      <StatusBlockList status={roomStatus} />
       {messageList?.map((messageInfo, index) => {
         return (
           // message overflow 처리하기
@@ -63,14 +37,23 @@ const MessageBox = ({ messageList, friendName }: MessageBoxProps) => {
             className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "
             key={index}
           >
-            <NameTag>{messageInfo.user.name}</NameTag>
-            <span className="text-ellipsis break-all ">{messageInfo.message}</span>
+            <NameTag>{messageInfo.user.nickname}</NameTag>
+            <span className="text-ellipsis break-all ">{messageInfo.text}</span>
             <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
-              {messageInfo.createdAt}
+              {messageInfo.created_at.toLocaleString()}
             </span>
           </div>
         );
       })}
+      {sentMessage ? (
+        <div className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis ">
+          <NameTag>{userInfo.nickname}</NameTag>
+          <span className="text-ellipsis break-all ">{sentMessage.text}</span>
+          <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
+            {"Sending..."}
+          </span>
+        </div>
+      ) : null}
       <div ref={scrollRef} />
     </Frame>
   );

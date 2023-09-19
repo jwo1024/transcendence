@@ -40,16 +40,18 @@ interface SelectButtonProps {
   children?: ReactNode;
   frameButton?: FrameButtonProps[];
   className?: string;
+  defaultActiveKey?: number;
 }
 
 const SelectButton = ({
   children,
   frameButton,
   className,
+  defaultActiveKey,
   ...props
 }: SelectButtonProps) => {
   const [activeFrameButtonKey, setActiveFrameButtonKey] =
-    React.useState<number>(-1);
+    React.useState<number>(defaultActiveKey || 0);
 
   const handleClick = (key: number) => () => {
     setActiveFrameButtonKey(key);
