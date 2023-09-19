@@ -18,6 +18,7 @@
     "@types/styled-components": "^5.1.26",
     "@types/xstyled__styled-components": "^1.19.3",
     "autoprefixer": "10.4.14",
+    "browser-image-compression": "^2.0.2",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.13",
     "http-proxy-middleware": "^2.0.6",

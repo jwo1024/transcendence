@@ -11,10 +11,24 @@ import Window from "../common/Window";
 import { UserLocalStorage } from "@/types/SignUpType";
 import sendAvatar from "../common/sendAvatar";
 import type { SignupDto, User42Dto } from "@/types/SignUpType";
+import imageCompression from "browser-image-compression";
 
 interface ProfileProps {
   avatarSrc: string; // 아바타 이미지 경로를 받는 속성 추가
 }
+const actionImgCompress = async (fileSrc: File) => {
+  const options = {
+    maxSizeMB: 0.05,
+    maxWidthOrHeight: 140,
+    useWebWorker: true,
+  };
+  try {
+    return await imageCompression(fileSrc, options);
+  } catch (error) {
+    alert(error);
+    return null;
+  }
+};
 
 const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
   const [myData, setMydata] = useState<UserLocalStorage>({
@@ -38,10 +52,18 @@ const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
   const [avatarURL, setAvatarURL] = useState<string | null>(null);
   const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
 
-  const onChangeAvatarInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files ? event.target.files[0] : null;
+  const onChangeAvatarInput = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    let file = event.target.files ? event.target.files[0] : null;
+    if (!file) return console.log("no image");
     setUploadAvatar(file);
-    console.log(file?.size);
+    console.log(`${file?.size} byte`);
+
+    if (file?.size > 140 * 140) {
+      file = await actionImgCompress(file);
+    }
+    console.log(`${file?.size} byte`);
     if (file) {
       const url = URL.createObjectURL(file);
       setAvatarURL(url);
