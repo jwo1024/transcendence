@@ -1,6 +1,5 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
-// import { Entity, Column, ManyToMany, OneToMany, BeforeUpdate } from "typeorm";
-import { UserProfile } from "./userprofile.entity";
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, OneToOne } from "typeorm";
+import { UserProfile } from "../../user/profile/user-profile.entity";
 import { RoomEntity } from "./room.entity";
 import { ConnectedUserEntity } from "./connected-user.entity";
 import { JoinedRoomEntity } from "./joined-room.entity";
@@ -11,9 +10,9 @@ import { FindOneOptions } from "typeorm";
 @Entity()
 export class UserEntity {
 
-  // @ManyToOne(() => UserProfile)
-  //   @JoinColumn({ name: 'user_profile_id' }) // 외래키 컬럼 이름
-  //   userProfile: UserProfile;
+  @OneToOne(() => UserProfile)
+  @JoinColumn({ name: 'user_profile_id' }) // 외래키 컬럼 이름
+  userProfile: UserProfile;
 
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false}) //외래키 한번에 지정 할 수 있나?
   id: number;
@@ -24,8 +23,8 @@ export class UserEntity {
   @Column({ type: 'integer', array: true, default: []})
   block_list : number[];
   
-  @Column({ type: 'integer', array: true, default: []})
-  friend_list : number[];
+  // @Column({ type: 'integer', array: true, default: []})
+  // friend_list : number[];
 
   @ManyToMany(() => RoomEntity, room => room.users)
   rooms: RoomEntity[]

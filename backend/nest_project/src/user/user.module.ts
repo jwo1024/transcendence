@@ -3,10 +3,11 @@ import { ProfileModule } from './profile/profile.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserProfile } from './profile/user-profile.entity';
+import { UserEntity } from '../chat/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserProfile]),
+    TypeOrmModule.forFeature([UserProfile, UserEntity]),
     ProfileModule,
     AuthModule
   ],

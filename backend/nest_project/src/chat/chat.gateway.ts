@@ -39,7 +39,7 @@ import { JoinedRoomService } from './services/joined-room/joined-room.service';
 import { MessageService } from './services/message/message.service';
 
 //temp - profile
-import { ProfileService } from './services/profile-service/profile-service.service';
+import { ProfileService } from '../user/profile/profile.service';
 // import { SignupDto } from './dto/signup.dto';
 
 //DTOs
@@ -77,72 +77,39 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   
   //required by OnModuleInit
   async onModuleInit() {
-    // await this.connectedUserService.deleteAll();
-    await this.joinedRoomService.deleteAll();
+
     await this.connectedUserService.deleteAll();
-    await this.userService.deleteAll();
+
   };
 
+  //-------소켓 연결 관련 메서드----------------------
   //required by OnGatewayConnection
   async handleConnection(socket: Socket) {
     try {
       // //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
-      // const token = socket.handshake.headers.authorization;
-      // const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
-
-              // const decodedToken 
-              // = await this.authService.verifyJwt(socket.handshake.headers.authorization);
-              // const userProfile: UserI = await this.userService.getOne(decodedToken.user.id);
-      // if (!user) {
-        // return this.disconnect(socket);
-      // } else {
-    this.logger.log(`Try connection: ${socket.id}`); 
-      
-      // //temp profile for test
-      //   const tempProfile: SignupDto = new SignupDto();
-      //   tempProfile.id = 1234;
-      //   tempProfile.nickname = 'surlee';
-      //   tempProfile.enable2FA = false;
-      //   tempProfile.data2FA = '';
-
-        //여기서 만드려고 하니까 오류남. 원래도 chat 진입전 Userprofile에 대응하는 데이터가 있을 것.
-        // const profileUser = await this.profileService.signUp(tempProfile) 
-        // const user
-
-    this.logger.log(`before make temp profile `); 
-
-
-        //temp UserI
-        const tempUser: UserI = {
-          id: 12344,
-          nickname: 'surlee',
-          block_list: [],
-          friend_list: [],
-          rooms: [],
-          connections: [],
-          joinedRooms: [],
-          messages: [],
-        };
-
-        this.logger.log(`before create db `); 
-
-        //원래 로직은 만드는 것이 아닌, getOne으로 찾아와야 하나 일단 임시
-        const user: UserI = await this.userService.create(tempUser);
-        // const user: UserI = await this.userService.getOne(tempUser.id);
-        this.logger.log(`create User: ${tempUser.id}, ${tempUser.nickname}`); 
-        this.logger.log(`returned User: ${user.id}, ${user.nickname}`); 
-        // const user: UserI = await this.userService.getOne(decodedToken.user.id);
-        socket.data.user = user;
-
-        const rooms = await this.roomService.getRoomsForUser(user.id);
+        const token = socket.handshake.headers.authorization;
+        //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
+        const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
+        if (!userId)
+          return this.disconnect(socket);
+        const userProfile = await this.profileService.getUserProfileById(userId);
+        if (!userProfile)
+          return this.disconnect(socket);
+        const userForChat: UserI = await this.userService.getOne(userId);
+        if (!userForChat)
+          return this.disconnect(socket);
         
-        // substract page -1 to match the angular material paginator
-        // rooms.meta.currentPage = rooms.meta.currentPage - 1;
-        // this.logger.log(`load from DB : "${rooms.items}"`); 
+        this.logger.log(`Try connection: ${socket.id}`); 
+                
+        this.logger.log( `Chat User: ${userForChat.id}, ${userForChat.nickname}`); 
+        // const user: UserI = await this.userService.getOne(decodedToken.user.id);
+        socket.data.user = userForChat;
+
+        const rooms = await this.roomService.getRoomsForUser(userForChat.id);
         
         // Save connection to DB
-        await this.connectedUserService.create({ socketId: socket.id, user });
-        this.logger.log(`saved to DB : ${socket.id}, ${user}`); 
+        await this.connectedUserService.create({ socketId: socket.id, user : userForChat });
+        this.logger.log(`saved to DB : ${socket.id}, ${userForChat}`); 
         
         // Only emit rooms to the specific connected client
         return this.server.to(socket.id).emit('rooms', rooms);
@@ -156,13 +123,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   async handleDisconnect(socket: Socket) {
     // // remove connection from DB
     await this.connectedUserService.deleteBySocketId(socket.id);
-    // this.logger.log(`userid : ${socket.data.user.id}`);
-    await this.userService.deleteById(socket.data.user.id);
     socket.disconnect();
   }
 
     private disconnect(socket: Socket) {
     socket.emit('Error', new UnauthorizedException());
+    this.emitErrorEvent(socket.id, "Socket is disconnect.");
     socket.disconnect();
   };
 
@@ -174,8 +140,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
 		this.logger.error(`${socket.id}: `, message);
 	}
-
-  //--------메서드 시작-------------------------
+  //------------------------------------------------------
+  //--------채팅 메서드 시작-------------------------
 
   //For Room(단체 채팅방 만들기용 메서드)
   @SubscribeMessage('Room-create')
@@ -220,27 +186,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     if (room.roomType != 'dm')
     {
+      this.emitErrorEvent(socket.id, "not dm type");
       return ; //dm룸 만드는 명령이 아닌 경우 무시
     }
     const userTheOther = await this.userService.findOneByNickname(userNickname);
     if ( userTheOther === undefined)
     {
+      this.emitErrorEvent(socket.id, "matching user not found");
       return ; //valid하지 않은 사용자 nickname을 넘긴경우 무시
     }
     //내가 블락한 상대일 경우 실패(일단은 무시)
     const currentBlockList = await (await this.userService.getOne(socket.data.user.id)).block_list;
     if (currentBlockList.find(finding => userTheOther.id))
     {
+      this.emitErrorEvent(socket.id, "you've blocked that user");
       return ;
     }
     //내가 블락된 상대일 경우 실패(일단은 무시)
     if (userTheOther.block_list.find(finding => socket.data.user.id))
     {
+      this.emitErrorEvent(socket.id, "you've been blocked by that user");
       return ;
     }
 
     const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
-
+    if (!createdRoom)
+    {
+      this.emitErrorEvent(socket.id, "failed to creat it. Please retry");
+      return ;
+    }
     //방을 만든 사용자를 생성된 방에 join 시킴()
     await this.joinedRoomService.create(
       { socketId: socket.id, user: socket.data.user, room: createdRoom });
@@ -429,7 +403,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   private async emitErrorEvent(socketId:string, reason: string)
   {
-    await this.server.to(socketId).emit("failed-somthis", reason);
+    await this.server.to(socketId).emit("Error-alert", reason);
   }
 
   private async emitRoomsToAllConnectedUser()
@@ -604,6 +578,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       const newData = this.userService.undoBlockList(socket.data.user.id, targetId);
       
       socket.emit("my-block-list", (await newData).block_list);
+    }
+
+    @SubscribeMessage('get-user-profile')
+    async onGetUserProfile(
+      @ConnectedSocket() socket: Socket,
+      @MessageBody() targetId: number
+    )
+    {
+      const profile_info = this.profileService.getUserProfileById(targetId);
+      socket.emit("user-profile-info", profile_info);
     }
 
   //--- 아직 구현 안한 쪽
