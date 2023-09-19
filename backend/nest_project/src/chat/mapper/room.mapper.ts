@@ -54,7 +54,11 @@ export class RoomMapper{
     dto.roomId = entity.roomId;
     dto.roomName = entity.roomName;
     dto.roomType = entity.roomType;
-    dto.hasPass = (entity.roomPass !== undefined);
+    if (entity.roomPass == undefined || entity.roomPass === "undefined")
+     dto.hasPass = false;
+    else
+      dto.hasPass = true;
+    // dto.hasPass = (entity.roomPass !== undefined);
     dto.joinUsersNum = entity.users.length;
   
     return dto;

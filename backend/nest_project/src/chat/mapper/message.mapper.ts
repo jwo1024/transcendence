@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 //Datas
-import { MessageDTO } from "../dto/message.dto"; 
+import { MessageDTO, SimpleMessageDTO } from "../dto/message.dto"; 
 import { MessageEntity } from "../entities/message.entity"; 
+import { MessageI } from "../interfaces/message.interface";
 
 //Services
 import { RoomService } from "../services/room/room.service";
@@ -10,6 +11,7 @@ import { UserService } from "../services/user/user.service";
 
 //Mappers
 import { RoomMapper } from "./room.mapper";
+import { UserMapper } from "./user.mapper";
 
 
 @Injectable()
@@ -19,16 +21,9 @@ export class MessageMapper{
     private readonly roomService : RoomService,
     private readonly userService : UserService,
     private roomMapper : RoomMapper,
+    private userMapper : UserMapper,
     ){};
-  
-//  Create_entityToDto(entity :MessageEntity){
-//     const dto = new MessageDTO;
-//     dto.roomName = entity.roomName;
-//     dto.roomPass = entity.roomPass;
-//     dto.roomType = entity.roomType;
-//     return dto;
-//   }
-  
+
 //userEntity를 userId 가지고 찾을 일이 아니고, socket에 주입되어있는 Entity나 id로 하는게
 //보안상 맞는것 같다!!!
  async Create_dtoToEntity(dto: MessageDTO) : Promise<MessageEntity> {
@@ -46,4 +41,26 @@ export class MessageMapper{
 
   }
 
+   Create_entityToSimpleDto(entity :MessageI)
+   {
+    const dto = new SimpleMessageDTO;
+
+    dto.text = entity.text;
+    dto.user = this.userMapper.Create_EntityToDto(entity.user);
+    dto.created_at = entity.created_at;
+    
+    return dto;
+  }  
+
+   Create_simpleDTOArrays(entityArray :MessageI[])
+   {
+    const dtoArray : SimpleMessageDTO[] = [];
+    if (entityArray.length === 0)
+      return dtoArray;
+    for (const messageEntity of entityArray)
+    {
+      dtoArray.push(this.Create_entityToSimpleDto(messageEntity));
+    }
+    return dtoArray;
+  }
 }
