@@ -4,7 +4,6 @@ import { UserProfile, userStatus } from './user-profile.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupDto } from './dto/signup.dto';
 
-
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 
@@ -13,12 +12,14 @@ import * as path from 'path';
 
 import { sign } from 'crypto';
 import { extname } from 'path';
+import { UserService } from '../../chat/services/user/user.service';
 
 @Injectable()
 export class ProfileService {
     constructor(
         @InjectRepository(UserProfile)
         private userProfileRepository: Repository<UserProfile>,
+        private userService: UserService,
     ) {}
 
     async logOn(id: number): Promise<void> {
@@ -52,8 +53,14 @@ export class ProfileService {
         try {
             console.log(id, nickname, enable2FA, data2FA);//
             const userProfile = await this.userProfileRepository.create({
-                  id, nickname, enable2FA, data2FA});
-            await this.userProfileRepository.save(userProfile);
+                id, nickname, enable2FA, data2FA, userEntity: null});
+            const createdProfile = await this.userProfileRepository.save(userProfile);
+            
+            // UserEntity 생성 && profile에 엔터티 추가 - for chat
+            const userEntity = await this.userService.create({ userProfile: createdProfile, id,
+                nickname, block_list: [], rooms: [], connections: [], joinedRooms: [], messages: []});
+            await this.userProfileRepository.update({id: id}, {userEntity: userEntity});
+
             console.log('wow signup is done! : ', userProfile);
           }
           catch (error) {
