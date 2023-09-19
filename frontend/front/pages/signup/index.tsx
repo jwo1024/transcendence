@@ -12,6 +12,7 @@ import sendAvatar from "@/components/common/sendAvatar";
 // import { User42Dto } from "@/types/User42Dto"; // have to delete that file
 import type { UserInfo } from "@/types/UserInfo";
 import type { SignupDto, User42Dto } from "@/types/SignUpType";
+import TwoFactorAuthentication from "@/components/signup/TwoFactorAuthentication";
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -24,6 +25,8 @@ const SignUpPage = () => {
   const menuUrl = frontendUrl + "/menu";
   const [twoFAchecked, setTwoFAchecked] = useState<boolean>(false);
   const twoFARef = useRef<HTMLInputElement>();
+
+  const [TwoFactorPage, setTwoFactorPage] = useState<boolean>(true);
 
   useEffect(() => {
     const cookie_data = Cookies.get("accessToken");
@@ -135,12 +138,13 @@ const SignUpPage = () => {
       });
   };
 
+  console.log(user42Dto?.email);
+  console.log(TwoFactorPage);
+  console.log(user42Dto);
   return (
     <div className="flex flex-col  h-90vh items-center justify-center">
       <Window title="Sign in Page" w="300" h="550" xOption={false}>
-        {!user42Dto ? (
-          <div className=" text-2xl text-center pt-60">Loading...</div>
-        ) : (
+        {user42Dto && !TwoFactorPage ? (
           <div className="flex flex-col space-y-3 m-3 items-right">
             {/* User Info Block */}
             <InfoBlock user42Dto={user42Dto} />
@@ -177,6 +181,10 @@ const SignUpPage = () => {
               </div>
             </form>
           </div>
+        ) : TwoFactorPage && user42Dto?.email ? (
+          <TwoFactorAuthentication email={user42Dto?.email} />
+        ) : (
+          <div className=" text-2xl text-center pt-60">Loading...</div>
         )}
       </Window>
     </div>
