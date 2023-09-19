@@ -1,39 +1,32 @@
-import { Fieldset, Frame, Button } from "@react95/core";
+// Libaries
+import { Fieldset, Frame, Button, Input } from "@react95/core";
+import { useRef, useState } from "react";
+// Components
 import NameTag from "../common/NameTag";
 import MenuBoxLayout from "../common/MenuBoxLayout";
+import type { SimpUserI, RoomInviteDTO, SimpRoomI } from "@/types/ChatInfoType";
+// ChatUserI 역할까지 담긴 user 정보가 필요하다
 
-const UserList = () => {
+// UserListMenuBox
+interface UserListMenuBoxProps {
+  userInfo: SimpUserI;
+  roomInfo?: SimpRoomI;
+}
+const UserListMenuBox = ({ userInfo, roomInfo }: UserListMenuBoxProps) => {
   const userList = [
-    { name: "user1", role: "admin" },
-    { name: "user2", role: "user" },
-    { name: "user3", role: "user" },
-    { name: "user4", role: "user" },
-  ];
+    { nickname: "user1", id: "admin" },
+    { nickname: "user2", id: "user" },
+    { nickname: "user3", id: "user" },
+    { nickname: "user4", id: "user" },
+  ]; // tmp
 
-  return (
-    <Frame
-      className=" text-white p-3 overflow-y-scroll bg-zinc-800 "
-      h="300"
-      w="100%"
-      boxShadow="in"
-      bg=""
-    >
-      {userList.map((user, index) => {
-        return (
-          <div className="m-1 my-4 text-lg" key={index}>
-            <input type="checkbox" />
-            {/* <Checkbox className="" key={index}></Checkbox> */}
-            {/* name tag 스타일 가능하도록 수정하기 */}
-            <NameTag>{user.name}</NameTag>
-            <NameTag>{user.role}</NameTag>
-          </div>
-        );
-      })}
-    </Frame>
-  );
-};
+  const inviteNickRef = useRef<HTMLInputElement>(null);
+  const [selectedValue, setSelectedValue] = useState<string>("");
+  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedValue(e.target.value);
+    console.log("selectedValue", selectedValue);
+  };
 
-const ButtonList = () => {
   const handleClickKick = () => {
     // click 된 friend 의 고유한 key 정보
     // 여러 유저들 선택이 가능하도록 할 것인지 ? 에 따라
@@ -50,48 +43,77 @@ const ButtonList = () => {
     console.log("mute");
   };
 
-  const handleClickInviteFriend = () => {
-    console.log("invite-friend");
+  const handleClickViewProfile = () => {
+    console.log("view-profile");
   };
 
-  const handleClickLeaveChat = () => {
-    console.log("leave-chat");
+  const onSubmitInviteFriend = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const targetUserNick = inviteNickRef.current?.value;
+    const inviteFriendData: RoomInviteDTO = {
+      targetUserId: 1,
+      roomId: 1,
+      // friendId: 1,
+    };
+    console.log("invite-friend", inviteFriendData);
   };
 
-  return (
-    <>
-      {/* buttons */}
-      <div className="flex flex-col">
-        {/* Button onClick => Modal 팝업 되도록 */}
-        <div className="flex flex-row grid-cols-5">
-          <Button className="flex-1" onClick={handleClickKick}>
-            kick
-          </Button>
-          <Button className="flex-1" onClick={handleClickBan}>
-            ban
-          </Button>
-          <Button className="flex-1" onClick={handleClickMute}>
-            mute
-          </Button>
-        </div>
-        <div className="flex flex-col">
-          <Button onClick={handleClickInviteFriend}>invite-freind</Button>
-          <Button onClick={handleClickLeaveChat}>leave-chat</Button>
-        </div>
-      </div>
-    </>
-  );
-};
-
-const UserListMenuBox = () => {
   return (
     <MenuBoxLayout>
-      <Fieldset className="flex flex-col p-2 w-full h-min" legend="User List">
-        <UserList />
+      <Fieldset
+        className="flex flex-col p-2 h-min gap-2 min-w-max"
+        legend="User List"
+      >
+        <Frame
+          className=" text-white p-3 overflow-y-scroll bg-zinc-800 "
+          h="240"
+          w="100%"
+          boxShadow="in"
+          bg=""
+        >
+          {userList?.map((user, index) => {
+            return (
+              <label>
+                <div className="m-1 my-4 text-lg" key={index}>
+                  <input
+                    type="radio"
+                    name="useListr"
+                    value={user.id}
+                    onChange={handleRadioChange}
+                  />
+                  {/* name tag 스타일 가능하도록 수정하기 */}
+                  <NameTag>{user.nickname}</NameTag>
+                  <NameTag>{user.id} "role"</NameTag>
+                </div>
+              </label>
+            );
+          })}
+          {/*  get radio button's selected value */}
+          <span>{}</span>
+        </Frame>
+        {/* <br /> */}
+        <div className="flex flex-col">
+          {/* Button onClick => Modal 팝업 되도록 */}
+          <div className="flex flex-row grid-cols-5">
+            <Button className="flex-1" onClick={handleClickKick}>
+              kick
+            </Button>
+            <Button className="flex-1" onClick={handleClickBan}>
+              ban
+            </Button>
+            <Button className="flex-1" onClick={handleClickMute}>
+              mute
+            </Button>
+          </div>
+          <br />
+          <Button onClick={handleClickViewProfile}>view-profile</Button>
+          <br />
+          <form onSubmit={onSubmitInviteFriend}>
+            <Input ref={inviteNickRef} />
+            <Button>invite-freind</Button>
+          </form>
+        </div>
         <br />
-        <ButtonList />
-        <br />
-        <Button className=" font-semibold">적용하기</Button>
       </Fieldset>
     </MenuBoxLayout>
   );

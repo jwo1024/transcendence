@@ -1,3 +1,5 @@
+import { SimpleUserDto } from "./simpleUser.dto";
+
 export class MessageDTO {
 
   roomId: number;
@@ -6,4 +8,14 @@ export class MessageDTO {
   
   text: string;
 
+}
+
+export class SimpleMessageDTO 
+{
+
+  text: string;
+
+  user: SimpleUserDto;
+
+  created_at: Date;
 }
