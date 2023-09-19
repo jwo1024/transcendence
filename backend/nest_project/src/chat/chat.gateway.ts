@@ -113,6 +113,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         await this.connectedUserService.create({ socketId: socket.id, user : userForChat });
         this.logger.log(`saved to DB : ${socket.id}, ${userForChat}`); 
         
+        await this.profileService.inchat(userId);
         // Only emit rooms to the specific connected client
         return this.server.to(socket.id).emit('rooms', rooms);
       } catch {
@@ -125,6 +126,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   async handleDisconnect(socket: Socket) {
     // // remove connection from DB
     await this.connectedUserService.deleteBySocketId(socket.id);
+    await this.profileService.inchat(socket.data.user.id);
     socket.disconnect();
   }
 
