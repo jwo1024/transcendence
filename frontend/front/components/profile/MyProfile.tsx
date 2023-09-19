@@ -38,6 +38,16 @@ const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
   const [avatarURL, setAvatarURL] = useState<string | null>(null);
   const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
 
+  const onChangeAvatarInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files ? event.target.files[0] : null;
+    setUploadAvatar(file);
+    console.log(file?.size);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setAvatarURL(url);
+    }
+  };
+
   const onSubmitAvatar = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const token = sessionStorage.getItem("accessToken");
@@ -96,7 +106,7 @@ const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
             className="w-full text-gray-200 file:mr-4 
                     file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold
                   file:bg-gray-100 file:text-blue-700 hover:file:bg-gray-300"
-            // onChange={onChangeAvatarInput}
+            onChange={onChangeAvatarInput}
             w=""
             h=""
           />
