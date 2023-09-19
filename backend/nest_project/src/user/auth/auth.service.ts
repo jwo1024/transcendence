@@ -20,7 +20,7 @@ export class AuthService {
     private jwtService: JwtService,
     ){}
 
-  private static setSession(userId: number, token: string) {
+  public static setSession(userId: number, token: string) {
     AuthService.sessions.set(userId, token);
     console.log('session set success : [', userId, ']-', token);
   }
@@ -101,7 +101,6 @@ export class AuthService {
     const payload = { userId };
     try { const accessToken = await this.jwtService.sign(payload);
     console.log('jwt creation success : [', userId, ']-', accessToken);
-    AuthService.setSession(userId, accessToken);
     return { accessToken };
     }catch (err) {
       throw new UnauthorizedException('jwt creation failed');

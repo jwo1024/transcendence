@@ -12,20 +12,20 @@ export default function App({ Component, pageProps }: AppProps) {
   const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "failed";
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "failed";
   
-  const handleWindowClose = (e: BeforeUnloadEvent) => {
-    const tokenData = sessionStorage.getItem("accessToken");
-    if (tokenData) {
-      Cookies.set("accessToken", tokenData);
-      navigator.sendBeacon(`${backendUrl}/auth/logoff`, null);
-    }
-  }
- 
   useEffect(() => {
     console.log("CHECK : _app : MOUNT");
-    window.addEventListener("beforeunload", handleWindowClose);
+
+    if (window.location.pathname !== "/" && window.location.pathname !== "/signup"){
+      try {
+        const response = fetch(`${backendUrl}/auth/validity`, {
+        headers: { authorization: `Bearer ${sessionStorage.getItem("accessToken")}` },
+        });
+      } catch (err) {
+        window.location.href = "/";
+      }
+    }   
     return () => {
       console.log("CHECK : _app : UNMOUNT");
-      window.removeEventListener("beforeunload", handleWindowClose);
     };
   });
 
