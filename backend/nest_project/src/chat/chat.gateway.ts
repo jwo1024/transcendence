@@ -127,8 +127,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   }
 
     private disconnect(socket: Socket) {
-    socket.emit('Error', new UnauthorizedException());
-    this.emitErrorEvent(socket.id, "Socket is disconnect.");
+    // socket.emit('Error', new UnauthorizedException());
+    this.emitErrorEvent(socket.id,"socket-dissconect", "Socket is disconnect.");
     socket.disconnect();
   };
 
@@ -401,9 +401,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   
   //-------방 정보 보내주기------------
 
-  private async emitErrorEvent(socketId:string, reason: string)
+  private async emitErrorEvent(socketId:string, errorName:string, reason: string)
   {
-    await this.server.to(socketId).emit("Error-alert", reason);
+    await this.server.to(socketId).emit(errorName, reason);
   }
 
   private async emitRoomsToAllConnectedUser()
