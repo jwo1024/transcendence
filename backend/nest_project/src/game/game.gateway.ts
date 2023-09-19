@@ -250,11 +250,12 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	
 	async handleConnection(socket: Socket)
 	{
-		console.log("Friendly Game Server: connected.");
+		console.log("Ladder Game Server: connected.");
 		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
 		// user의 소켓 id 정보
 		// // //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
 		// const token = socket.handshake.headers.authorization;
+		// jiwolee님이 알려주신 대로 프론트에 추가
 		
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
 		// const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
@@ -265,6 +266,9 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// 	return this.disconnect(socket);
 		const userId = 99833;
 		const current  = await this.gameService.createPlayer(userId, socket.id);
+
+		this.ladderQueue.push(current);
+
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`)
 		this.logger.log(`socketId : ${socket.id}`)
 	}

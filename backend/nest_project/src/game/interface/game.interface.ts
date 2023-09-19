@@ -1,13 +1,13 @@
-// export interface Player
-// {
-// 	id: number;
-// 	// nickname: string;
-// 	// ladder: number; // for ladder queue
-// 	socketId: string;
+export interface Player
+{
+	id: number;
+	// nickname: string;
+	// ladder: number; // for ladder queue
+	socketId: string;
 
-// 	// 최근 전적 5개의 data(match_id)
-// 	// latelyMatch: number[];
-// }
+	// 최근 전적 5개의 data(match_id)
+	// latelyMatch: number[];
+}
 
 // game type: 래더, 오리지널, 커스텀(종류, 속도)
 export interface MatchInfo
