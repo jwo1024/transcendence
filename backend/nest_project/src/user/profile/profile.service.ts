@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
+import { In, Repository, UpdateResult } from 'typeorm';
 import { UserProfile, userStatus } from './user-profile.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupDto } from './dto/signup.dto';
@@ -13,6 +13,7 @@ import * as path from 'path';
 import { sign } from 'crypto';
 import { extname } from 'path';
 import { UserService } from '../../chat/services/user/user.service';
+import { UserEntity } from 'src/chat/entities/user.entity';
 
 @Injectable()
 export class ProfileService {
@@ -89,6 +90,11 @@ export class ProfileService {
         return this.userProfileRepository.find();
     }
 
+    async getLadderById(id: number) : Promise<number> {
+        const user =  this.userProfileRepository.findOne({where : {id: id}});
+        return (await user).ladder;
+    }
+
     async getUserProfileById(id: number): Promise<UserProfile> {
         return this.userProfileRepository.findOne({where : {id: id}});
     }
@@ -117,6 +123,20 @@ export class ProfileService {
 
     async updateAvatar(id : number, avatar : Buffer) : Promise<any> {
         return this.userProfileRepository.update({id: id}, {avatar: avatar});
+    }
+
+    async updateLadder(id :number, ladder: number) : Promise<UpdateResult> {
+        return await this.userProfileRepository.update({id: id}, {ladder: ladder});
+    }
+
+    async updateWins(id :number) : Promise<UpdateResult> {
+        const wins = (await this.getUserProfileById(id)).wins;
+        return await this.userProfileRepository.update({id: id}, {wins: (wins + 1)});
+    }
+
+    async updateLoses(id :number) : Promise<UpdateResult> {
+        const loses = (await this.getUserProfileById(id)).loses;
+        return await this.userProfileRepository.update({id: id}, {loses: (loses + 1)});
     }
 
     async updateUserProfileByNickname(nickname: string, updateDto: SignupDto): Promise<UserProfile> {

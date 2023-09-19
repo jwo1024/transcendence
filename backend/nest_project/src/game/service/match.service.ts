@@ -43,17 +43,17 @@ export class MatchService {
 		});
 	}
 
-	async getByPlayerId(player_id: number)/* : Promise<MatchEntity> */
+	async getByPlayerId(player_id: number): Promise<MatchEntity>
 	{
-		// const match = await this.matchRepository.findOne({
-		// 	where: { playerLeft: player_id }
-		// });
-		
-		// const match = await this.matchRepository.findOne({
-		// 	where: { playerRight: player_id }
-		// });
-
-		// return await ;
+		const left = await  this.matchRepository.findOne({
+			where: { playerLeft : player_id }});
+		if (! left)
+		{
+			const Right =  await  this.matchRepository.findOne({
+			where: { playerRight : player_id }});
+			return Right;
+		}
+		return left;
 	}
 
 
@@ -82,16 +82,10 @@ export class MatchService {
 	// // }
 
 	// // todo
-	// async deletePlayerBySocketId(socketId: string)
-	// // async deletePlayerBySocketId(name: string)
-	// {
-	// 	// await this.connectedPlayerRepository.delete({
-	// 	// 	nickname: name
-	// 	// });
-	// 	await this.connectedPlayerRepository.softDelete({
-	// 		socketId: socketId
-	// 	});
-	// }
+	async deleteByMatchId(match_id: number)
+	{
+		await this.matchRepository.delete({ match_id });
+	}
 
 	// //
 	// async deleteAll() {

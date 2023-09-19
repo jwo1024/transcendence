@@ -200,9 +200,10 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		// socket.emit('Error', new UnauthorizedException()); //ee
 		
 		const player_id = (await this.gameService.getPlayerBySocketId(socket.id)).id;
-		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id; //service player id left Right undeifined , 
+		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
+		 //service player id left Right undeifined , 
 		if (match_id)
-		this.endGame(match_id, socket.id);
+			this.endGame(match_id, socket.id);
 
 		this.gameService.deletePlayerBySocketId(socket.id);
 
@@ -342,7 +343,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 				lose_score = match.scoreRight;
 			}
 			this.historyService.create(win_user_id, lose_user_id, win_score, lose_score);
-			this.matchService.delete(match.match_id);
+			this.matchService.deleteByMatchId(match.match_id);
 			return ;
 		}
 
@@ -350,7 +351,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
 		else
 			this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
-		this.matchService.delete(match.match_id);
+		this.matchService.deleteByMatchId(match.match_id);
 		
 		}
 

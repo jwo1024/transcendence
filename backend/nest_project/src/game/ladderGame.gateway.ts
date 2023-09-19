@@ -14,7 +14,7 @@ import { ProfileService } from 'src/user/profile/profile.service';
 import { MatchEntity } from './entities/match.entity';
 
 
-import {MatchService} from './service/match.service';
+import { MatchService } from './service/match.service';
 import { HistoryService } from './service/history.service';
 import { HistoryEntity } from './entities/history.entity';
 
@@ -291,6 +291,8 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// 	this.ladderQueue.splice(0, 2);
 		// }
 
+		// const user_ladder = await this.profileService.getLadderById(userid);
+
 		let range = 1000;
 
 		for (let i = 0; i < this.ladderQueue.length; ++i)
@@ -379,14 +381,10 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	ladderQueueMatch(@ConnectedSocket() socket: Socket)
 	{
 		// 인가? user id?
-		this.ladderQueue.push(socket);
+		// this.ladderQueue.push(socket);
 
-		// console.log(socket.id);
-		// console.log(socket.rooms);
-		// console.log(socket.data);
-		// console.log(data);
 		
-		const opponent = queueProcess();
+		const opponent = this.queueProcess();
 		if (opponent === null)
 		{
 			console.log("no game now.");
@@ -408,6 +406,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	async endGame(match_id : number, socket_id : string)
 	{
+		//history save 
 		let win_user_id = 0;
 		 let lose_user_id = 0;
 		 let win_score = 0;
@@ -431,16 +430,24 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 				lose_score = match.scoreRight;
 			}
 			this.historyService.create(win_user_id, lose_user_id, win_score, lose_score);
-			this.matchService.delete(match.match_id);
+			this.matchService.deleteByMatchId(match.match_id);
 			return ;
-		}
 
-		if (match.scoreLeft > match.scoreRight)
-			this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
-		else
-			this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
-		this.matchService.delete(match.match_id);
+			
+		}
 		
-		}
+		if (match.scoreLeft > match.scoreRight)
+		this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
+		else
+		this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
+		this.matchService.deleteByMatchId(match.match_id);
+	}
 
+	//ladder save 
+			// this.profileService.updateLadder(id :number, ladder: number); -> left, right;
+
+	//win lose save  
+			//     async updateWins(id :number) : Promise<UpdateResult> 
+		
+			// async updateLoses(id :number) : Promise<UpdateResult> 
 }
