@@ -1,64 +1,90 @@
-import { useState, useEffect } from "react"; // useCallback ?
+// Libraries
+import { useState, useEffect, useContext } from "react";
 import { Button, Frame, Input } from "@react95/core";
-
+// Components
 import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
 import MessageBox from "./chat_window/MessageBox";
-import SettingMenuBox from "./chat_window/SettingMenuBox";
+import StatusBlock from "./chat_window/StatusBlock";
+import SettingMenuBox from "./chat_window/SettingMenu";
 import UserListMenuBox from "./chat_window/UserListMenuBox";
-import { MessageInfo, UserInfo, ChatRoomInfo } from "@/types/ChatInfoType";
-
+import LeaveRoomMenuBox from "./chat_window/LeaveRoomMenuBox";
+// Types & Hooks & Contexts
+import { MessageI, SimpUserI, SimpRoomI } from "@/types/ChatInfoType";
 import useMessageForm from "@/hooks/chat/useMessageForm";
 import useMenuBox from "@/hooks/useMenuBox";
 import type { MenuItemInfo } from "@/hooks/useMenuBox";
+import { SocketContext } from "@/context/ChatSocketContext";
 
-// chatRoomData : chatRoomInfo // ? 빼기
+interface ChatGroupWindowProps {
+  className?: string;
+  userInfo: SimpUserI;
+  roomInfo: SimpRoomI;
+  customOnClickXOption?: () => void;
+}
+
 const ChatGroupWindow = ({
   className,
-  chatRoomData,
+  userInfo,
+  roomInfo,
   customOnClickXOption,
-}: {
-  className?: string;
-  chatRoomData: ChatRoomInfo;
-  customOnClickXOption?: () => void;
-}) => {
-  const [messageList, setMessageList] = useState<MessageInfo[]>([]);
+}: ChatGroupWindowProps) => {
+  const socket = useContext(SocketContext);
+  const [messageList, setMessageList] = useState<MessageI[]>([]);
+  const { inputRef, sentMessage, setSentMessage, handleFormSubmit } =
+    useMessageForm({
+      roomInfo,
+      userInfo: userInfo,
+    });
+  const [setUsers, setSetUsers] = useState<SimpUserI[]>([]); // TODO : roomInfo.users
 
-  const [userInfo, setUserInfo] = useState<UserInfo>({
-    id: -1,
-    name: "test",
-  });
-  const { inputRef, sentMessage, handleFormSubmit } = useMessageForm({
-    chatRoomData,
-    // userInfo: userInfo,
-  });
+  // chatRoom 에 대한  구체적인 정보 저장 필요
+  const initMessageEvent = `messages_${roomInfo.roomId.toString}`;
+  const currentRoomEvent = `current-room_${roomInfo.roomId.toString}`;
+  const messageAddEvent = `messageAdded_${roomInfo.roomId.toString}`;
 
   useEffect(() => {
-    console.log("CHECK : ChatGroupWindow : MOUNT");
+    // 초기데이터 받기 messages & user data
+    socket?.on(initMessageEvent, (data) => {
+      console.log("socket.on initMessageEvent: ", data);
+      setMessageList((messageList) => [...messageList, data]);
+      socket?.off(initMessageEvent);
+    });
+    socket?.on(currentRoomEvent, (data) => {
+      console.log("socket.on current-room-id: ", data.users);
+      setSetUsers(data.users); //
+      socket?.off(currentRoomEvent);
+    });
+    socket?.emit("Room-enter", { roomId: roomInfo.roomId });
+
+    // 메시지 받기
+    socket?.on(messageAddEvent, (data) => {
+      console.log("socket.on messageAdded: ", data);
+      if (data.user.id === userInfo.id) setSentMessage(undefined);
+      setMessageList((messageList) => [...messageList, data]);
+    });
     return () => {
-      console.log("CHECK : ChatGroupWindow : UNMOUNT");
+      socket?.off(messageAddEvent);
     };
   }, []);
-  console.log("CHECK : ChatGroupWindow : RENDER");
 
+  // sentMessage가 생성되면은 => 메시지 전송
   useEffect(() => {
-    if (sentMessage?.message !== "") {
-      // set received message from server
-      // socket io
-      setMessageList((messageList) => [...messageList, sentMessage]);
-    }
+    if (sentMessage === undefined || sentMessage.text === "") return;
+    socket?.emit("Message-add", sentMessage);
   }, [sentMessage]);
 
+  // Menu Items
   const menuItmes: MenuItemInfo[] = [
     { name: "Settings" },
     { name: "User-List" },
+    { name: "Leave-Room" },
   ];
-
   const { menuItemsWithHandlers, showMenuBox } = useMenuBox(menuItmes);
 
   return (
     <Window
-      title="Chatting Room | 방제"
+      title={`Chatting Room / ${roomInfo.roomName}`}
       className={className}
       customOnClickXOption={customOnClickXOption}
     >
@@ -69,10 +95,24 @@ const ChatGroupWindow = ({
         {/* chat box */}
         <div className="flex flex-col flex-1 overflow-auto ">
           <Frame
-            className="flex flex-row flex-1 overflow-auto p-1"
+            className="flex flex-col flex-1 overflow-auto p-1"
             boxShadow="in"
           >
-            <MessageBox messageList={messageList} />
+            <Frame className="p-3" boxShadow="in" bg="white">
+              <StatusBlock>{roomInfo.roomName}</StatusBlock>
+              <StatusBlock>
+                {roomInfo.hasPass ? "비밀번호있음" : "비밀번호없음"}
+              </StatusBlock>
+              <StatusBlock>
+                {roomInfo.roomType === "open" ? "공개방" : "비공개방"}
+              </StatusBlock>
+              <StatusBlock>{`인원 [${roomInfo.joinUsersNum}명]`}</StatusBlock>
+            </Frame>
+            <MessageBox
+              messageList={messageList}
+              sentMessage={sentMessage}
+              userInfo={userInfo}
+            />
           </Frame>
           <form onSubmit={handleFormSubmit} className="flex flex-row p-1">
             <Input
@@ -84,8 +124,11 @@ const ChatGroupWindow = ({
           </form>
         </div>
         {/* menu box */}
-        {showMenuBox[0] ? <SettingMenuBox /> : null}
-        {showMenuBox[1] ? <UserListMenuBox /> : null}
+        {showMenuBox[0] ? <SettingMenuBox roomInfo={roomInfo} /> : null}
+        {showMenuBox[1] ? (
+          <UserListMenuBox userInfo={userInfo} roomInfo={roomInfo} />
+        ) : null}
+        {showMenuBox[2] ? <LeaveRoomMenuBox roomInfo={roomInfo} /> : null}
       </div>
     </Window>
   );

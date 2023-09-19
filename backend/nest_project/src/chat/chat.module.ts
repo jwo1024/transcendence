@@ -24,6 +24,7 @@ import { ProfileService } from '../user/profile/profile.service';
 //Mappers
 import { RoomMapper } from './mapper/room.mapper';
 import { MessageMapper } from './mapper/message.mapper';
+import { UserMapper } from './mapper/user.mapper';
 
 
 @Module({
@@ -49,6 +50,7 @@ import { MessageMapper } from './mapper/message.mapper';
     //Mappers
     RoomMapper, 
     MessageMapper,
+    UserMapper,
 ]
 })
 export class ChatModule { }

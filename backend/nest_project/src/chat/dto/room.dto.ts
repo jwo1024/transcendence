@@ -22,7 +22,7 @@ export class RoomJoinDTO
 export class RoomInviteDTO 
 {
 
-  targetUserId: number;
+  targetUserNickname: string;
 
   roomId: number;
 

@@ -6,9 +6,14 @@ const MenuList = () => {
   const onClickLogout = () => {
     // home -> home 무시
     if (router.pathname === "/") return;
-    if (confirm("로그아웃 하시겠습니까?"))
-      // cleaning
-      router.push("/");
+    if (confirm("로그아웃 하시겠습니까?")) {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logoff`, { 
+        method: "POST",
+        headers: { authorization: `Bearer ${sessionStorage.getItem("accessToken")}` },
+      }).then((res) => {
+        router.push("/");
+      });
+    }
   };
 
   const onClickMenu = () => {

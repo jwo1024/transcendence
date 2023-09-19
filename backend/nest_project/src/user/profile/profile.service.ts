@@ -31,6 +31,13 @@ export class ProfileService {
         await this.userProfileRepository.update({id: id}, {status: userStatus.offline});
     }
 
+    async ingame(id: number): Promise<void> {
+        await this.userProfileRepository.update({id: id}, {status: userStatus.inGame});
+    }
+
+    async inchat(id: number): Promise<void> {
+        await this.userProfileRepository.update({id: id}, {status: userStatus.inChat});
+    }
     // async signUp(signupDto: SignupDto, imagePath: string): Promise<void> {
     //     const { id, nickname, enable2FA, data2FA } = signupDto;
     //     try {
