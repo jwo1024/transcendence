@@ -51,12 +51,10 @@ async function collision(b: Ball, p: Paddle)
 // // temp variables for unit test
 const player1: Player = {
 			id: 0,
-			ladder: 4242,
 			socketId: "not yet",
 		};
 const player2: Player = {
 			id: 1,
-			ladder: 4242,
 			socketId: "not yet",
 		};
 
@@ -187,6 +185,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	private ladderQueue: Player[];
 	private resetQueueTime: number;
 	private currentQueueTime: number;
+	private ladderRange: number;
 
 	// constructor
 	constructor(
@@ -200,6 +199,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.ladderQueue = [];
 		this.resetQueueTime = 0;
 		this.currentQueueTime = 0;
+		this.ladderRange = 1000;
 	}
 
 
@@ -249,28 +249,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.logger.log(`socketId : ${socket.id}`)
 	}
 
-	// async onModuleInit() {}
-	// // 연결, 끊길 시 -> secket id 리뉴얼하기
-	// async handleConnection(socket: Socket) // handleconnection 함수를 오버라이딩해서 사용
-	// {
-	// 	console.log("Ladder Game Server: connected.");
-	// 	// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
-	// 	// user의 소켓 id 정보
-
-	// 	// const player: Player = await this.gameService.createPlayer(socket.id);
-	// 	// console.log(player);
-
-	// 	if (player1.socketId === "not yet")
-	// 	{
-	// 		player1.socketId = socket.id;
-	// 		console.log(player1);
-	// 	}
-	// 	else if (player2.socketId === "not yet")
-	// 	{
-	// 		player2.socketId = socket.id;
-	// 		console.log(player2);
-	// 	}
-	// }
 	async handleDisconnect(socket: Socket)
 	{
 		console.log("Server: disconnected.");
@@ -284,29 +262,39 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	// setInterval 이전에 resetQueueTime reset하기
 	async queueProcess()
 	{
-		// 선착순 큐
+		// [ 선착순 큐 ]
 		// if (this.ladderQueue.length > 1)
 		// {
 		// 	this.setGame(this.ladderQueue[0].id, this.ladderQueue[1].id);
 		// 	this.ladderQueue.splice(0, 2);
 		// }
 
-		// const user_ladder = await this.profileService.getLadderById(userid);
 
-		let range = 1000;
+		if (this.ladderQueue.length < 2)
+			return ;
+
+		this.currentQueueTime = Date.now();
+		if (this.currentQueueTime - this.resetQueueTime > 10000) // 1000 milliseconds == 1 second
+		{
+			this.ladderRange += 1000;
+		}
 
 		for (let i = 0; i < this.ladderQueue.length; ++i)
 		{
-			if (this.ladderQueue.length < 2)
-				return ;
 			for (let j = i + 1; j < this.ladderQueue.length; ++j)
 			{
-				if ((this.ladderQueue[i].ladder / range) === (this.ladderQueue[j].ladder / range))
+				const player1Ladder = await this.profileService.getLadderById(this.ladderQueue[i].id);
+				const player1less = player1Ladder - this.ladderRange;
+				const player1greater = player1Ladder + this.ladderRange;
+				const player2Ladder = await this.profileService.getLadderById(this.ladderQueue[j].id);
+
+				if ((player2Ladder >= player1less) || (player2Ladder <= player1greater))
 				{
 					this.setGame(this.ladderQueue[i].id, this.ladderQueue[j].id);
 					this.ladderQueue.splice(i, 1);
 					this.ladderQueue.splice(j, 1);
-					// this.resetQueueTime = Date.now();
+					this.resetQueueTime = Date.now();
+					this.ladderRange = 1000;
 					return ;
 				}
 			}
