@@ -580,6 +580,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       socket.emit("my-block-list", (await newData).block_list);
     }
 
+    @SubscribeMessage('get-user-profile')
+    async onGetUserProfile(
+      @ConnectedSocket() socket: Socket,
+      @MessageBody() targetId: number
+    )
+    {
+      const profile_info = this.profileService.getUserProfileById(targetId);
+      socket.emit("user-profile-info", profile_info);
+    }
+
   //--- 아직 구현 안한 쪽
 
   //소켓이 끊기는 순간 handledissconnection에서 room-leave와 connected-socket 데이터 정리를 잘 해야함!!! 꼭 테스트 할것
