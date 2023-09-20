@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GameController } from './game.controller';
-import { GameService } from './game.service';
+import { ConnectedPlayerService } from './service/connectedPlayer.service';
 import { FriendlyGameGateway } from './friendlyGame.gateway';
 import { LadderGameGateway } from './ladderGame.gateway';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -31,7 +31,7 @@ import { UserEntity } from 'src/chat/entities/user.entity';
 		FriendlyGameGateway,
 		ProfileService,
 		MatchService,
-		GameService,
+		ConnectedPlayerService,
 		HistoryService,
 		UserService,
 	],

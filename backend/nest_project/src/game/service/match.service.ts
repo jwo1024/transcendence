@@ -7,7 +7,7 @@ import { MatchEntity } from '../entities/match.entity';
 import { UserProfile } from 'src/user/profile/user-profile.entity';
 import { ProfileService } from 'src/user/profile/profile.service';
 import { ConnectedPlayerEntity } from '../entities/connectedPlayer.entity';
-import { GameService } from '../game.service';
+import { ConnectedPlayerService } from './connectedPlayer.service';
 // import { SignupDto } from 'src/user/profile/dto/signup.dto';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class MatchService {
 		// @InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
 		@InjectRepository(ConnectedPlayerEntity) private connectedPlayerRepository: Repository<ConnectedPlayerEntity>,		
 		private dataSource: DataSource,
-		private gameService: GameService,
+		private connectedPlayerService: ConnectedPlayerService,
 		private profileService: ProfileService,
 	) {}
 
@@ -62,11 +62,11 @@ export class MatchService {
 		const match = await this.getByMatchId(match_id);
 		if (match.playerLeft === player_id)
 		{
-			return this.gameService.getPlayer(match.playerRight);
+			return this.connectedPlayerService.getPlayer(match.playerRight);
 		}
 		else
 		{
-			return this.gameService.getPlayer(match.playerLeft);
+			return this.connectedPlayerService.getPlayer(match.playerLeft);
 		}
 	}
 

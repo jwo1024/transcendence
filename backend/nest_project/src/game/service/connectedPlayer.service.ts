@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { Player } from './interface/game.interface';
+import { Player } from '../interface/game.interface';
 
-import { ConnectedPlayerEntity } from './entities/connectedPlayer.entity';
+import { ConnectedPlayerEntity } from '../entities/connectedPlayer.entity';
 import { UserProfile } from 'src/user/profile/user-profile.entity';
 import { ProfileService } from 'src/user/profile/profile.service';
 import { SignupDto } from 'src/user/profile/dto/signup.dto';
 
 @Injectable()
-export class GameService {
+export class ConnectedPlayerService {
 	constructor(
 		@InjectRepository(ConnectedPlayerEntity) private connectedPlayerRepository: Repository<ConnectedPlayerEntity>,
 		// @InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,

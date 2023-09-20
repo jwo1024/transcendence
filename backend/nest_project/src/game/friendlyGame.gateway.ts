@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { GameField, Ball, Paddle } from './interface/game.interface';
-import { GameService } from './game.service';
+import { ConnectedPlayerService } from './service/connectedPlayer.service';
 
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -130,8 +130,8 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		resetBall(gameField);
 	}
 
-	server.to(this.gameService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
-	server.to(this.gameService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
+	server.to(this.connectedPlayerService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
+	server.to(this.connectedPlayerService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
 }
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
@@ -146,7 +146,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	private gameFieldArr: GameField[];
 
 	constructor(
-		private gameService: GameService,
+		private connectedPlayerService: ConnectedPlayerService,
 		private profileService: ProfileService,
 		private matchService: MatchService,
 		private historyService: HistoryService,
@@ -158,7 +158,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 
 	async onModuleInit() 
 	{
-		this.gameService.deleteAll();
+		this.connectedPlayerService.deleteAll();
 	}
 
 	async handleConnection(socket: Socket)
@@ -178,7 +178,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		// if (!userProfile)
 		// 	return this.disconnect(socket);
 		const userId = 99833;
-		const current  = await this.gameService.createPlayer(userId, socket.id);
+		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
 
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 	}
@@ -189,14 +189,14 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		this.logger.log(`Friendly Game Server: socketId [ ${socket.id} ] disconnected.`);
 
 		// 게임 도중 끊긴 연결이면, 게임 종료(매치 패배 처리)
-		const player_id = (await this.gameService.getPlayerBySocketId(socket.id)).id;
+		const player_id = (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id;
 		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
 		if (match_id)
 		{
 			this.endGame(match_id, socket.id);
 		}
 
-		this.gameService.deletePlayerBySocketId(socket.id); //id로 삭제
+		this.connectedPlayerService.deletePlayerBySocketId(socket.id); //id로 삭제
 		socket.disconnect();
 		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
 	}
@@ -218,8 +218,8 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 
 	async startGame(match : MatchEntity)
 	{
-		const player1 = await this.gameService.getPlayer(match.playerLeft);
-		const player2 = await this.gameService.getPlayer(match.playerRight);
+		const player1 = await this.connectedPlayerService.getPlayer(match.playerLeft);
+		const player2 = await this.connectedPlayerService.getPlayer(match.playerRight);
 
 		const profile1 = await this.profileService.getUserProfileById(match.playerLeft);
 		const profile2 = await this.profileService.getUserProfileById(match.playerRight);
@@ -270,7 +270,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	@SubscribeMessage('mouseMove')
 	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
 	{
-		const player = await this.gameService.getPlayerBySocketId(socket.id);
+		const player = await this.connectedPlayerService.getPlayerBySocketId(socket.id);
 		const match = (await this.matchService.getByPlayerId(player.id));
 		const opponent = await this.matchService.getOpponentByPlayerId(match.match_id, player.id);
 		const gameField = await this.getGameFieldByMatchId(match.match_id);
@@ -309,7 +309,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	@SubscribeMessage("acceptGame")
 	async acceptGame( @ConnectedSocket() socket: Socket, @MessageBody() proposingId : number)
 	{
-		this.setGame(proposingId, (await this.gameService.getPlayerBySocketId(socket.id)).id);
+		this.setGame(proposingId, (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id);
 	}
 
 	async endGame(match_id: number, socket_id: string)
@@ -320,7 +320,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 
 		if (socket_id)
 		{
-			const loser_id = (await this.gameService.getPlayerBySocketId(socket_id)).id;
+			const loser_id = (await this.connectedPlayerService.getPlayerBySocketId(socket_id)).id;
 			if ( match.playerLeft === loser_id)
 			{
 				// todo: 이미 소켓 연결 끊긴 left
