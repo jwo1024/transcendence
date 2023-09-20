@@ -2,33 +2,6 @@ import { data } from "autoprefixer";
 import React, { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
-type paddleSize = {
-  width: number;
-  height: number;
-};
-const PaddleSize: paddleSize = {
-  width: 10,
-  height: 100,
-};
-
-type canvasSize = {
-  width: number;
-  height: number;
-};
-const CanvasSize: canvasSize = {
-  width: 800,
-  height: 600,
-};
-
-type ballSpec = {
-  radius: number;
-  speed: number;
-};
-const BallSpec: ballSpec = {
-  radius: 10,
-  speed: 3,
-};
-
 interface Paddle {
   x: number;
   y: number;
@@ -60,12 +33,41 @@ interface PongGameProps {
   socket: Socket
 }
 
+type paddleSize = {
+  width: number;
+  height: number;
+};
+const PaddleSize: paddleSize = {
+  width: 10,
+  height: 100,
+};
+
+type canvasSize = {
+  width: number;
+  height: number;
+};
+const CanvasSize: canvasSize = {
+  width: 800,
+  height: 600,
+};
+
+type ballSpec = {
+  radius: number;
+  speed: number;
+};
+const BallSpec: ballSpec = {
+  radius: 10,
+  speed: 3,
+};
+
+
 const PongGame: React.FC<PongGameProps> = ({socket}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(
     canvasRef.current
   );
-  const user = {
+
+  const left = {
     x: 0,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
@@ -73,7 +75,7 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     color: "white",
     score: 0,
   };
-  const com = {
+  const right = {
     x: CanvasSize.width - PaddleSize.width,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
@@ -112,22 +114,20 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
 
     // event lister
 
-    socket.on('paddleMove', (data) => {
-      user.y = data.paddleLeftY;
-      com.y = data.paddleRightY;
+    socket.on('paddleMove', (data: any) => {
+      left.y = data.paddleLeftY;
+      right.y = data.paddleRightY;
     });
     
-    socket.on('updateCanvas', (data) => {
-      // ball
+    socket.on('updateCanvas', (data: any) => {
       ball.x = data.ballX;
       ball.y = data.ballY;
       ball.velocityX = data.ballXvelocity;
       ball.velocityY = data.ballYvelocity;
       ball.speed = data.ballSpeed;
       
-      // socre
-      user.score = data.scoreLeft;
-      com.score = data.scoreRight;
+      left.score = data.scoreLeft;
+      right.score = data.scoreRight;
     });
     
     // rendering function
@@ -171,97 +171,20 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
       }
     }
 
-    // function resetBall() {
-    //   if (canvas) {
-    //     socket.emit('resetBall', (data: any) => {
-    //       ball.x = data.ballX;
-    //       ball.y = data.ballY;
-    //       ball.velocityX = data.ballXvelocity;
-    //     });
-    //     ball.speed = BallSpec.speed;
-    //     // ball.velocityX = BallSpec.speed;
-    //   }
-    // }
-
-    // function collision(b: Ball, p: Paddle) {
-    //   const paddleLocation = {
-    //     top: p.y,
-    //     bottom: p.y + p.height,
-    //     left: p.x,
-    //     right: p.x + p.width,
-    //   };
-    //   const ballLocation = {
-    //     top: b.y - b.radius,
-    //     bottom: b.y + b.radius,
-    //     left: b.x - b.radius,
-    //     right: b.x + b.radius,
-    //   };
-    //   return (
-    //     ballLocation.right > paddleLocation.left &&
-    //     ballLocation.left < paddleLocation.right &&
-    //     ballLocation.top < paddleLocation.bottom &&
-    //     ballLocation.bottom > paddleLocation.top
-    //   );
-    // }
-
-    function update() {
-      if (canvas) {
-        // socket.emit('updateCanvas', (data: any) => {
-        //   ball.x = data.ballX;
-        //   ball.y = data.ballY;
-        //   ball.velocityY = data.ballYvelocity;
-        // });
-        // ball.x += ball.velocityX;
-        // ball.y += ball.velocityY;
-
-        // simple AI
-        // com.y += (ball.y - (com.y + com.height / 2)) * 0.1;
-        
-        // if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-        //   ball.velocityY = -ball.velocityY;
-        // }
-
-        // let player = ball.x + ball.radius < canvas.width / 2 ? user : com;
-        // if (collision(ball, player)) {
-        //   let collidePoint =
-        //     (ball.y - (player.y + player.height / 2)) / (player.height / 2);
-        //   let angleRad = (Math.PI / 4) * collidePoint;
-
-        //   let direction = ball.x + ball.radius < canvas.width / 2 ? 1 : -1;
-
-        //   //
-        //   ball.velocityX = direction * ball.speed * Math.cos(angleRad);
-        //   ball.velocityY = ball.speed * Math.sin(angleRad);
-          // todo: 위의 값들 백엔드에서 값 변경하는 것으로 수정해야 함
-          // socket.emit('collision', ball.velocityX, ball.velocityY, (data: any) => {});
-
-        //   ball.speed += 0.1;
-        // }
-
-        // if (ball.x - ball.radius < 0) {
-        //   // com.score++;
-        //   resetBall();
-        // } else if (ball.x + ball.radius > canvas.width) {
-        //   // user.score++;
-        //   resetBall();
-        // }
-      }
-    }
-
     function render() {
       if (canvas) {
         drawRect(0, 0, canvas.width, canvas.height, "black");
-        drawRect(user.x, user.y, user.width, user.height, user.color);
-        drawRect(com.x, com.y, com.width, com.height, com.color);
+        drawRect(left.x, left.y, left.width, left.height, left.color);
+        drawRect(right.x, right.y, right.width, right.height, right.color);
         drawNet();
         drawText(
-          user.score.toString(),
+          left.score.toString(),
           canvas.width / 4,
           canvas.height / 5,
           "WHITE"
         );
         drawText(
-          com.score.toString(),
+          right.score.toString(),
           canvas.width * (3 / 4),
           canvas.height / 5,
           "WHITE"
@@ -270,27 +193,23 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
       }
     }
 
-    function game() {
-      update();
-      render();
-    }
-
-    // setInterval(game, 1000 / framePerSecond);
-
     function movePaddle(event: any) {
       if (canvas) {
         let rect = canvas.getBoundingClientRect();
-        // user.y = event.clientY - rect.top - user.height / 2;
-        const mouseY = event.clientY - rect.top - user.height / 2;
+        const mouseY = event.clientY - rect.top - left.height / 2;
         socket.emit("mouseMove", mouseY);
       }
     }
-
+    
     canvas.addEventListener("mousemove", movePaddle);
+    
+    // function game() {
+    //   render();
+    // }
+    // setInterval(game, 1000 / framePerSecond);
 
     // 게임 루프 시작
     const intervalId = setInterval(() => {
-      update();
       render();
     }, 1000 / framePerSecond);
 
