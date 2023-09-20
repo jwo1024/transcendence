@@ -197,9 +197,11 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	{
 		// ladder queue
 		this.ladderQueue = [];
-		this.resetQueueTime = 0;
+		this.resetQueueTime = Date.now();
 		this.currentQueueTime = 0;
 		this.ladderRange = 500;
+
+		setInterval(this.queueProcess, 1000);
 	}
 
 
@@ -257,19 +259,16 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.gameService.deletePlayerBySocketId(socket.id); //id로 삭제
 	}
 
-	// 래더 큐 잡는 로직
-	// setInterval 함수로 계속 돌리기
-	// setInterval 이전에 resetQueueTime reset하기
 	async queueProcess()
 	{
-		// [ 선착순 큐 ]
+		// [ first-come, first-served basis queue ]
 		// if (this.ladderQueue.length > 1)
 		// {
 		// 	this.setGame(this.ladderQueue[0].id, this.ladderQueue[1].id);
 		// 	this.ladderQueue.splice(0, 2);
 		// }
 
-		// [ ladder queue ]
+		// [ ladder basis queue ]
 		if (this.ladderQueue.length < 2)
 			return ;
 
