@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { MatchInfo, GameField, Ball, Paddle } from './interface/game.interface';
+import { GameField, Ball, Paddle } from './interface/game.interface';
 import { GameService } from './game.service';
 
 import { from, Observable } from 'rxjs';
@@ -8,7 +8,6 @@ import { map } from 'rxjs/operators';
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
-//인증 
 import * as jwt from 'jsonwebtoken';
 import { ProfileService } from 'src/user/profile/profile.service';
 import { MatchEntity } from './entities/match.entity';
@@ -117,7 +116,8 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		if (gameField.scoreRight === 7)
 		{
 			this.endGame(match, null);
-			clearInterval(gameField.gameTimer);
+			// endGame 코드 안에 넣어야 할 듯
+			// clearInterval(gameField.gameTimer);
 		}
 		resetBall(gameField);
 	}
@@ -129,7 +129,7 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		if (gameField.scoreLeft === 7)
 		{
 			this.endGame(match, null);
-			clearInterval(gameField.gameTimer);
+			// clearInterval(gameField.gameTimer);
 		}
 		resetBall(gameField);
 	}
@@ -152,6 +152,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	private resetQueueTime: number;
 	private currentQueueTime: number;
 	private ladderRange: number;
+	private gameFieldArr: GameField[];
 
 	// constructor
 	constructor(
@@ -161,11 +162,11 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		private historyService: HistoryService,
 	)
 	{
-		// ladder queue
 		this.ladderQueue = [];
 		this.resetQueueTime = Date.now();
 		this.currentQueueTime = 0;
 		this.ladderRange = 500;
+		this.gameFieldArr = [];
 
 		setInterval(this.queueProcess, 1000);
 	}
@@ -275,16 +276,12 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	private async setGame(userId1: number, userId2: number)
 	{
-		// check player validation
-		const player1 = await this.gameService.getPlayer(userId1);
-		const player2 = await this.gameService.getPlayer(userId2);
-		if (!player1 || !player2)
+		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
+		if (!currentMatch)
 		{
-			// todo: 매치가 성립되지 않으므로, 에러 메시지 띄우고 게임 종료
+			// todo: 매치가 성사되지 않음을 알리고 게임 메인 화면 등으로 나가는 프론트
 			return ;
 		}
-
-		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
 		this.startGame(currentMatch);
 	}
 
@@ -299,7 +296,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.server.to(player1.socketId).emit("setMiniProfile", profile1, profile2);
 		this.server.to(player2.socketId).emit("setMiniProfile", profile1, profile2);
 
-		// gameField 배열 만들기
 		const gameField: GameField = {
 			canvasWidth: 800,
 			canvasHeight: 600,
@@ -315,54 +311,53 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			ballXvelocity: 3,
 			ballYvelocity: 3,
 			ballSpeed: 3,
+			matchId: match.match_id,
 			gameTimer: 0,
 		}
-		
+
+		this.gameFieldArr.push(gameField);
 		gameField.gameTimer = setInterval(playGame, 30, this.server, match, gameField);
+	}
+
+	private async getGameFieldByMatchId(match_id: number)
+	{
+		for (let i = 0; i < this.gameFieldArr.length; ++i)
+		{
+			if (this.gameFieldArr[i].matchId === match_id)
+			return this.gameFieldArr[i];
+		}
 	}
 
 	@SubscribeMessage('mouseMove')
 	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
 	{
-		// const player = await this.gameService.getPlayerBySocketId(socket.id);
-		// const match = (await this.matchService.getByPlayerId(player.id));
-		// const opponent = await this.matchService.getOpponentByPlayerId(match.match_id, player.id);
+		const player = await this.gameService.getPlayerBySocketId(socket.id);
+		const match = (await this.matchService.getByPlayerId(player.id));
+		const opponent = await this.matchService.getOpponentByPlayerId(match.match_id, player.id);
+		const gameField = await this.getGameFieldByMatchId(match.match_id);
 		
-		// if (userY < 0)
-		// {
-		// 	userY = 0;
-		// }
-		// else if (userY > 500)
-		// {
-		// 	userY = 500;
-		// }
+		if (userY < 0)
+		{
+			userY = 0;
+		}
+		else if (userY > 500)
+		{
+			userY = 500;
+		}
 
-		// if (match.playerLeft === player.id)
-		// {
-		// 	this.server.to(player.socketId).emit('leftMove', userY);
-		// 	this.server.to(opponent.socketId).emit('leftMove', userY);
-		// }
-		// else if (match.playerRight === player.id)
-		// {
-		// 	this.server.to(player.socketId).emit('rightMove', userY);
-		// 	this.server.to(opponent.socketId).emit('rightMove', userY);
-		// }
-
-		// this.server.to(player.socketId).emit('paddleMove', );
-		// this.server.to(opponent.socketId).emit('paddleMove',);
-
-		// if (socket.id === player1.socketId)
-		// {
-		// 	gameField.paddleLeftY = userY;
-		// 	this.server.to("Game Room").emit('paddleMove', gameField);
-		// }
-		// else if (socket.id === player2.socketId)
-		// {
-		// 	gameField.paddleRightY = userY;
-		// 	this.server.to("Game Room").emit('paddleMove', gameField);
-		// }
+		if (match.playerLeft === player.id)
+		{
+			gameField.paddleLeftY = userY;
+			this.server.to(player.socketId).emit('paddleMove', gameField);
+			this.server.to(opponent.socketId).emit('paddleMove', gameField);
+		}
+		else if (match.playerRight === player.id)
+		{
+			gameField.paddleRightY = userY;
+			this.server.to(player.socketId).emit('paddleMove', gameField);
+			this.server.to(opponent.socketId).emit('paddleMove', gameField);
+		}
 	}
-
 
 	async endGame(match_id : number, socket_id : string)
 	{

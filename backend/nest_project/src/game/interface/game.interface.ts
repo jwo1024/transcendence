@@ -7,23 +7,6 @@ export interface Player
 	// latelyMatch: number[];
 }
 
-// game type: 래더, 오리지널, 커스텀(종류, 속도)
-export interface MatchInfo
-{
-	// needed for ladder game
-	matchId?: number,
-	roomName: string, // matchId를 roomName로 사용하면 unique
-					// friendly mode: inviter's nickname으로 unique
-	playerLeft: Player,
-	playerRight: Player,
-	// todo: check
-	gameType: string,
-	customMode:string,
-	scoreLeft: number,
-	scoreRight: number,
-}
-
-// 퐁 캔버스, 플레이어 2명의 paddle, 퐁 ball
 export interface GameField
 {
 	// canvas
@@ -44,7 +27,8 @@ export interface GameField
 	ballXvelocity: number,
 	ballYvelocity: number,
 	ballSpeed: number,
-	// game lifetime
+	// related data
+	matchId: number,
 	gameTimer: number,
 }
 

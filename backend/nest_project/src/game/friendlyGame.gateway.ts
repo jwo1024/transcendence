@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { MatchInfo, GameField, Ball, Paddle } from './interface/game.interface';
+import { GameField, Ball, Paddle } from './interface/game.interface';
 import { GameService } from './game.service';
 
 import { from, Observable } from 'rxjs';
@@ -167,7 +167,6 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 
 	server.to(this.gameService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
 	server.to(this.gameService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
-	// server.to(matchInfo.roomName).emit('updateCanvas', gameField);
 }
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
@@ -278,7 +277,6 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	@SubscribeMessage('mouseMove')
 	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
 	{
-		// need to take parameters [ matchInfo, gameField ]
 
 		if (userY < 0)
 		{

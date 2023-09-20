@@ -27,11 +27,11 @@ export class MatchService {
 		const player1 = await this.connectedPlayerRepository.findOne({
 			where : {id : id1}});
 		if (!player1)
-			return //error 처리 !!
+			return null;
 		const player2 = await this.connectedPlayerRepository.findOne({
 			where : {id : id2}});
 		if (!player2)
-			return //error 처리 !!
+			return null;
 		return this.matchRepository.save({playerLeft : id1, playerRight: id2, game_type: game_type, scoreLeft : 0, scoreRight : 0});
 	}
 
@@ -57,18 +57,18 @@ export class MatchService {
 	}
 
 	// todo : 필요 없어지면 지우기
-	// async getOpponentByPlayerId(match_id: number, player_id: number): Promise<ConnectedPlayerEntity>
-	// {
-	// 	const match = await this.getByMatchId(match_id);
-	// 	if (match.playerLeft === player_id)
-	// 	{
-	// 		return this.gameService.getPlayer(match.playerRight);
-	// 	}
-	// 	else
-	// 	{
-	// 		return this.gameService.getPlayer(match.playerLeft);
-	// 	}
-	// }
+	async getOpponentByPlayerId(match_id: number, player_id: number): Promise<ConnectedPlayerEntity>
+	{
+		const match = await this.getByMatchId(match_id);
+		if (match.playerLeft === player_id)
+		{
+			return this.gameService.getPlayer(match.playerRight);
+		}
+		else
+		{
+			return this.gameService.getPlayer(match.playerLeft);
+		}
+	}
 
 	async updateRightScore(id: number, score : number) : Promise<void>
 	{
