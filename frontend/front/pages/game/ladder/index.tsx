@@ -4,10 +4,15 @@ import Window from "@/components/common/Window";
 import MiniProfile from "@/components/game/MiniProfile";
 import PongGame from "@/components/game/PongGame";
 
-// socket.io 백엔드와 연결
 import io from 'socket.io-client';
+// todo: token 필요 시 socket과 함께 백에 넘겨야 함
+// const token = sessionStorage.getItem(“accessToken”);
+//   const socket = io('http://localhost:4000/ladder_game', {
+//     extraHeaders: {
+//         Authorization: `Bearer ${token}`
+//     }
+// });
 const socket = io('http://localhost:4000/ladder_game');
-console.log(socket);
 
 export default function GamePage() {
 
@@ -15,9 +20,10 @@ export default function GamePage() {
   const [left, setLeft] = useState({ nickname: "pLeft.nickname", ladder: 23, })
   const [right, setRight] = useState({ nickname: "pRight.nickname", ladder: 42, })
 
+  //  todo: main 화면의 래더 버튼과 연동되어야 함  or setGame() 시작 시 setMiniProfile 이벤트 발생
   const startGameHandler = () => {
     socket.emit('startGame');
-    socket.on('setMiniProfile', (pLeft, pRight, callback) => {
+    socket.on('setMiniProfile', (pLeft: any, pRight: any, callback: any) => {
       setLeft({nickname: pLeft.nickname, ladder:pLeft.level})
       setRight({nickname: pRight.nickname, ladder:pRight.level})
       callback();

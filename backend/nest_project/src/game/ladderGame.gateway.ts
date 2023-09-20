@@ -195,7 +195,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	// this.logger.log();
 
 	// variables
-		// ladder queue
 	private ladderQueue: Player[];
 	private resetQueueTime: number;
 	private currentQueueTime: number;
@@ -223,14 +222,13 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	{
 		this.gameService.deleteAll();
 	}
-	// 연결, 끊길 시 -> secket id 리뉴얼하기
 
-
+	// todo: handleDisconnect와의 차이?
 	private async disconnect(socket: Socket) {
-		// socket.emit('Error', new UnauthorizedException()); //ee
+		// socket.emit('Error', new UnauthorizedException()); //
 		
 		const player_id = (await this.gameService.getPlayerBySocketId(socket.id)).id;
-		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id; //service player id left Right undeifined , 
+		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
 		if (match_id)
 		this.endGame(match_id, socket.id);
 
@@ -241,12 +239,12 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	async handleConnection(socket: Socket)
 	{
-		console.log("Ladder Game Server: connected.");
+		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] connected.`)
 		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
 		// user의 소켓 id 정보
-		// // //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
+		// 인증 관련 부분(토큰 및 user 정보 socket에 주입 )
 		// const token = socket.handshake.headers.authorization;
-		// jiwolee님이 알려주신 대로 프론트에 추가
+		// jiwolee님이 알려주신 대로 프론트에 추가 -> ok
 		
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
 		// const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
@@ -262,15 +260,34 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.ladderQueue.push(current);
 
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`)
-		this.logger.log(`socketId : ${socket.id}`)
 	}
 
 	async handleDisconnect(socket: Socket)
 	{
-		console.log("Server: disconnected.");
-		// 유저의 소켓 id 삭제?
-		// await this.gameService.deletePlayerBySocketId(socket.id);
-		this.gameService.deletePlayerBySocketId(socket.id); //id로 삭제
+		// socket.emit('Error', new UnauthorizedException());
+		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] disconnected.`)
+
+		// 게임 도중 끊긴 연결이면, 게임 종료(매치 패배 처리)
+		const player_id = (await this.gameService.getPlayerBySocketId(socket.id)).id;
+		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
+		if (match_id)
+		{
+			this.endGame(match_id, socket.id);
+		}
+
+		// 큐 잡는 도중 끊긴 연결이면, 래더 큐 배열에서도 삭제
+		const dis_player = await this.gameService.getPlayerBySocketId(socket.id);
+		for (let i = 0; i < this.ladderQueue.length; ++i)
+		{
+			if (dis_player.id === this.ladderQueue[i].id)
+			{
+				this.ladderQueue.splice(i, 1);
+				break ;
+			}
+		}
+
+		this.gameService.deletePlayerBySocketId(socket.id);
+		socket.disconnect();
 	}
 
 	async queueProcess()
@@ -312,7 +329,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 				}
 			}
 		}
-
 	}
 
 	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
@@ -398,10 +414,12 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	//2명 플레이어 매칭이후 메서드
 	private async setGame( userId1: number, userId2: number)
 	{
-			const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
-			// socket.join(match.match_id);
-			
-			this.startGame(currentMatch);			
+		// todo: 유효한 플레이어인지 확인하는 코드
+
+
+		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
+		
+		this.startGame(currentMatch);
 	}
 
 
