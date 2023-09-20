@@ -115,8 +115,6 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		if (gameField.scoreRight === 7)
 		{
 			this.endGame(match, null);
-			// endGame 코드 안에 넣어야 할 듯
-			// clearInterval(gameField.gameTimer);
 		}
 		resetBall(gameField);
 	}
@@ -128,7 +126,6 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		if (gameField.scoreLeft === 7)
 		{
 			this.endGame(match, null);
-			// clearInterval(gameField.gameTimer);
 		}
 		resetBall(gameField);
 	}
@@ -361,6 +358,8 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	async endGame(match_id : number, socket_id : string)
 	{
+		const gameField = await this.getGameFieldByMatchId(match_id);
+		clearInterval(gameField.gameTimer);
 		const match = await this.matchService.getByMatchId(match_id);
 
 		if (socket_id)
