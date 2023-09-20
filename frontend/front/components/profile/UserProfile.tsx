@@ -21,10 +21,10 @@ interface ProfileProps {
   selectedFriend: user;
 }
 
-const FriendProfile: React.FC<ProfileProps> = ({ selectedFriend }) => {
+const UserProfile: React.FC<ProfileProps> = ({ selectedFriend }) => {
   const myProfile: boolean = true;
   return (
-    <Window title="Friend Profile" w="320" h="260">
+    <Window title="User Profile" w="320" h="260">
       <div className=" flex flex-col items-center justify-between p-4 pb-1">
         <div className="flex items-center space-x-8">
           <img
@@ -50,4 +50,4 @@ const FriendProfile: React.FC<ProfileProps> = ({ selectedFriend }) => {
   );
 };
 
-export default FriendProfile;
+export default UserProfile;
