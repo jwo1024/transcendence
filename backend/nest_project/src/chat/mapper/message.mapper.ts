@@ -8,6 +8,7 @@ import { MessageI } from "../interfaces/message.interface";
 //Services
 import { RoomService } from "../services/room/room.service";
 import { UserService } from "../services/user/user.service";
+import { ProfileService } from "src/user/profile/profile.service";
 
 //Mappers
 import { RoomMapper } from "./room.mapper";
@@ -20,6 +21,7 @@ export class MessageMapper{
   constructor (
     private readonly roomService : RoomService,
     private readonly userService : UserService,
+    private readonly profileService : ProfileService,
     private roomMapper : RoomMapper,
     private userMapper : UserMapper,
     ){};
@@ -41,25 +43,25 @@ export class MessageMapper{
 
   }
 
-   Create_entityToSimpleDto(entity :MessageI)
+  async Create_entityToSimpleDto(entity :MessageI)
    {
     const dto = new SimpleMessageDTO;
 
     dto.text = entity.text;
-    dto.user = this.userMapper.Create_EntityToDto(entity.user);
+    dto.user = this.userMapper.Create_EntityToDto(entity.user, (await this.profileService.getUserProfileById(entity.user.id)).nickname);
     dto.created_at = entity.created_at;
     
     return dto;
   }  
 
-   Create_simpleDTOArrays(entityArray :MessageI[])
+   async Create_simpleDTOArrays(entityArray :MessageI[])
    {
     const dtoArray : SimpleMessageDTO[] = [];
     if (entityArray.length === 0)
       return dtoArray;
     for (const messageEntity of entityArray)
     {
-      dtoArray.push(this.Create_entityToSimpleDto(messageEntity));
+      dtoArray.push(await this.Create_entityToSimpleDto(messageEntity));
     }
     return dtoArray;
   }
