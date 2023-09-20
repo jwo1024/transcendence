@@ -47,6 +47,15 @@ async function collision(b: Ball, p: Paddle)
 	);
   }
 
+async function resetBall(gameField: GameField)
+{
+	gameField.ballX = gameField.canvasWidth / 2;
+	gameField.ballY = gameField.canvasHeight / 2;
+	gameField.ballXvelocity = -3;
+	gameField.ballYvelocity = 3;
+	gameField.ballSpeed = 3;
+}
+
 
 // // temp variables for unit test
 const player1: Player = {
@@ -132,35 +141,40 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 	if (gameField.ballX - gameField.ballRadius < 0)
 	{
 		++gameField.scoreRight;
-		// check end game
 		this.MatchService.updateRightScore(match.match_id, gameField.scoreRight);
-
+		
+		// check end game
 		if (gameField.scoreRight === 7)
 		{
 			this.endGame(match, null);
 		}
+
+		resetBall(gameField);
 		//resetBall();
-		gameField.ballX = gameField.canvasWidth / 2;
-		gameField.ballY = gameField.canvasHeight / 2;
-		gameField.ballXvelocity = -3;
-		gameField.ballYvelocity = 3;
-		gameField.ballSpeed = 3;
+		// gameField.ballX = gameField.canvasWidth / 2;
+		// gameField.ballY = gameField.canvasHeight / 2;
+		// gameField.ballXvelocity = -3;
+		// gameField.ballYvelocity = 3;
+		// gameField.ballSpeed = 3;
 	}
 	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
 	{
 		++gameField.scoreLeft;
 		this.MatchService.updateLeftScore(match.match_id, gameField.scoreRight);
+
 		// check end game
 		if (gameField.scoreLeft === 7)
 		{
 			this.endGame(match, null);
 		}
+
+		resetBall(gameField);
 		//resetBall();
-		gameField.ballX = gameField.canvasWidth / 2;
-		gameField.ballY = gameField.canvasHeight / 2;
-		gameField.ballXvelocity = 3;
-		gameField.ballYvelocity = 3;
-		gameField.ballSpeed = 3;
+		// gameField.ballX = gameField.canvasWidth / 2;
+		// gameField.ballY = gameField.canvasHeight / 2;
+		// gameField.ballXvelocity = 3;
+		// gameField.ballYvelocity = 3;
+		// gameField.ballSpeed = 3;
 	}
 
 	server.to(this.gameService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
