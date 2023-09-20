@@ -47,7 +47,7 @@ export class RoomService {
     const Room_dtoToEntity = this.roomRepository.create(this.roomMapper.Create_dtoToEntity(room));
     const newRoom = await this.addCreatorToRoom(Room_dtoToEntity, creator);
 
-    this.logger.log(`second step ${newRoom.created_at},\n ${newRoom.users} ${creator.nickname}`);
+    this.logger.log(`second step ${newRoom.created_at},\n ${newRoom.users} `);
 
     return this.roomRepository.save(newRoom);
   }
@@ -75,13 +75,13 @@ export class RoomService {
       relations: ['users'] //관련 엔터티도 함께 가져오겠다.
     });
     
-    this.logger.log(`temp : ${temp.roomName}, ${temp.users[0].nickname},
-       ${temp.roomOwner }`);
+    // this.logger.log(`temp : ${temp.roomName}, ${temp.roomOwner }`);
     
-    if (!temp) 
-    {
-      throw new NotFoundException(`Room with ID ${roomId} not found`);
-    }
+    // if (!temp) 
+    // {
+
+    //   // throw new NotFoundException(`Room with ID ${roomId} not found`);
+    // }
     
     return temp;
     // return this.roomRepository.findOne({

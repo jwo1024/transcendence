@@ -48,6 +48,23 @@ export class RoomMapper{
     return entity;
   
   }
+  
+  Create_simpleInterfaceToDto(interfaceI :RoomI)
+  {
+    const dto = new SimpleRoomDTO;
+    dto.roomId = interfaceI.roomId;
+    dto.roomName = interfaceI.roomName;
+    dto.roomType = interfaceI.roomType;
+    if (interfaceI.roomPass == undefined || interfaceI.roomPass === "undefined")
+     dto.hasPass = false;
+    else
+      dto.hasPass = true;
+    // dto.hasPass = (interfaceI.roomPass !== undefined);
+    dto.joinUsersNum = interfaceI.users.length;
+  
+    return dto;
+  }
+
 
     Create_simpleEntityToDto(entity :RoomEntity){
     const dto = new SimpleRoomDTO;

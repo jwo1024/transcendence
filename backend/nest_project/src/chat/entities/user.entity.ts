@@ -17,11 +17,11 @@ export class UserEntity {
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false}) //외래키 한번에 지정 할 수 있나?
   id: number;
 
-  @Column({unique: true})
-  nickname: string;
+  // @Column({unique: true})
+  // nickname: string;
 
-  @Column({ type: 'integer', array: true, default: []})
-  block_list : number[];
+  // @Column({ type: 'integer', array: true, default: []})
+  // block_list : number[];
   
   // @Column({ type: 'integer', array: true, default: []})
   // friend_list : number[];
