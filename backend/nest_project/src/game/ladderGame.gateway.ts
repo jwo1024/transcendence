@@ -144,7 +144,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	private logger = new Logger('LadderGameGateway');
 
-	// variables
 	private ladderQueue: Player[];
 	private resetQueueTime: number;
 	private currentQueueTime: number;
@@ -176,7 +175,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	async handleConnection(socket: Socket)
 	{
-		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] connected.`)
+		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] connected.`);
 		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
 		// user의 소켓 id 정보
 		// 인증 관련 부분(토큰 및 user 정보 socket에 주입 )
@@ -193,16 +192,15 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		const userId = 99833;
 		const current  = await this.gameService.createPlayer(userId, socket.id);
 
-		// ladder queue
 		this.ladderQueue.push(current);
 
-		this.logger.log(`current Player : ${current.id}, ${current.socketId}`)
+		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 	}
 
 	async handleDisconnect(socket: Socket)
 	{
 		// socket.emit('Error', new UnauthorizedException());
-		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] disconnected.`)
+		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] disconnected.`);
 
 		// 게임 도중 끊긴 연결이면, 게임 종료(매치 패배 처리)
 		const player_id = (await this.gameService.getPlayerBySocketId(socket.id)).id;
@@ -225,6 +223,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 		this.gameService.deletePlayerBySocketId(socket.id);
 		socket.disconnect();
+		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
 	}
 
 	async queueProcess()
@@ -309,7 +308,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			ballYvelocity: 3,
 			ballSpeed: 3,
 			matchId: match.match_id,
-			gameTimer: 0,
+			gameTimer: null,
 		}
 
 		this.gameFieldArr.push(gameField);
@@ -356,7 +355,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		}
 	}
 
-	async endGame(match_id : number, socket_id : string)
+	async endGame(match_id: number, socket_id: string)
 	{
 		const gameField = await this.getGameFieldByMatchId(match_id);
 		clearInterval(gameField.gameTimer);
@@ -382,20 +381,27 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 				this.profileService.updateWins(match.playerLeft);
 			}
 			this.matchService.deleteByMatchId(match.match_id);
-			// todo: 메인 화면으로 돌아가는 프론트
+			// todo: 승패 알려주고 메인 화면으로 돌아가는 프론트
 			return ;
-
 		}
 		
 		if (match.scoreLeft > match.scoreRight)
 		{
 			this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
-		}
+			this.profileService.downLadder(match.playerRight);
+			this.profileService.upLadder(match.playerLeft);
+			this.profileService.updateLoses(match.playerRight);
+			this.profileService.updateWins(match.playerLeft);
+	}
 		else
 		{
 			this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
+			this.profileService.downLadder(match.playerLeft);
+			this.profileService.upLadder(match.playerRight);
+			this.profileService.updateLoses(match.playerLeft);
+			this.profileService.updateWins(match.playerRight);
 		}
 		this.matchService.deleteByMatchId(match.match_id);
-		// todo: 메인 화면으로 돌아가는 프론트
+		// todo: 승패 알려주고 메인 화면으로 돌아가는 프론트
 	}
 }

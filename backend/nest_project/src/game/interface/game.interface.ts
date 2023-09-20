@@ -29,7 +29,7 @@ export interface GameField
 	ballSpeed: number,
 	// related data
 	matchId: number,
-	gameTimer: number,
+	gameTimer: NodeJS.Timeout,
 }
 
 export interface Ball

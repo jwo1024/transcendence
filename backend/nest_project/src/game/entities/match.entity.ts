@@ -11,8 +11,7 @@ export class MatchEntity
 	@PrimaryGeneratedColumn({type: 'integer'}) 
 	match_id: number;
 
-	// todo: 래더 게임만 매치 저장할 거면 필요 없는 요소
-	// [ ladder, original, custom_speedUp, custom_smallBall ]
+	// [ ladder, original, speedUp, smallBall ]
 	// < ladder game >: only original
 	// < friendly game >: 3 modes (original, speedUp, smallBall)
 	@Column({ type: 'varchar', nullable: false })
