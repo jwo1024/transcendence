@@ -53,6 +53,7 @@ const TestPage = () => {
       roomPass: roomPass === "" ? undefined : roomPass,
     };
     console.log("socket.emit Room-create", createRoom);
+    console.log("socket", socket);
     socket?.emit("Room-create", createRoom);
   };
 

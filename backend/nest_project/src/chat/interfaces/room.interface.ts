@@ -8,7 +8,7 @@ export interface RoomI {
   roomId: number;
   roomName: string;
   roomType: roomType;
-  roomPass?: string;
+  roomPass: string;
   roomOwner: number; //owner user의 id
   roomAdmins: number[]; //ids
   roomBanned: number[]; //ids
