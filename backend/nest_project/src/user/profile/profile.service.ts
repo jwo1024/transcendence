@@ -132,8 +132,14 @@ export class ProfileService {
         return this.userProfileRepository.update({id: id}, {avatar: avatar});
     }
 
-    async updateLadder(id :number, ladder: number) : Promise<UpdateResult> {
-        return await this.userProfileRepository.update({id: id}, {ladder: ladder});
+    async upLadder(id :number) : Promise<UpdateResult> {
+        const ladder = (await this.getUserProfileById(id)).ladder;
+        return await this.userProfileRepository.update({id: id}, {ladder: (ladder + 100)});
+    }
+
+    async downLadder(id :number) : Promise<UpdateResult> {
+        const ladder = (await this.getUserProfileById(id)).ladder;
+        return await this.userProfileRepository.update({id: id}, {ladder: (ladder - 100)});
     }
 
     async updateWins(id :number) : Promise<UpdateResult> {

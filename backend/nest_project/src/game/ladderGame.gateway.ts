@@ -55,7 +55,6 @@ async function resetBall(gameField: GameField)
 	gameField.ballSpeed = 3;
 }
 
-
 async function playGame(server: Server, match: MatchEntity, gameField: GameField)
 {
 	// location of ball
@@ -139,6 +138,7 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 }
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
+// todo: 게임 시작하기 전에 대기 화면?
 
 @Injectable()
 @WebSocketGateway({ namespace: 'ladder_game' })
@@ -361,48 +361,42 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	async endGame(match_id : number, socket_id : string)
 	{
-		//history save 
-		let win_user_id = 0;
-		 let lose_user_id = 0;
-		 let win_score = 0;
-		 let lose_score = 0;
 		const match = await this.matchService.getByMatchId(match_id);
+
 		if (socket_id)
 		{
 			const loser_id = (await this.gameService.getPlayerBySocketId(socket_id)).id;
 			if ( match.playerLeft === loser_id)
 			{
-				win_user_id = match.playerRight;
-				lose_user_id = match.playerLeft;
-				win_score = match.scoreRight;
-				lose_score = match.scoreLeft;
-			}	
+				this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
+				this.profileService.downLadder(loser_id);
+				this.profileService.upLadder(match.playerRight);
+				this.profileService.updateLoses(loser_id);
+				this.profileService.updateWins(match.playerRight);
+			}
 			else
 			{
-				win_user_id = match.playerLeft;
-				lose_user_id = match.playerRight;
-				win_score = match.scoreLeft;
-				lose_score = match.scoreRight;
+				this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
+				this.profileService.downLadder(loser_id);
+				this.profileService.upLadder(match.playerLeft);
+				this.profileService.updateLoses(loser_id);
+				this.profileService.updateWins(match.playerLeft);
 			}
-			this.historyService.create(win_user_id, lose_user_id, win_score, lose_score);
 			this.matchService.deleteByMatchId(match.match_id);
+			// todo: 메인 화면으로 돌아가는 프론트
 			return ;
 
-			
 		}
 		
 		if (match.scoreLeft > match.scoreRight)
-		this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
+		{
+			this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
+		}
 		else
-		this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
+		{
+			this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
+		}
 		this.matchService.deleteByMatchId(match.match_id);
+		// todo: 메인 화면으로 돌아가는 프론트
 	}
-
-	//ladder save 
-			// this.profileService.updateLadder(id :number, ladder: number); -> left, right;
-
-	//win lose save  
-			//     async updateWins(id :number) : Promise<UpdateResult> 
-		
-			// async updateLoses(id :number) : Promise<UpdateResult> 
 }
