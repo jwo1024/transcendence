@@ -199,7 +199,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.ladderQueue = [];
 		this.resetQueueTime = 0;
 		this.currentQueueTime = 0;
-		this.ladderRange = 1000;
+		this.ladderRange = 500;
 	}
 
 
@@ -269,14 +269,14 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// 	this.ladderQueue.splice(0, 2);
 		// }
 
-
+		// [ ladder queue ]
 		if (this.ladderQueue.length < 2)
 			return ;
 
 		this.currentQueueTime = Date.now();
 		if (this.currentQueueTime - this.resetQueueTime > 10000) // 1000 milliseconds == 1 second
 		{
-			this.ladderRange += 1000;
+			this.ladderRange += 500;
 		}
 
 		for (let i = 0; i < this.ladderQueue.length; ++i)
@@ -288,13 +288,13 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 				const player1greater = player1Ladder + this.ladderRange;
 				const player2Ladder = await this.profileService.getLadderById(this.ladderQueue[j].id);
 
-				if ((player2Ladder >= player1less) || (player2Ladder <= player1greater))
+				if ((player2Ladder >= player1less) && (player2Ladder <= player1greater))
 				{
 					this.setGame(this.ladderQueue[i].id, this.ladderQueue[j].id);
 					this.ladderQueue.splice(i, 1);
-					this.ladderQueue.splice(j, 1);
+					this.ladderQueue.splice(j - 1, 1); // 바로 위에서 요소 하나 삭제되므로 인덱스가 하나씩 당겨짐
 					this.resetQueueTime = Date.now();
-					this.ladderRange = 1000;
+					this.ladderRange = 500;
 					return ;
 				}
 			}
