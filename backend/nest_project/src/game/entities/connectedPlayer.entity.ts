@@ -12,9 +12,6 @@ export class ConnectedPlayerEntity {
   id: number;
 
   @Column()
-  ladder: number;
-
-  @Column()
   socketId: string;
 
 }

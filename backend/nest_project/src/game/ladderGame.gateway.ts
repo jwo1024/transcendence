@@ -134,6 +134,13 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 	server.to(this.connectedPlayerService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
 }
 
+
+let ladderQueue: Player[];
+let resetQueueTime: number;
+let currentQueueTime: number;
+let ladderRange: number;
+
+
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 // todo: 게임 시작하기 전에 대기 화면?
 
@@ -144,10 +151,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	private logger = new Logger('LadderGameGateway');
 
-	private ladderQueue: Player[];
-	private resetQueueTime: number;
-	private currentQueueTime: number;
-	private ladderRange: number;
 	private gameFieldArr: GameField[];
 
 	// constructor
@@ -158,10 +161,10 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		private historyService: HistoryService,
 	)
 	{
-		this.ladderQueue = [];
-		this.resetQueueTime = Date.now();
-		this.currentQueueTime = 0;
-		this.ladderRange = 500;
+		ladderQueue = [];
+		resetQueueTime = Date.now();
+		currentQueueTime = Date.now();
+		ladderRange = 500;
 		this.gameFieldArr = [];
 
 		setInterval(this.queueProcess, 1000);
@@ -192,7 +195,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		const userId = 99833;
 		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
 
-		this.ladderQueue.push(current);
+		ladderQueue.push(current);
 
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 	}
@@ -212,11 +215,11 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 		// 큐 잡는 도중 끊긴 연결이면, 래더 큐 배열에서도 삭제
 		const dis_player = await this.connectedPlayerService.getPlayerBySocketId(socket.id);
-		for (let i = 0; i < this.ladderQueue.length; ++i)
+		for (let i = 0; i < ladderQueue.length; ++i)
 		{
-			if (dis_player.id === this.ladderQueue[i].id)
+			if (dis_player.id === ladderQueue[i].id)
 			{
-				this.ladderQueue.splice(i, 1);
+				ladderQueue.splice(i, 1);
 				break ;
 			}
 		}
@@ -229,38 +232,38 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	async queueProcess()
 	{
 		// [ first-come, first-served basis queue ]
-		// if (this.ladderQueue.length > 1)
+		// if (ladderQueue.length > 1)
 		// {
-		// 	this.setGame(this.ladderQueue[0].id, this.ladderQueue[1].id);
-		// 	this.ladderQueue.splice(0, 2);
+		// 	this.setGame(ladderQueue[0].id, ladderQueue[1].id);
+		// 	ladderQueue.splice(0, 2);
 		// }
 
 		// [ ladder basis queue ]
-		if (this.ladderQueue.length < 2)
+		if (ladderQueue.length < 2)
 			return ;
 
-		this.currentQueueTime = Date.now();
-		if (this.currentQueueTime - this.resetQueueTime > 10000) // 1000 milliseconds == 1 second
+		currentQueueTime = Date.now();
+		if (currentQueueTime - resetQueueTime > 10000) // 1000 milliseconds == 1 second
 		{
-			this.ladderRange += 500;
+			ladderRange += 500;
 		}
 
-		for (let i = 0; i < this.ladderQueue.length; ++i)
+		for (let i = 0; i < ladderQueue.length; ++i)
 		{
-			for (let j = i + 1; j < this.ladderQueue.length; ++j)
+			for (let j = i + 1; j < ladderQueue.length; ++j)
 			{
-				const player1Ladder = await this.profileService.getLadderById(this.ladderQueue[i].id);
-				const player1less = player1Ladder - this.ladderRange;
-				const player1greater = player1Ladder + this.ladderRange;
-				const player2Ladder = await this.profileService.getLadderById(this.ladderQueue[j].id);
+				const player1Ladder = await this.profileService.getLadderById(ladderQueue[i].id);
+				const player1less = player1Ladder - ladderRange;
+				const player1greater = player1Ladder + ladderRange;
+				const player2Ladder = await this.profileService.getLadderById(ladderQueue[j].id);
 
 				if ((player2Ladder >= player1less) && (player2Ladder <= player1greater))
 				{
-					this.setGame(this.ladderQueue[i].id, this.ladderQueue[j].id);
-					this.ladderQueue.splice(i, 1);
-					this.ladderQueue.splice(j - 1, 1); // 바로 위에서 요소 하나 삭제되므로 인덱스가 하나씩 당겨짐
-					this.resetQueueTime = Date.now();
-					this.ladderRange = 500;
+					this.setGame(ladderQueue[i].id, ladderQueue[j].id);
+					ladderQueue.splice(i, 1);
+					ladderQueue.splice(j - 1, 1); // 바로 위에서 요소 하나 삭제되므로 인덱스가 하나씩 당겨짐
+					resetQueueTime = Date.now();
+					ladderRange = 500;
 					return ;
 				}
 			}
