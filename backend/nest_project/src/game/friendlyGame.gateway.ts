@@ -20,120 +20,6 @@ import { HistoryEntity } from './entities/history.entity';
 import { Player } from './dto/player.dto';
 
 
-async function collision(b: Ball, p: Paddle)
-{
-	const paddleLocation =
-	{
-	  top: p.y,
-	  bottom: p.y + p.height,
-	  left: p.x,
-	  right: p.x + p.width,
-	};
-
-	const ballLocation =
-	{
-	  top: b.y - b.radius,
-	  bottom: b.y + b.radius,
-	  left: b.x - b.radius,
-	  right: b.x + b.radius,
-	};
-
-	return (
-	  ballLocation.right > paddleLocation.left &&
-	  ballLocation.left < paddleLocation.right &&
-	  ballLocation.top < paddleLocation.bottom &&
-	  ballLocation.bottom > paddleLocation.top
-	);
-  }
-
-async function resetBall(gameField: GameField)
-{
-	gameField.ballX = gameField.canvasWidth / 2;
-	gameField.ballY = gameField.canvasHeight / 2;
-	gameField.ballXvelocity = -3;
-	gameField.ballYvelocity = 3;
-	gameField.ballSpeed = 3;
-}
-
-async function playGame(server: Server, match: MatchEntity, gameField: GameField)
-{
-	// location of ball
-	gameField.ballX += gameField.ballXvelocity;
-	gameField.ballY += gameField.ballYvelocity;
-
-	// collision with ball and top & bottom of canvas
-	if (gameField.ballY + gameField.ballRadius > gameField.canvasHeight
-		|| gameField.ballY - gameField.ballRadius < 0)
-	{
-		gameField.ballYvelocity = -gameField.ballYvelocity;
-	}
-
-	// collision with ball and paddle
-	const tempBall: Ball =
-	{
-		x: gameField.ballX,
-		y: gameField.ballY,
-		radius: gameField.ballRadius,
-	}
-	const tempPaddle: Paddle =
-	{
-		x: 0,
-		y: 0,
-		width: 10,
-		height: 100,
-	}
-	if (gameField.ballX + gameField.ballRadius < gameField.canvasWidth / 2)
-	{
-		tempPaddle.x = gameField.paddleLeftX;
-		tempPaddle.y = gameField.paddleLeftY;
-	}
-	else
-	{
-		tempPaddle.x = gameField.paddleRightX;
-		tempPaddle.y = gameField.paddleRightY;
-	}
-
-	if (await collision(tempBall, tempPaddle))
-	{
-		const collidePoint =
-			(tempBall.y - (tempPaddle.y + tempPaddle.height / 2)) / (tempPaddle.height / 2);
-		const angleRad = (Math.PI / 4) * collidePoint;
-		const direction = tempBall.x + tempBall.radius < gameField.canvasWidth / 2 ? 1 : -1;
-
-		gameField.ballXvelocity = direction * gameField.ballSpeed * Math.cos(angleRad);
-		gameField.ballYvelocity = gameField.ballSpeed * Math.sin(angleRad);
-
-		gameField.ballSpeed += 0.1;
-	}
-
-	// check score
-	if (gameField.ballX - gameField.ballRadius < 0)
-	{
-		++gameField.scoreRight;
-		this.MatchService.updateRightScore(match.match_id, gameField.scoreRight);
-
-		if (gameField.scoreRight === 7)
-		{
-			this.endGame(match, null);
-		}
-		resetBall(gameField);
-	}
-	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
-	{
-		++gameField.scoreLeft;
-		this.MatchService.updateLeftScore(match.match_id, gameField.scoreRight);
-
-		if (gameField.scoreLeft === 7)
-		{
-			this.endGame(match, null);
-		}
-		resetBall(gameField);
-	}
-
-	server.to(this.connectedPlayerService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
-	server.to(this.connectedPlayerService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
-}
-
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 // todo: 게임 시작하기 전에 대기 화면?
 
@@ -348,4 +234,118 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		// todo: 승패 알려주고 메인 화면으로 돌아가는 프론트
 	}
 
+}
+
+async function collision(b: Ball, p: Paddle)
+{
+	const paddleLocation =
+	{
+	  top: p.y,
+	  bottom: p.y + p.height,
+	  left: p.x,
+	  right: p.x + p.width,
+	};
+
+	const ballLocation =
+	{
+	  top: b.y - b.radius,
+	  bottom: b.y + b.radius,
+	  left: b.x - b.radius,
+	  right: b.x + b.radius,
+	};
+
+	return (
+	  ballLocation.right > paddleLocation.left &&
+	  ballLocation.left < paddleLocation.right &&
+	  ballLocation.top < paddleLocation.bottom &&
+	  ballLocation.bottom > paddleLocation.top
+	);
+  }
+
+async function resetBall(gameField: GameField)
+{
+	gameField.ballX = gameField.canvasWidth / 2;
+	gameField.ballY = gameField.canvasHeight / 2;
+	gameField.ballXvelocity = -3;
+	gameField.ballYvelocity = 3;
+	gameField.ballSpeed = 3;
+}
+
+async function playGame(server: Server, match: MatchEntity, gameField: GameField)
+{
+	// location of ball
+	gameField.ballX += gameField.ballXvelocity;
+	gameField.ballY += gameField.ballYvelocity;
+
+	// collision with ball and top & bottom of canvas
+	if (gameField.ballY + gameField.ballRadius > gameField.canvasHeight
+		|| gameField.ballY - gameField.ballRadius < 0)
+	{
+		gameField.ballYvelocity = -gameField.ballYvelocity;
+	}
+
+	// collision with ball and paddle
+	const tempBall: Ball =
+	{
+		x: gameField.ballX,
+		y: gameField.ballY,
+		radius: gameField.ballRadius,
+	}
+	const tempPaddle: Paddle =
+	{
+		x: 0,
+		y: 0,
+		width: 10,
+		height: 100,
+	}
+	if (gameField.ballX + gameField.ballRadius < gameField.canvasWidth / 2)
+	{
+		tempPaddle.x = gameField.paddleLeftX;
+		tempPaddle.y = gameField.paddleLeftY;
+	}
+	else
+	{
+		tempPaddle.x = gameField.paddleRightX;
+		tempPaddle.y = gameField.paddleRightY;
+	}
+
+	if (await collision(tempBall, tempPaddle))
+	{
+		const collidePoint =
+			(tempBall.y - (tempPaddle.y + tempPaddle.height / 2)) / (tempPaddle.height / 2);
+		const angleRad = (Math.PI / 4) * collidePoint;
+		const direction = tempBall.x + tempBall.radius < gameField.canvasWidth / 2 ? 1 : -1;
+
+		gameField.ballXvelocity = direction * gameField.ballSpeed * Math.cos(angleRad);
+		gameField.ballYvelocity = gameField.ballSpeed * Math.sin(angleRad);
+
+		gameField.ballSpeed += 0.1;
+	}
+
+	// check score
+	if (gameField.ballX - gameField.ballRadius < 0)
+	{
+		++gameField.scoreRight;
+		this.MatchService.updateRightScore(match.match_id, gameField.scoreRight);
+
+		if (gameField.scoreRight === 7)
+		{
+			this.endGame(match, null);
+		}
+		resetBall(gameField);
+	}
+	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
+	{
+		++gameField.scoreLeft;
+		this.MatchService.updateLeftScore(match.match_id, gameField.scoreRight);
+
+		if (gameField.scoreLeft === 7)
+		{
+			this.endGame(match, null);
+		}
+		resetBall(gameField);
+	}
+
+	server.to(this.connectedPlayerService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
+	server.to(this.connectedPlayerService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
 }
