@@ -299,6 +299,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.server.to(player1.socketId).emit("setMiniProfile", profile1, profile2);
 		this.server.to(player2.socketId).emit("setMiniProfile", profile1, profile2);
 
+		// gameField 배열 만들기
 		const gameField: GameField = {
 			canvasWidth: 800,
 			canvasHeight: 600,
@@ -323,47 +324,44 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	@SubscribeMessage('mouseMove')
 	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
 	{
-		// need to take parameters [ matchInfo, gameField ]
-
-		if (userY < 0)
-		{
-			userY = 0;
-		}
-		else if (userY > 500)
-		{
-			userY = 500;
-		}
-
-		if (socket.id === player1.socketId)
-		{
-			gameField.paddleLeftY = userY;
-			this.server.to("Game Room").emit('paddleMove', gameField);
-		}
-		else if (socket.id === player2.socketId)
-		{
-			gameField.paddleRightY = userY;
-			this.server.to("Game Room").emit('paddleMove', gameField);
-		}
-	}
-
-
-	@SubscribeMessage('ladderGameQueue')
-	ladderQueueMatch(@ConnectedSocket() socket: Socket)
-	{
-		// 인가? user id?
-		// this.ladderQueue.push(socket);
-
+		// const player = await this.gameService.getPlayerBySocketId(socket.id);
+		// const match = (await this.matchService.getByPlayerId(player.id));
+		// const opponent = await this.matchService.getOpponentByPlayerId(match.match_id, player.id);
 		
-		const opponent = this.queueProcess();
-		if (opponent === null)
-		{
-			console.log("no game now.");
-			socket.emit('noLadderGame');
-		}
-		// const clients = this.server.in("queueRoom").fetchSockets();
-		// console.log(clients);
-	}
+		// if (userY < 0)
+		// {
+		// 	userY = 0;
+		// }
+		// else if (userY > 500)
+		// {
+		// 	userY = 500;
+		// }
 
+		// if (match.playerLeft === player.id)
+		// {
+		// 	this.server.to(player.socketId).emit('leftMove', userY);
+		// 	this.server.to(opponent.socketId).emit('leftMove', userY);
+		// }
+		// else if (match.playerRight === player.id)
+		// {
+		// 	this.server.to(player.socketId).emit('rightMove', userY);
+		// 	this.server.to(opponent.socketId).emit('rightMove', userY);
+		// }
+
+		// this.server.to(player.socketId).emit('paddleMove', );
+		// this.server.to(opponent.socketId).emit('paddleMove',);
+
+		// if (socket.id === player1.socketId)
+		// {
+		// 	gameField.paddleLeftY = userY;
+		// 	this.server.to("Game Room").emit('paddleMove', gameField);
+		// }
+		// else if (socket.id === player2.socketId)
+		// {
+		// 	gameField.paddleRightY = userY;
+		// 	this.server.to("Game Room").emit('paddleMove', gameField);
+		// }
+	}
 
 
 	async endGame(match_id : number, socket_id : string)

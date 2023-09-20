@@ -7,6 +7,7 @@ import { MatchEntity } from '../entities/match.entity';
 import { UserProfile } from 'src/user/profile/user-profile.entity';
 import { ProfileService } from 'src/user/profile/profile.service';
 import { ConnectedPlayerEntity } from '../entities/connectedPlayer.entity';
+import { GameService } from '../game.service';
 // import { SignupDto } from 'src/user/profile/dto/signup.dto';
 
 @Injectable()
@@ -16,11 +17,10 @@ export class MatchService {
 		// @InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
 		@InjectRepository(ConnectedPlayerEntity) private connectedPlayerRepository: Repository<ConnectedPlayerEntity>,		
 		private dataSource: DataSource,
+		private gameService: GameService,
 		private profileService: ProfileService,
 	) {}
 
-	// todo: remove
-	// getWindow() {return "hey";}
 
 	async create(id1:number, id2 : number, game_type : string): Promise<MatchEntity>
 	{
@@ -56,6 +56,19 @@ export class MatchService {
 		return left;
 	}
 
+	// todo : 필요 없어지면 지우기
+	// async getOpponentByPlayerId(match_id: number, player_id: number): Promise<ConnectedPlayerEntity>
+	// {
+	// 	const match = await this.getByMatchId(match_id);
+	// 	if (match.playerLeft === player_id)
+	// 	{
+	// 		return this.gameService.getPlayer(match.playerRight);
+	// 	}
+	// 	else
+	// 	{
+	// 		return this.gameService.getPlayer(match.playerLeft);
+	// 	}
+	// }
 
 	async updateRightScore(id: number, score : number) : Promise<void>
 	{
@@ -66,6 +79,7 @@ export class MatchService {
 	{
 		await this.matchRepository.update({match_id: id}, {scoreLeft : score});
 	}
+
 	// // temp code
 	// async getPlayerBySocketId(socketId: string): Promise<Player>
 	// {
@@ -73,15 +87,7 @@ export class MatchService {
 	// 		where: { "socketId": socketId }
 	// 	});
 	// }
-	// // // temp code
-	// // async getPlayerBynickname(name: string): Promise<Player>
-	// // {
-	// // 	return this.connectedPlayerRepository.findOne({
-	// // 		where: { "nickname": name }
-	// // 	});
-	// // }
 
-	// // todo
 	async deleteByMatchId(match_id: number)
 	{
 		await this.matchRepository.delete({ match_id });
