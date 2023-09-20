@@ -44,6 +44,8 @@ export interface GameField
 	ballXvelocity: number,
 	ballYvelocity: number,
 	ballSpeed: number,
+	// game lifetime
+	gameTimer: number,
 }
 
 export interface Ball

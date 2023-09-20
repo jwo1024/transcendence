@@ -57,35 +57,6 @@ async function resetBall(gameField: GameField)
 }
 
 
-// // temp variables for unit test
-const player1: Player = {
-			id: 0,
-			socketId: "not yet",
-		};
-const player2: Player = {
-			id: 1,
-			socketId: "not yet",
-		};
-
-const gameField: GameField = {
-	// canvas 크기 바뀔 경우 고려해서 수정 필요
-	canvasWidth: 800,
-	canvasHeight: 600,
-	paddleLeftX: 0, // 캔버스의 x축 왼쪽 끝
-	paddleLeftY: 42,
-	paddleRightX: 800 - 10, // 캔버스의 x축 오른쪽 끝
-	paddleRightY: 42,
-	scoreLeft: 0,
-	scoreRight: 0,
-	ballX: 800 / 2,
-	ballY: 600 / 2,
-	ballRadius: 10,
-	ballXvelocity: 3,
-	ballYvelocity: 3,
-	ballSpeed: 3,
-}
-
-
 async function playGame(server: Server, match: MatchEntity, gameField: GameField)
 {
 	// location of ball
@@ -143,48 +114,31 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		++gameField.scoreRight;
 		this.MatchService.updateRightScore(match.match_id, gameField.scoreRight);
 		
-		// check end game
 		if (gameField.scoreRight === 7)
 		{
 			this.endGame(match, null);
+			clearInterval(gameField.gameTimer);
 		}
-
 		resetBall(gameField);
-		//resetBall();
-		// gameField.ballX = gameField.canvasWidth / 2;
-		// gameField.ballY = gameField.canvasHeight / 2;
-		// gameField.ballXvelocity = -3;
-		// gameField.ballYvelocity = 3;
-		// gameField.ballSpeed = 3;
 	}
 	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
 	{
 		++gameField.scoreLeft;
 		this.MatchService.updateLeftScore(match.match_id, gameField.scoreRight);
 
-		// check end game
 		if (gameField.scoreLeft === 7)
 		{
 			this.endGame(match, null);
+			clearInterval(gameField.gameTimer);
 		}
-
 		resetBall(gameField);
-		//resetBall();
-		// gameField.ballX = gameField.canvasWidth / 2;
-		// gameField.ballY = gameField.canvasHeight / 2;
-		// gameField.ballXvelocity = 3;
-		// gameField.ballYvelocity = 3;
-		// gameField.ballSpeed = 3;
 	}
 
 	server.to(this.gameService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
 	server.to(this.gameService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
-	// server.to(matchInfo.roomName).emit('updateCanvas', gameField);
 }
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
-
-
 
 @Injectable()
 @WebSocketGateway({ namespace: 'ladder_game' })
@@ -192,7 +146,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 {
 
 	private logger = new Logger('LadderGameGateway');
-	// this.logger.log();
 
 	// variables
 	private ladderQueue: Player[];
@@ -222,20 +175,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	{
 		this.gameService.deleteAll();
 	}
-
-	// todo: handleDisconnect와의 차이?
-	private async disconnect(socket: Socket) {
-		// socket.emit('Error', new UnauthorizedException()); //
-		
-		const player_id = (await this.gameService.getPlayerBySocketId(socket.id)).id;
-		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
-		if (match_id)
-		this.endGame(match_id, socket.id);
-
-		this.gameService.deletePlayerBySocketId(socket.id);
-
-		socket.disconnect();
-	  };
 
 	async handleConnection(socket: Socket)
 	{
@@ -330,41 +269,55 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			}
 		}
 	}
-
+	
 	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
 	server: Server;
 
+	private async setGame(userId1: number, userId2: number)
+	{
+		// check player validation
+		const player1 = await this.gameService.getPlayer(userId1);
+		const player2 = await this.gameService.getPlayer(userId2);
+		if (!player1 || !player2)
+		{
+			// todo: 매치가 성립되지 않으므로, 에러 메시지 띄우고 게임 종료
+			return ;
+		}
 
-	@SubscribeMessage('startGame')
+		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
+		this.startGame(currentMatch);
+	}
+
 	async startGame(match : MatchEntity)
 	{
-
 		const player1 = await this.gameService.getPlayer(match.playerLeft);
 		const player2 = await this.gameService.getPlayer(match.playerRight);
 
-
 		const profile1 = await this.profileService.getUserProfileById(match.playerLeft);
 		const profile2 = await this.profileService.getUserProfileById(match.playerRight);
-		// socket.join(match.match_id);
-		// this.server.to(player1)
-		// match.playerLeft.
-		// console.log(`socket ${socket.id} join room of [${match.match_id}]`);
-		
-		//미니 프로필 보내기
+
 		this.server.to(player1.socketId).emit("setMiniProfile", profile1, profile2);
 		this.server.to(player2.socketId).emit("setMiniProfile", profile1, profile2);
 
-		// todo: 한쪽이 게임 수락하면, 동시에 양쪽에 뜨도록 server.to(roomName).emit()으로 수정하기
-		// socket.emit('setMiniProfile', playerLeft, playerRight, () => {
-		// 	console.log("sending mini profile data OK.");
-		// });
-
-		// 특정 room에만 이벤트 발생
-		// playGame();
-		// movePlayer();
-
-		const timer = setInterval(playGame, 30, this.server, match, gameField);
-		// const timer = setInterval(playGame, 30, this.server, match, gameField),;
+		const gameField: GameField = {
+			canvasWidth: 800,
+			canvasHeight: 600,
+			paddleLeftX: 0,
+			paddleLeftY: 42,
+			paddleRightX: 800 - 10,
+			paddleRightY: 42,
+			scoreLeft: 0,
+			scoreRight: 0,
+			ballX: 800 / 2,
+			ballY: 600 / 2,
+			ballRadius: 10,
+			ballXvelocity: 3,
+			ballYvelocity: 3,
+			ballSpeed: 3,
+			gameTimer: 0,
+		}
+		
+		gameField.gameTimer = setInterval(playGame, 30, this.server, match, gameField);
 	}
 
 	@SubscribeMessage('mouseMove')
@@ -411,16 +364,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// console.log(clients);
 	}
 
-	//2명 플레이어 매칭이후 메서드
-	private async setGame( userId1: number, userId2: number)
-	{
-		// todo: 유효한 플레이어인지 확인하는 코드
-
-
-		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
-		
-		this.startGame(currentMatch);
-	}
 
 
 	async endGame(match_id : number, socket_id : string)
