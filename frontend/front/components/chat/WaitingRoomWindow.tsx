@@ -12,8 +12,9 @@ import useMenuBox from "@/hooks/useMenuBox";
 import type { MenuItemInfo } from "@/hooks/useMenuBox";
 import { HandleChatOpenWindowContext } from "@/context/ChatOpenWindowContext";
 import useChatRoomListReducer from "@/hooks/chat/useChatRoomListReducer";
-import type { SimpRoomI, SimpUserI } from "@/types/ChatInfoType";
 import { SocketContext } from "@/context/ChatSocketContext";
+import type { SimpUserI } from "@/types/ChatInfoType";
+import { ON_ROOMS, ON_NEW_JOIN_ROOM } from "@/types/ChatSocketEventName";
 
 interface WaitingRoomWindowProps {
   className?: string;
@@ -30,36 +31,17 @@ const WaitingRoomWindow = ({ className, userInfo }: WaitingRoomWindowProps) => {
 
   useEffect(() => {
     // 참여가능한 채팅방 목록 & 참여중인 채팅방 목록
-    socket?.on("rooms", ({ data }: { data: SimpRoomI[] }) => {
+    socket?.on(ON_ROOMS, (data) => {
+      console.log("socket.on ON_ROOMS", data);
       waitingRoomState.setListState({ roomList: data });
     }); // 궁금한것 : 형태가 다른 data가 들어오면 어떻게 되는가?
-    socket?.on("new-join-room", (data) => {
+    socket?.on(ON_NEW_JOIN_ROOM, (data) => {
+      console.log("socket.on ON_NEW_JOIN_ROOM", data);
       joinedRoomState.addState({ roomData: data });
     });
-
-    const roomList1: SimpRoomI[] = [
-      {
-        roomId: 1,
-        roomName: "test room",
-        roomType: "open",
-        hasPass: true, // TODO : roomPass
-        joinUsersNum: 0, // TODO : joinUsersNum
-      },
-    ];
-    waitingRoomState.setListState({ roomList: roomList1 });
-    const roomList2: SimpRoomI[] = [
-      {
-        roomId: 2,
-        roomName: "joined room",
-        roomType: "dm",
-        hasPass: false, // TODO : roomPass
-        joinUsersNum: 0, // TODO : joinUsersNum
-      },
-    ];
-    joinedRoomState.setListState({ roomList: roomList2 });
     return () => {
-      socket?.off("rooms");
-      socket?.off("new-join-room");
+      socket?.off(ON_ROOMS);
+      socket?.off(ON_NEW_JOIN_ROOM);
     };
   }, []);
 
@@ -68,7 +50,6 @@ const WaitingRoomWindow = ({ className, userInfo }: WaitingRoomWindowProps) => {
       {/* menu bar */}
       <MenuBar menu={menuItemsWithHandlers} />
       {/* main */}
-      {/* <div> */}
       <div className="flex flex-row flex-1 overflow-auto">
         {/* room list box */}
         <div className="flex flex-col flex-1 overflow-auto w-full h-full">

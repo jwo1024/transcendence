@@ -8,6 +8,7 @@ import { SocketContext } from "@/context/ChatSocketContext";
 import { ChatRoomStateI } from "@/hooks/chat/useChatRoomListReducer";
 import { HandleChatOpenWindowContextI } from "@/context/ChatOpenWindowContext";
 import { roomType } from "@/types/ChatInfoType";
+import { EMIT_ROOM_JOIN } from "@/types/ChatSocketEventName";
 
 // ChatRoomBlock
 interface ChatRoomBlockProps {
@@ -23,29 +24,24 @@ const ChatRoomBlock = ({
   const socket = useContext(SocketContext);
   const passInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // TODO : socket io event 등록
-    // Alert ?
-    return () => {
-      // TODO : socket io event 해제
-    };
-  }, []);
-
   const handleClickJoin = (chatGroup: SimpRoomI) => {
     console.log(chatGroup);
     if (chatGroup.hasPass) {
       // 비밀번호 입력시 input값 암호화해야함
       console.log("비밀번호가 있습니다. 비밀번호를 입력해주세요");
-      socket?.emit("Room-join", {
+      socket?.emit(EMIT_ROOM_JOIN, {
         roomId: chatGroup.roomId,
         roomPass: passInputRef.current?.value,
       });
       handleOpenWindow?.addOpenWindow({ roomData: chatGroup });
     } else {
       console.log("비밀번호가 없습니다. 바로 입장합니다.");
-      socket?.emit("Room-join", { roomId: chatGroup.roomId });
+      socket?.emit(EMIT_ROOM_JOIN, { roomId: chatGroup.roomId });
       handleOpenWindow?.addOpenWindow({ roomData: chatGroup });
     }
+    // TODO : wask surlee ? : join - enter - 어떻게 하기로 햇는지 다 까먹었음
+    // socket?.emit(EMIT_ROOM_JOIN, { roomId: chatGroup.roomId });
+    // handleOpenWindow?.addOpenWindow({ roomData: chatGroup });
   };
 
   interface AlermViewProps {

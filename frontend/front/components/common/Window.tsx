@@ -24,7 +24,7 @@ const Window = ({
   className,
   // active = true,
   xOption = true,
-  minimizeOption = true,
+  minimizeOption = false,
   customOnClickXOption,
   ...props
 }: WindowProps) => {
@@ -47,7 +47,7 @@ const Window = ({
   const onClickXOption = () => {
     if (customOnClickXOption) {
       console.log("CHECK : Window : onClickXOption");
-      () => customOnClickXOption();
+      customOnClickXOption();
     }
   };
 
