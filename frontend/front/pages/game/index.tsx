@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { ThemeProvider } from "@react95/core";
+import { useRouter } from "next/router";
+
 import Window from "@/components/common/Window";
 import MiniProfile from "@/components/game/MiniProfile";
 import PongGame from "@/components/game/PongGame";
 
-import io from "socket.io-client";
 import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
+
+import io from "socket.io-client";
 // todo: token 필요 시 socket과 함께 백에 넘겨야 함
 // const token = sessionStorage.getItem(“accessToken”);
 //   const socket = io('http://localhost:4000/ladder_game', {
@@ -17,6 +20,10 @@ import GameResult from "@/components/game/GameResult";
 const socket = io("http://localhost:4000/ladder_game");
 
 export default function GamePage() {
+
+  // todo: 게임 종료 후 router 작동
+  const router = useRouter();
+  //router.push("http://localhost:3001/~");
 
   const [left, setLeft] = useState({
     nickname: "left player",
