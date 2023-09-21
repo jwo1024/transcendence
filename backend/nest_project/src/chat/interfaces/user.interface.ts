@@ -8,7 +8,6 @@ import { UserProfile } from "../../user/profile/user-profile.entity";
 export interface UserI {
 	userProfile: UserProfile;
 	id: number;
-
 	rooms: RoomEntity[]
 	connection: ConnectedUserEntity;
 	messages: MessageEntity[];

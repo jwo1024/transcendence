@@ -67,8 +67,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     //     // private authService: AuthService,
       private userService: UserService,
       private roomService: RoomService,
-      // private userRepository: Repository<UserEntity>,
-      // private readonly userRepository: Repository<UserEntity>,
       private profileService : ProfileService,
       private connectedUserService: ConnectedUserService,
       private joinedRoomService: JoinedRoomService,
@@ -87,31 +85,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   //-------소켓 연결 관련 메서드----------------------
   //required by OnGatewayConnection
   async handleConnection(socket: Socket) {
-    try {
+    // try {
       // //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
         const token = socket.handshake.headers.authorization;
-        this.logger.log(`token : ${token}`); 
         //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
         const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
-        this.logger.log(`userId : ${userId}`); 
         if (!userId)
           return this.disconnect(socket);
         const userProfile = await this.profileService.getUserProfileById(userId);
-        this.logger.log(`userProfile.nickName : ${userProfile.nickname}`); 
         if (!userProfile)
           return this.disconnect(socket);
         const userForChat: UserI = await this.userService.getOne(userId);
-        this.logger.log(`userForChat.id : ${userForChat.id}`); 
         if (!userForChat)
           return this.disconnect(socket);
         
         this.logger.log(`Try connection: ${socket.id}`); 
 
         // const user: UserI = await this.userService.getOne(decodedToken.user.id);
-        socket.data.user = userForChat;
+        socket.data.userId = userForChat.id;
 
         // Save connection to DB
-        await this.connectedUserService.create({ socketId: socket.id, user : userForChat });
+        await this.connectedUserService.create({id : null, socketId: socket.id, user : userForChat, room : null});
         this.logger.log(`saved to DB : ${socket.id}, ${userForChat}`); 
         
         await this.profileService.inchat(userId);
@@ -126,18 +120,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
         this.logger.log(`after emit rooms : ${rooms.length}`);
 
-      } catch {
-       this.logger.log(`error occur`); 
-      return this.disconnect(socket);
-    }
+    //   } catch {
+    //    this.logger.log(`error occur`); 
+    //   return this.disconnect(socket);
+    // }
   }
 
   //required by OnGatewayDisconnection
   async handleDisconnect(socket: Socket) {
     // // remove connection from DB
     await this.connectedUserService.deleteBySocketId(socket.id);
-    await this.profileService.logOn(socket.data.user.id);
-    // await this.profileService.inchat(socket.data.user.id);
+    await this.profileService.logOn(socket.data.userId);
+    // await this.profileService.inchat(socket.data.userId);
     socket.disconnect();
   }
 
@@ -167,22 +161,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     // socket.emit("respose!!!");
     // socket.broadcast.emit("respose!!!");
-    const userEntity = await this.userService.getOne(socket.data.user.id);
-    const userFull = await this.userService.getfull();
+    this.logger.log(`userid : ${socket.data.userId}`)
+    const userEntity = await this.userService.getOne(socket.data.userId);
 
     this.logger.log(`userEntity : ${userEntity}`);
    
-    const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
-   
+    //방을 만들고 만든 사용자를 Owner로서 임명 
+    const createdRoom: RoomI = await this.roomService.createRoom(room, userEntity);
+    
     if(!createdRoom)
     { //방만들기 실패
       this.emitErrorEvent(socket.id, "Response-Room-create", "the room is not exist now.")
       return ;
     }
-    return ;
-    //방을 만든 사용자를 생성된 방에 join 시킴
-    // this.onJoinRoom(socket, {roomId: createdRoom.roomId, roomPass: createdRoom.roomPass});
-    
+
+    // 유저를 방에 추가 시킴 
+    this.roomService.addUserToRoom(userEntity, createdRoom);
+    this.logger.log(`after add User!!!!!!!!!!!!!!!!!`);
     // 방을 만든 사용자에게 현재 방의 정보 제공 
     await this.server.to(socket.id).emit('new_join_room',
        this.roomMapper.Create_simpleInterfaceToDto(createdRoom));
@@ -228,14 +223,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return ; //valid하지 않은 사용자 nickname을 넘긴경우 무시
     }
     //내가 블락한 상대일 경우 실패(일단은 무시)
-    const currentBlockList = await (await this.profileService.getUserProfileById(socket.data.user.id)).block_list;
+    const currentBlockList = await (await this.profileService.getUserProfileById(socket.data.userId)).block_list;
     if (currentBlockList.find(finding => userTheOther.id))
     {
       this.emitErrorEvent(socket.id, "Response-DM-create", "you've blocked that user");
       return ;
     }
     //내가 블락된 상대일 경우 실패(일단은 무시)
-    if (userTheOtherProfile.block_list.find(finding => socket.data.user.id))
+    if (userTheOtherProfile.block_list.find(finding => socket.data.userId))
     {
       this.emitErrorEvent(socket.id, "Response-DM-create", "you've been blocked by that user");
       return ;
@@ -278,8 +273,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
     const targetUserId = targetProfile.id;
-    const userEntity = await this.userService.getOne(socket.data.user.id);
-    const userProfile = await this.profileService.getUserProfileById(socket.data.user.id);
+    const userEntity = await this.userService.getOne(socket.data.userId);
+    const userProfile = await this.profileService.getUserProfileById(socket.data.userId);
     //내가 차단한 유저 초대시 무시
     if (userProfile.block_list.find(finding => finding === targetUserId))
     {
@@ -319,42 +314,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.emitErrorEvent(socket.id, "Response-Room-join", "the room is not exist now.")
         return ; //방이 존재하지 않음
       }
-    // if ( await this.roomService.isBannedUser(socket.data.user.id, room.roomId))
+    // if ( await this.roomService.isBannedUser(socket.data.userId, room.roomId))
     // {
     //   this.emitErrorEvent(socket.id, "Response-Room-join", "this user is banned from the room.")
     //   return ; //ban 처리된 유저
     // }
     const roomFromDB = await this.roomService.getRoom(room.roomId);
     // if(roomFromDB
-      this.logger.log(`1. roomFromDB : ${( roomFromDB)}, ${( roomFromDB).roomOwner}`)
-      this.logger.log(`1. roomFromDB : ${(await roomFromDB).roomName}, ${(await roomFromDB).roomOwner}`)
-    this.logger.log(`bool : ${await this.roomService.isValidForJoin( roomFromDB, room)}`)
       if (!( await this.roomService.isValidForJoin( roomFromDB, room)))
     {
       this.emitErrorEvent(socket.id, "Response-Room-join", "not valid password")
       return ; //참여할 자격이 안됨.
     }
+         //join process -> 이전대화 불러와서 새로 들어온 사용자에게 보내주기.
+    const messages = 
+    await this.messageMapper.Create_simpleDTOArrays(
+    await this.messageService.findMessagesForRoom(roomFromDB));
     
-    //join process -> 이전대화 불러와서 새로 들어온 사용자에게 보내주기.
-      const messages = 
-        await this.messageMapper.Create_simpleDTOArrays(
-          await this.messageService.findMessagesForRoom(roomFromDB));
- 
-    //새 참여자 추가하기
+      //새 참여자 추가하기
+      const newUserEntity = await this.userService.getOne(socket.data.userId);
+      if (newUserEntity != undefined)
+        this.roomService.addUserToRoom(newUserEntity, roomFromDB);
+      else
+      {
+        this.emitErrorEvent(socket.id, "Response-Room-join", "not valid user");
+        return ;
+      }
 
-    const newUserEntity = await this.userService.getOne(socket.data.user.id);
-    if (newUserEntity != undefined)
-    {
       this.roomService.addUserToRoom(newUserEntity, roomFromDB);
-    }
-    else
-    {
-      this.emitErrorEvent(socket.id, "Response-Room-join", "not valid user");
-      return ;
-    }
-    
-    // this.logger.log(`2-2. Joined in room : ${await roomFromDB.joinedUsers}`)
-    const newUserProfile = await this.profileService.getUserProfileById(socket.data.user.id);
+      // this.emitRoomsToAllConnectedUser();
+
+      // this.logger.log(`2-2. Joined in room : ${await roomFromDB.joinedUsers}`)
+    const newUserProfile = await this.profileService.getUserProfileById(socket.data.userId);
     this.emitNotice(await roomFromDB, `[${newUserProfile.nickname}]님이 방에 새로 들어왔습니다!`);
     
     //이벤트명 동적생성
@@ -380,13 +371,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.emitErrorEvent(socket.id, "Response-Room-enter", "the room is not exist now.");
         return ;
       }
-    if ( await this.roomService.isBannedUser(socket.data.user.id, roomId))
+    if ( await this.roomService.isBannedUser(socket.data.userId, roomId))
     {
       this.emitErrorEvent(socket.id, "Response-Room-enter", "you are banned by that room.");
       return ; //ban 처리된 유저이면 요청 무시
     }
-    // this.logger.log("RoomJoin:-start---------")
-    // this.logger.log(`exist : ${await this.roomService.isRoomExis.roomId)}`)
     const roomFromDB = this.roomService.getRoom(roomId);
    
     //DB에서 messages 불러와서 사용자에게 보내주기.
@@ -402,6 +391,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     await this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
     
     this.emitOneRoomToOneUser(roomId, socket.id,"Response-Room-enter");
+    this.emitUserJoingingRooms(socket.id, await this.userService.getOne(socket.data.userId));
   }
 
   private async deleteRoom(roomId:number)
@@ -427,7 +417,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitErrorEvent(socket.id,"Response-Room-leave", "the room is not exist now.")
       return ;
     }
-    const userId = socket.data.user.id;
+    const userId = socket.data.userId;
     const userProfile = await this.profileService.getUserProfileById(userId);
     if (!userProfile)
     {
@@ -495,7 +485,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     await this.server.to(socketId).emit(eventName, {status : true, message : undefined });
   }
-  //----공지 기능 방 메서드-------------
+
+  //----공지 기능 메서드-------------
 
   private async emitNotice(room:RoomI, message: string)
   {
@@ -516,12 +507,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     
     const connectedUsers = room.connections
 
+    this.logger.log(`connect : ${createdMessage.text}`);
+    this.logger.log(`connect : ${createdMessage.created_at}`);
+    this.logger.log(`connect : ${createdMessage.user}`);
     for(const user of connectedUsers) 
     {
       this.emitResponseEvent(user.socketId, "Response-Message-add");
       await this.server.to(user.socketId).emit(
         `messageAdded_${currentRoomId}`,
-         this.messageMapper.Create_entityToSimpleDto(createdMessage));
+         await this.messageMapper.Create_entityToSimpleDto(createdMessage));
     }
   }
 
@@ -574,23 +568,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // const joinedUsers: JoinedRoomI[] 
       // =  await this.joinedRoomService.findByRoom(room);
     const conncetedUsers  = room.connections;
-      for (const user of conncetedUsers) 
+      for (const connection of conncetedUsers) 
     {
-      const joiningrooms = user.rooms
-      this.emitResponseEvent(user.socketId, "Response-DM-create");
-      await this.server.to(user.socketId).emit(
-        'me-joining-rooms', 
-        this.roomMapper.Create_simpleDTOArrays(joiningrooms)
-        );
+      const joiningrooms = await this.roomService.getRoomsForUser(connection.user.id);
+      this.emitResponseEvent(connection.socketId, "Response-DM-create");
+      this.logger.log(`joining : ${joiningrooms}`);
+      this.logger.log(`joining : ${joiningrooms.length}`);
+      await this.server.to(connection.socketId).emit(
+        'me-joining-rooms', joiningrooms);
     }
   }
 
   private async emitUserJoingingRooms(socketId : string, user : UserI)
   {
-      const joiningrooms = user.rooms;
+      const joiningrooms = await this.roomService.getRoomsForUser(user.id);
+      // const joiningrooms = user.rooms;
       this.emitResponseEvent(socketId, "Response-DM-create");
-      await this.server.to(socketId).emit( 'me-joining-rooms', 
-        this.roomMapper.Create_simpleDTOArrays(joiningrooms));
+      await this.server.to(socketId).emit( 'me-joining-rooms', joiningrooms);
   }
   // }
  //----------------------------------
@@ -648,7 +642,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @MessageBody() adminDto: AdminRelatedDTO
   )
   {
-    if (await this.onAdminMethods(adminDto.roomId, socket.data.user.id, adminDto.targetUserId) === false)
+    if (await this.onAdminMethods(adminDto.roomId, socket.data.userId, adminDto.targetUserId) === false)
     {
       this.emitErrorEvent(socket.id, "Response-Admin-kick", "you are not allowed to do that");
       return ;//무시 케이스들
@@ -678,7 +672,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @MessageBody() adminDto: AdminRelatedDTO
     )
     {
-      if (await this.onAdminMethods(adminDto.roomId, socket.data.user.id, adminDto.targetUserId) === false)
+      if (await this.onAdminMethods(adminDto.roomId, socket.data.userId, adminDto.targetUserId) === false)
       {
         this.emitErrorEvent(socket.id, "Response-Admin-Ban", "You're not allowed to do that");
         return ;
@@ -710,7 +704,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @ConnectedSocket() socket: Socket,
       @MessageBody() adminDto: AdminRelatedDTO)
     {
-      if (await this.onAdminMethods(adminDto.roomId, socket.data.user.id, adminDto.targetUserId) === false)
+      if (await this.onAdminMethods(adminDto.roomId, socket.data.userId, adminDto.targetUserId) === false)
       {
         this.emitErrorEvent(socket.id, "Response-Admin-mute", "You're not allowed to do that");
         return ;
@@ -752,7 +746,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     //   @ConnectedSocket() socket: Socket,
     //   @MessageBody() targetId: number)
     // {
-    //   const newData = this.userService.addBlockList(socket.data.user.id, targetId);
+    //   const newData = this.userService.addBlockList(socket.data.userId, targetId);
       
     //   socket.emit("my-block-list", (await newData).block_list);
     // }
@@ -762,7 +756,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     //   @ConnectedSocket() socket: Socket,
     //   @MessageBody() targetId: number)
     // {
-    //   const newData = this.userService.undoBlockList(socket.data.user.id, targetId);
+    //   const newData = this.userService.undoBlockList(socket.data.userId, targetId);
       
     //   socket.emit("my-block-list", (await newData).block_list);
     // }

@@ -12,6 +12,8 @@ import { UserI } from '../../interfaces/user.interface';
 import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO, SimpleRoomDTO } from '../../dto/room.dto';
 
 import { RoomMapper } from '../../mapper/room.mapper';
+import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
+import { ConnectedUserService } from '../connected-user/connected-user.service';
 
 const bcrypt = require('bcrypt');
 
@@ -24,6 +26,7 @@ export class RoomService {
   constructor(
     @InjectRepository(RoomEntity)
     private readonly roomRepository: Repository<RoomEntity>,
+    private readonly connectedService : ConnectedUserService,
     private roomMapper: RoomMapper,
     ) { }
 
@@ -45,30 +48,29 @@ export class RoomService {
       room.roomPass = await this.hashPassword(room.roomPass);
 		//   newUser.password = passwordHash;
     const Room_dtoToEntity = this.roomRepository.create(this.roomMapper.Create_dtoToEntity(room));
-    const newRoom = await this.addCreatorToRoom(Room_dtoToEntity, creator);
-
-    this.logger.log(`second step ${newRoom.created_at},\n ${newRoom.users} `);
-
-    return this.roomRepository.save(newRoom);
-  }
-
-  async addCreatorToRoom(room: RoomEntity, creator: UserI): Promise<RoomI> 
-  {
-    this.logger.log(`creator : ${creator}, ${creator.id}`);
-    this.logger.log(`room : ${room}, ${room.roomId}, ${room.roomName}`);
-    
-    room.users.push(creator);
-    // room.users.fill(creator);
-    // push(creator);
-    room.roomOwner = creator.id;
-    room.roomAdmins.push(creator.id);
-    return room;
+    Room_dtoToEntity.roomOwner = creator.id;
+    Room_dtoToEntity.roomAdmins.push(creator.id);
+    return await this.roomRepository.save(Room_dtoToEntity);
   }
 
   async addUserToRoom(newUser : UserI, theroom: RoomI) : Promise<RoomI>
   {
     theroom.users.push(newUser);
-    // 방에 사용자 추가
+    const connection = await this.connectedService.findByUser(newUser);
+    if (theroom.connections === undefined)
+      theroom.connections = [];
+    if (connection !== undefined)
+    {
+      this.logger.log(`conect : ${connection}, ${connection.user}`);
+      this.logger.log(`conect : ${connection}`);
+      this.logger.log(`theroom.connections : ${theroom.connections}`);
+      theroom.connections.push(connection);
+      this.logger.log(`!!!!!!!!!!!After push`);
+
+    }
+    
+    this.logger.log(`!!!!!!!!!!!before save`);
+
     return await this.roomRepository.save(theroom);
   }
 
@@ -82,14 +84,7 @@ export class RoomService {
       relations: ['users'] //관련 엔터티도 함께 가져오겠다.
     });
     
-    // this.logger.log(`temp : ${temp.roomName}, ${temp.roomOwner }`);
-    
-    // if (!temp) 
-    // {
 
-    //   // throw new NotFoundException(`Room with ID ${roomId} not found`);
-    // }
-    
     return temp;
     // return this.roomRepository.findOne({
     //   where: { roomId },

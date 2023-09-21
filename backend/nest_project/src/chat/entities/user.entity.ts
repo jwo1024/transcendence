@@ -10,12 +10,13 @@ export class UserEntity {
 
   @OneToOne(() => UserProfile)
   @JoinColumn({ name: 'user_profile_id' }) // 외래키 컬럼 이름
+  // @JoinColumn() // 외래키 없애기
   userProfile: UserProfile;
 
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false}) //외래키 한번에 지정 할 수 있나?
   id: number;
 
-  @ManyToMany(() => RoomEntity, room => room.users)
+  @ManyToMany(() => RoomEntity, (room) => room.users)
   @JoinTable()
   rooms: RoomEntity[];
 

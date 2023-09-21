@@ -32,13 +32,16 @@ export class RoomEntity {
   @ManyToMany(() => UserEntity, (user) => user.rooms)
   users: UserEntity[];
 
-  @OneToMany(() => ConnectedUserEntity, conncetion => conncetion.rooms)
+  @OneToMany(() => ConnectedUserEntity, (conncetion) => conncetion.room)
+  @JoinTable()
   connections: ConnectedUserEntity[];
 
-  @OneToMany(() => MessageEntity, message => message.room)
+  @ManyToMany(() => MessageEntity, message => message.room)
   messages: MessageEntity[];
 
   @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
   created_at: Date;
 
+  // @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
+  // joinedUsers: JoinedRoomEntity[];
 }

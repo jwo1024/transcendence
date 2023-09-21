@@ -36,7 +36,7 @@ export class MessageService {
         .leftJoin('message.room', 'room')
         .where('room.roomId = :roomId', { roomId: room.roomId })
         .leftJoinAndSelect('message.user', 'user')
-        .orderBy('message.created_at', 'DESC')
+        .orderBy('message.created_at', 'ASC')
         .getMany();
       
       return messages;
