@@ -68,7 +68,7 @@ export default function ProfilePage() {
     <div className=" h-screen flex flex-col items-center justify-center space-y-3">
       <div className="flex space-x-4">
         <div className="flex flex-col justify-between h-[626px]">
-          {myProfile ? <MyProfile avatarSrc={imageURL} /> : null}
+          {myProfile ? <MyProfile /> : null}
           {friendsProfile ? (
             <UserProfile selectedFriend={selectedFriend} />
           ) : null}
