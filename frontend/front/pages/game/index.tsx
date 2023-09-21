@@ -17,6 +17,7 @@ import GameResult from "@/components/game/GameResult";
 const socket = io("http://localhost:4000/ladder_game");
 
 export default function GamePage() {
+
   const [left, setLeft] = useState({
     nickname: "left player",
     ladder: 1000,
@@ -58,6 +59,16 @@ export default function GamePage() {
       win: profile2.wins,
       lose: profile2.loses,
     });
+  });
+
+  socket.on('startGame', () => {
+    setGameStart(true);
+  });
+
+  socket.on('endGame', (winner_nickname, loser_nickname) => {
+      setWinNickName(winner_nickname);
+      setLoseNickName(loser_nickname);
+      setGameEnd(true);
   });
 
   return (

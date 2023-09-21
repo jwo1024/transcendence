@@ -21,7 +21,7 @@ import { Player } from './dto/player.dto';
 
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
-// todo: 게임 시작하기 전에 대기 화면?
+// todo: 게임 시작하기 전에 대기 화면 -> test
 
 @Injectable()
 @WebSocketGateway({ namespace: 'friendly_game' })
@@ -79,7 +79,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
 		if (match_id)
 		{
-			this.endGame(match_id, socket.id);
+			this.endGame(match_id, player_id);
 		}
 
 		this.connectedPlayerService.deletePlayerBySocketId(socket.id); //id로 삭제
@@ -198,43 +198,58 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		this.setGame(proposingId, (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id);
 	}
 
-	async endGame(match_id: number, socket_id: string)
+	async endGame(match_id: number, loser_id: number)
 	{
 		const gameField = await this.getGameFieldByMatchId(match_id);
 		clearInterval(gameField.gameTimer);
 		const match = await this.matchService.getByMatchId(match_id);
+		let winner_id = 0;
 
-		if (socket_id)
+		if (loser_id)
 		{
-			const loser_id = (await this.connectedPlayerService.getPlayerBySocketId(socket_id)).id;
-			if ( match.playerLeft === loser_id)
+			if (match.playerLeft === loser_id)
 			{
-				// todo: 이미 소켓 연결 끊긴 left
-				// todo: right에게 승리 화면 표시
+				winner_id = match.playerRight;
 			}	
 			else
 			{
-				// todo: 이미 소켓 연결 끊긴 right
-				// todo: left에게 승리 화면 표시
+				winner_id = match.scoreLeft;
 			}
+
+			const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
+			const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
+			this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+
 			this.matchService.deleteByMatchId(match.match_id);
-			// todo: 승패 알려주고 메인 화면으로 돌아가는 프론트
+			// todo: 메인 화면으로 돌아가는 프론트
 			return ;
 		}
 
 		if (match.scoreLeft > match.scoreRight)
 		{
-			// todo: left, right에게 최종 스코어 및 승패 화면 표시
+			winner_id = match.playerLeft;
+			loser_id = match.scoreRight;
+		}
+		else if (match.scoreLeft < match.scoreRight)
+		{
+			winner_id = match.playerRight;
+			loser_id = match.playerLeft;
 		}
 		else
 		{
-			// todo: left, right에게 최종 스코어 및 승패 화면 표시
+			// todo?: throw error
 		}
+		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
+		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
+		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+
 		this.matchService.deleteByMatchId(match.match_id);
-		// todo: 승패 알려주고 메인 화면으로 돌아가는 프론트
+		// todo: 메인 화면으로 돌아가는 프론트
 	}
 
 }
+
 
 async function collision(b: Ball, p: Paddle)
 {
