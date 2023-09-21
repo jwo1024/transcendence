@@ -251,6 +251,18 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.profileService.downLadder(loser_id);
 		this.profileService.updateWins(winner_id);
 		this.profileService.updateLoses(loser_id);
+		// todo: user profile의 match 전적에 들어갈 match_id 업데이트
+	}
+
+	private async sendMatchResult(winner_id: number, loser_id:number, normal_end: boolean)
+	{
+		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
+		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
+		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		if (normal_end == true)
+		{
+			this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		}
 	}
 
 	async endGame(match_id: number, loser_id: number)
@@ -275,10 +287,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 				this.updateProfile(winner_id, loser_id);
 			}
 
-			const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
-			const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-			this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
-
+			this.sendMatchResult(winner_id, loser_id, false);
 			this.matchService.deleteByMatchId(match.match_id);
 			// todo: 메인 화면으로 돌아가는 프론트
 			return ;
@@ -298,11 +307,8 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			loser_id = match.playerLeft;
 			this.updateProfile(winner_id, loser_id);
 		}
-		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
-		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
-		this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
 
+		this.sendMatchResult(winner_id, loser_id, true);
 		this.matchService.deleteByMatchId(match.match_id);
 		// todo: 메인 화면으로 돌아가는 프론트
 	}
