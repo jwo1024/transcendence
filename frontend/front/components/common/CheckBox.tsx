@@ -1,14 +1,22 @@
+import { on } from "events";
 import { SetStateAction, ChangeEvent, Dispatch } from "react";
 
 interface CheckBoxProps {
-  label: string;
+  label?: string;
   checked: boolean;
-  setChecked: Dispatch<SetStateAction<boolean>>;
+  setChecked?: Dispatch<SetStateAction<boolean>>;
+  onChange?: () => void;
 }
 
-const CheckBox = ({ label, checked, setChecked }: CheckBoxProps) => {
+const CheckBox = ({
+  label = "checkbox",
+  checked,
+  setChecked,
+  onChange,
+}: CheckBoxProps) => {
   const onChageCheckBox = (e: ChangeEvent<HTMLInputElement>) => {
-    setChecked(e.target.checked);
+    onChange && onChange();
+    setChecked && setChecked(e.target.checked);
   };
 
   return (
@@ -20,7 +28,10 @@ const CheckBox = ({ label, checked, setChecked }: CheckBoxProps) => {
         onChange={onChageCheckBox}
         className=" text-right"
       />
-      <label className=" text-right">{` `}{label}</label>
+      <label className=" text-right">
+        {` `}
+        {label}
+      </label>
     </span>
   );
 };

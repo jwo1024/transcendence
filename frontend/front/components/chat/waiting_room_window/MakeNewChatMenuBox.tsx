@@ -13,7 +13,7 @@ const MakeNewChatMenu = () => {
   const passwordRef = useRef<HTMLInputElement>(); // 암호화필요
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [passwordChecked, setPasswordChecked] = useState<boolean>(false);
-  const [isPublicRoom, setIsPublicRoom] = useState<boolean | null>(null);
+  const [isPublicRoom, setIsPublicRoom] = useState<boolean>(true);
 
   const frameElement: FrameButtonProps[] = [
     { children: "공개방", handleClickCustom: () => setIsPublicRoom(true) },

@@ -1,7 +1,11 @@
-import { Fieldset, Checkbox, Input, Button } from "@react95/core";
-import SelectButton from "../../common/SelectButton";
-import type { FrameButtonProps } from "../../common/SelectButton";
+// Libraries
+import { Fieldset, Input, Button } from "@react95/core";
 import React, { useState, useContext, useRef } from "react";
+// Components
+import CheckBox from "@/components/common/CheckBox";
+import SelectButton from "../../common/SelectButton";
+// Types & Hooks & Contexts
+import type { FrameButtonProps } from "../../common/SelectButton";
 import MenuBoxLayout from "../common/MenuBoxLayout";
 import { SocketContext } from "@/context/ChatSocketContext";
 import { RoomCreateDTO, SimpRoomI, roomType } from "@/types/ChatInfoType";
@@ -9,12 +13,14 @@ import { RoomCreateDTO, SimpRoomI, roomType } from "@/types/ChatInfoType";
 interface SettingMenuBoxProps {
   confirmButtonName?: string;
   roomInfo: SimpRoomI;
+  isAdmin: boolean;
 }
 
 // SettingMenuBox
 const SettingMenuBox = ({
   confirmButtonName,
   roomInfo,
+  isAdmin,
 }: SettingMenuBoxProps) => {
   const socket = useContext(SocketContext);
   const [checkedPassword, setCheckedPassword] = useState<boolean>(false);
@@ -37,8 +43,9 @@ const SettingMenuBox = ({
       roomType: roomType,
       roomPass: checkedPassword ? passInputRef.current?.value : undefined,
     };
-    socket?.emit("Room-create", roomData, roomInfo.roomId); // 이렇게 보내는게 맞나
-    console.log("Room-create : ", roomData, roomInfo.roomId);
+    // TODO
+    // socket?.emit(EMIT_OWNER_ROOM_EDIT, roomData, roomInfo.roomId); // 이렇게 보내는게 맞나
+    // console.log("Room-create : ", roomData, roomInfo.roomId);
   };
 
   return (
@@ -54,12 +61,11 @@ const SettingMenuBox = ({
           </div>
 
           <div className="flex flex-col mt-4">
-            <Checkbox
+            <CheckBox
+              label="비밀번호 설정"
               checked={checkedPassword}
               onChange={handleCheckedPassword}
-            >
-              비밀번호 설정
-            </Checkbox>
+            />
             {/* <input type="checkbox" id="scales" name="scales" checked /> */}
             {checkedPassword ? (
               <Input
@@ -70,9 +76,10 @@ const SettingMenuBox = ({
               />
             ) : null}
           </div>
-
           <br />
-          <Button className=" font-semibold w-full">적용하기</Button>
+          <Button className=" font-semibold w-full" disabled={!isAdmin}>
+            적용하기
+          </Button>
         </form>
       </Fieldset>
     </MenuBoxLayout>

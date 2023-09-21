@@ -10,7 +10,19 @@ import SettingMenuBox from "./chat_window/SettingMenu";
 import UserListMenuBox from "./chat_window/UserListMenuBox";
 import LeaveRoomMenuBox from "./chat_window/LeaveRoomMenuBox";
 // Types & Hooks & Contexts
-import { MessageI, SimpUserI, SimpRoomI } from "@/types/ChatInfoType";
+import {
+  RecvMessageDTO,
+  SimpUserI,
+  SimpRoomI,
+  RoomI,
+} from "@/types/ChatInfoType";
+import {
+  ON_MESSAGES_ROOMID,
+  ON_CURRENT_ROOM_ROOMID,
+  ON_MESSAGE_ADDED_ROOMID,
+  EMIT_ROOM_ENTER,
+  EMIT_MESSAGE_ADD,
+} from "@/types/ChatSocketEventName";
 import useMessageForm from "@/hooks/chat/useMessageForm";
 import useMenuBox from "@/hooks/useMenuBox";
 import type { MenuItemInfo } from "@/hooks/useMenuBox";
@@ -30,13 +42,17 @@ const ChatGroupWindow = ({
   customOnClickXOption,
 }: ChatGroupWindowProps) => {
   const socket = useContext(SocketContext);
-  const [messageList, setMessageList] = useState<MessageI[]>([]);
-  const { inputRef, sentMessage, setSentMessage, handleFormSubmit } =
+  const [messageList, setMessageList] = useState<RecvMessageDTO[]>([]);
+  const { inputRef, sentMessageList, deleteSentMessage, handleFormSubmit } =
     useMessageForm({
       roomInfo,
-      userInfo: userInfo,
+      userInfo,
     });
   const [setUsers, setSetUsers] = useState<SimpUserI[]>([]); // TODO : roomInfo.users
+  const [roomInfoState, setRoomInfoState] = useState<RoomI | undefined>(
+    undefined
+  ); // TODO : roomInfo
+  const [isAdmin, setIsAdmin] = useState<boolean>(false); // TODO : check
 
   // chatRoom 에 대한  구체적인 정보 저장 필요
   const initMessageEvent = `messages_${roomInfo.roomId.toString}`;
@@ -45,34 +61,57 @@ const ChatGroupWindow = ({
 
   useEffect(() => {
     // 초기데이터 받기 messages & user data
-    socket?.on(initMessageEvent, (data) => {
-      console.log("socket.on initMessageEvent: ", data);
-      setMessageList((messageList) => [...messageList, data]);
-      socket?.off(initMessageEvent);
-    });
-    socket?.on(currentRoomEvent, (data) => {
-      console.log("socket.on current-room-id: ", data.users);
-      setSetUsers(data.users); //
-      socket?.off(currentRoomEvent);
-    });
-    socket?.emit("Room-enter", { roomId: roomInfo.roomId });
+    setRoomInfoState({
+      ...roomInfo,
+      users: [
+        { nickname: "user1", id: 98069 },
+        { nickname: "user2", id: 99833 },
+        { nickname: "user3", id: 98989 },
+        { nickname: "user4", id: 11111 },
+      ],
+      roomOwner: 99800,
+      roomAdmins: [99800],
+      roomBanned: [11111],
+      created_at: new Date(),
+    }); // tmp
+    checkAdmin();
 
-    // 메시지 받기
-    socket?.on(messageAddEvent, (data) => {
-      console.log("socket.on messageAdded: ", data);
-      if (data.user.id === userInfo.id) setSentMessage(undefined);
+    socket?.once(`${ON_MESSAGES_ROOMID}${roomInfo.roomId}`, (data) => {
+      console.log("socket.on ON_MESSAGES_ROOMID: ", data);
       setMessageList((messageList) => [...messageList, data]);
     });
+    socket?.once(`${ON_CURRENT_ROOM_ROOMID}${roomInfo.roomId}`, (data) => {
+      console.log("socket.on ON_CURRENT_ROOM_ROOMID: ", data.users);
+      setSetUsers(data.users); //
+    });
+    socket?.emit(EMIT_ROOM_ENTER, { roomId: roomInfo.roomId });
+    socket?.on(`${ON_MESSAGE_ADDED_ROOMID}${roomInfo.roomId}`, (data) => {
+      console.log("socket.on ON_MESSAGE_ADDED_ROOMID: ", data);
+      if (data.user.id === userInfo.id) deleteSentMessage(data);
+      setMessageList((messageList) => [...messageList, data]);
+    });
+
     return () => {
-      socket?.off(messageAddEvent);
+      socket?.off(`${ON_MESSAGE_ADDED_ROOMID}${roomInfo.roomId}`);
     };
   }, []);
 
   // sentMessage가 생성되면은 => 메시지 전송
   useEffect(() => {
-    if (sentMessage === undefined || sentMessage.text === "") return;
-    socket?.emit("Message-add", sentMessage);
-  }, [sentMessage]);
+    if (sentMessageList.length !== 0) return;
+    sentMessageList.map((message) => {
+      socket?.emit(EMIT_MESSAGE_ADD, message);
+    });
+  }, [sentMessageList]);
+
+  const checkAdmin = () => {
+    // TODO
+    // if (roomInfoState?.roomOwner === userInfo.id) setIsAdmin(true);
+    // else if (roomInfoState?.roomAdmins.find((admin) => admin === userInfo.id))
+    //   setIsAdmin(true);
+    // else setIsAdmin(false);
+    setIsAdmin(true); // tmp
+  };
 
   // Menu Items
   const menuItmes: MenuItemInfo[] = [
@@ -110,7 +149,7 @@ const ChatGroupWindow = ({
             </Frame>
             <MessageBox
               messageList={messageList}
-              sentMessage={sentMessage}
+              sentMessageList={sentMessageList}
               userInfo={userInfo}
             />
           </Frame>
@@ -124,11 +163,18 @@ const ChatGroupWindow = ({
           </form>
         </div>
         {/* menu box */}
-        {showMenuBox[0] ? <SettingMenuBox roomInfo={roomInfo} /> : null}
-        {showMenuBox[1] ? (
-          <UserListMenuBox userInfo={userInfo} roomInfo={roomInfo} />
+        {showMenuBox[0] ? (
+          <SettingMenuBox roomInfo={roomInfo} isAdmin={isAdmin} />
         ) : null}
-        {showMenuBox[2] ? <LeaveRoomMenuBox roomInfo={roomInfo} /> : null}
+        {showMenuBox[1] ? (
+          <UserListMenuBox roomInfo={roomInfoState} isAdmin={isAdmin} />
+        ) : null}
+        {showMenuBox[2] ? (
+          <LeaveRoomMenuBox
+            roomInfo={roomInfo}
+            triggerClose={customOnClickXOption}
+          />
+        ) : null}
       </div>
     </Window>
   );
