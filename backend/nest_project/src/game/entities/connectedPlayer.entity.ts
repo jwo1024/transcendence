@@ -4,8 +4,6 @@ import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinCol
 import { FindOneOptions } from "typeorm";
 
 @Entity()
-// @Unique('id')
-// export class ConnectedPlayerEntity extends BaseEntity {
 export class ConnectedPlayerEntity {
 
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false})

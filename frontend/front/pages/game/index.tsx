@@ -9,7 +9,7 @@ import PongGame from "@/components/game/PongGame";
 import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
 
-import io from 'socket.io-client';
+import io from "socket.io-client";
 // todo: token 필요 시 socket과 함께 백에 넘겨야 함
 // const token = sessionStorage.getItem(“accessToken”);
 //   const socket = io('http://localhost:4000/ladder_game', {
@@ -17,7 +17,7 @@ import io from 'socket.io-client';
 //         Authorization: `Bearer ${token}`
 //     }
 // });
-const socket = io('http://localhost:4000/friendly_game');
+const socket = io("http://localhost:4000/ladder_game");
 
 export default function GamePage() {
 
@@ -38,10 +38,20 @@ export default function GamePage() {
     lose: 0,
   });
 
+  // 사용법
+  // setGameStart(true); 를 적어주면 <PongGame/>컴포넌트가 생성된다.
   const [gameStart, setGameStart] = useState(false);
+  // setGameEnd(true); 를 적어주면 게임이 종료된다.
   const [gameEnd, setGameEnd] = useState(false);
+  // setWinNickName("이긴닉네임"); setLoseNickName("진닉네임"); 쓰면 됨
   const [winNickName, setWinNickName] = useState("");
   const [loseNickName, setLoseNickName] = useState("");
+
+  //소켓이 연결되면 setGameStart(true);가 되어야 게임시작됨
+
+  //게임이 끝나면 백엔드로부터 정보를 받은 후
+  // setWinNickName("nick"); setLoseNickName("nick"); 설정 후에
+  // setGameEnd(true); 가 되어야함.
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
     setLeft({
