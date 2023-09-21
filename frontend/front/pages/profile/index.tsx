@@ -4,7 +4,7 @@ import FriendList from "@/components/profile/FriendList";
 import Window from "@/components/common/Window";
 import { ThemeProvider, Button } from "@react95/core";
 import MyProfile from "@/components/profile/MyProfile";
-import FriendProfile from "@/components/profile/FriendProfile";
+import UserProfile from "@/components/profile/UserProfile";
 import { UserInfo } from "@/types/UserInfo";
 import sendAvatar from "@/components/common/sendAvatar";
 import { UserLocalStorage } from "@/types/SignUpType";
@@ -68,9 +68,9 @@ export default function ProfilePage() {
     <div className=" h-screen flex flex-col items-center justify-center space-y-3">
       <div className="flex space-x-4">
         <div className="flex flex-col justify-between h-[626px]">
-          {myProfile ? <MyProfile avatarSrc={imageURL} /> : null}
+          {myProfile ? <MyProfile /> : null}
           {friendsProfile ? (
-            <FriendProfile selectedFriend={selectedFriend} />
+            <UserProfile selectedFriend={selectedFriend} />
           ) : null}
         </div>
         {friendList ? (
