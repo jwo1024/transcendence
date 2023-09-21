@@ -13,9 +13,9 @@ import sendAvatar from "../common/sendAvatar";
 import type { SignupDto, User42Dto } from "@/types/SignUpType";
 import imageCompression from "browser-image-compression";
 
-interface ProfileProps {
-  avatarSrc: string; // 아바타 이미지 경로를 받는 속성 추가
-}
+// interface ProfileProps {
+//   avatarSrc: string; // 아바타 이미지 경로를 받는 속성 추가
+// }
 const actionImgCompress = async (fileSrc: File) => {
   const options = {
     maxSizeMB: 0.05,
@@ -30,7 +30,7 @@ const actionImgCompress = async (fileSrc: File) => {
   }
 };
 
-const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
+const MyProfile: React.FC = () => {
   const [myData, setMydata] = useState<UserLocalStorage>({
     id: 0,
     nickname: "",
@@ -43,14 +43,34 @@ const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
   const myProfile: boolean = true;
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+  const [avatarURL, setAvatarURL] = useState<string | null>(null);
+  const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
+
+  const [profileAvatarSrc, setProfileAvatarSrc] = useState<string | undefined>(
+    "https://github.com/React95.png"
+  );
+
   useEffect(() => {
     const user = localStorage.getItem("user");
     const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
     setMydata(user_obj);
-  }, []);
 
-  const [avatarURL, setAvatarURL] = useState<string | null>(null);
-  const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
+    const token = sessionStorage.getItem("accessToken");
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (res.ok) return res.blob();
+        else throw new Error("Failed to fetch image");
+      })
+      .then((blob) => {
+        const imageUrl = URL.createObjectURL(blob);
+        setProfileAvatarSrc(imageUrl);
+      })
+      .catch((error) => {
+        console.error("Error fetching image:", error);
+      });
+  }, []);
 
   const onChangeAvatarInput = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -72,29 +92,23 @@ const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
 
   const onSubmitAvatar = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    sendAvatar({ setAvatarURL, uploadAvatar });
+
     const token = sessionStorage.getItem("accessToken");
-    if (token) {
-      fetch(`${backendUrl}/auth/defaultAvatar`, {
-        headers: { Authorization: `Bearer ${token}` },
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (res.ok) return res.blob();
+        else throw new Error("Failed to fetch image");
       })
-        .then((res) => {
-          if (res.ok) {
-            res.blob().then((blob) => {
-              setUploadAvatar(blob as File); // 이게 맞나 ? typeScript as
-              const url = URL.createObjectURL(blob);
-              setAvatarURL(url);
-              sendAvatar({ setAvatarURL, uploadAvatar });
-            });
-          } else {
-            console.log("확인");
-            setAvatarURL("");
-          }
-        })
-        .catch((error) => {
-          setAvatarURL("");
-          console.error("이미지를 불러오는 동안 오류 발생: ", error);
-        });
-    }
+      .then((blob) => {
+        const imageUrl = URL.createObjectURL(blob);
+        setProfileAvatarSrc(imageUrl);
+      })
+      .catch((error) => {
+        console.error("Error fetching image:", error);
+      });
   };
 
   const [newNickName, setNewNickName] = useState<string | null>(null);
@@ -105,12 +119,33 @@ const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
     const handleBlurInput = () => {
       setNewNickName(newNickNameInputRef.current?.value || "");
     };
+
+    // localStorage의 "user"는 여기 페이지 상에서 myData라는 변수로 저장되있음
+    //현재 닉네임은 myData.nickname;
+    // 새 닉네임은 newNickName
+
+    // 닉변성공시;
+    // {
+    //   const user = localStorage.getItem("user");
+    //   const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+
+    //   // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
+    //   setMydata({ ...user_obj, nickname: newNickName });
+
+    //   // 로컬스토리지를 비우고 새로 업데이트
+    //   localStorage.clear();
+    //   localStorage.setItem("user", JSON.stringify(myData));
+    // }
+    // 실패시;
+    // {
+    //   alert("닉네임 변경 실패(ex. 중복된 닉네임, 유효하지않은 닉네임)");
+    // }
   };
   return (
     <Window title="My Profile" w="320" h="350">
       <div className=" flex flex-col items-center justify-between p-4">
         <div className="flex items-center space-x-8">
-          <img src={avatarSrc} alt="Avatar" className=" w-32 h-32" />
+          <img src={profileAvatarSrc} alt="Avatar" className=" w-32 h-32" />
           <div className="flex flex-col items-center space-y-3 w-28">
             <span className=" text-3xl">{myData.nickname}</span>
           </div>
@@ -136,7 +171,7 @@ const MyProfile: React.FC<ProfileProps> = ({ avatarSrc }) => {
         </form>
         <form
           className="flex flex-col space-y-1 p-0.5 items-center"
-          onSubmit={onSubmitAvatar}
+          onSubmit={onSubmitNickname}
         >
           <Input placeholder="Nick Name" className="flex-1 w-32" />
           <Button className="w-full">닉네임 변경</Button>
