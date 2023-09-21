@@ -49,6 +49,7 @@ const MyProfile: React.FC = () => {
   const [profileAvatarSrc, setProfileAvatarSrc] = useState<string | undefined>(
     "https://github.com/React95.png"
   );
+  const newNickNameInputRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -92,6 +93,10 @@ const MyProfile: React.FC = () => {
 
   const onSubmitAvatar = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!uploadAvatar) {
+      alert("변경할 아바타가 등록되지 않았습니다.");
+      return;
+    }
     sendAvatar({ setAvatarURL, uploadAvatar });
 
     const token = sessionStorage.getItem("accessToken");
@@ -115,34 +120,45 @@ const MyProfile: React.FC = () => {
 
   const onSubmitNickname = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const newNickNameInputRef = useRef<HTMLInputElement>();
-    const handleBlurInput = () => {
-      setNewNickName(newNickNameInputRef.current?.value || "");
-    };
-
-    // localStorage의 "user"는 여기 페이지 상에서 myData라는 변수로 저장되있음
-    //현재 닉네임은 myData.nickname;
-    // 새 닉네임은 newNickName
-
-    // 닉변성공시;
-    // {
-    //   const user = localStorage.getItem("user");
-    //   const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
-
-    //   // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
-    //   setMydata({ ...user_obj, nickname: newNickName });
-
-    //   // 로컬스토리지를 비우고 새로 업데이트
-    //   localStorage.clear();
-    //   localStorage.setItem("user", JSON.stringify(myData));
-    // }
-    // 실패시;
-    // {
-    //   alert("닉네임 변경 실패(ex. 중복된 닉네임, 유효하지않은 닉네임)");
-    // }
+    const nickname = newNickNameInputRef.current?.value;
+    if (nickname == "") return alert("비었잖아..");
+    if (nickname == myData.nickname) return alert("같은 닉네임이잖아..");
+    const token = sessionStorage.getItem("accessToken");
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/rename`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ rename: nickname })
+    }).then((res) => {
+      if (res.status == 409)
+        return alert("이미 존재하는 닉네임입니다. 다른 닉네임을 입력해주세요.");
+      else if (res.ok) {
+        const user = localStorage.getItem("user");
+        const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+        // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
+        setMydata({ ...user_obj, nickname: nickname });
+        // 로컬스토리지를 비우고 새로 업데이트
+        localStorage.clear();
+        localStorage.setItem("user", JSON.stringify(myData)); 
+        return alert("닉네임이 변경되었습니다.");
+      }
+      else
+        return alert("오마이갓 비상사태 큰일났다");
+    }).catch((error) => {
+      console.error("Error while change nickname:", error);
+      alert("에러발생했잔아");
+    });
   };
   return (
-    <Window title="My Profile" w="320" h="350">
+    <Window
+      title="My Profile"
+      w="320"
+      h="350"
+      xOption={false}
+      minimizeOption={false}
+    >
       <div className=" flex flex-col items-center justify-between p-4">
         <div className="flex items-center space-x-8">
           <img src={profileAvatarSrc} alt="Avatar" className=" w-32 h-32" />
@@ -173,7 +189,11 @@ const MyProfile: React.FC = () => {
           className="flex flex-col space-y-1 p-0.5 items-center"
           onSubmit={onSubmitNickname}
         >
-          <Input placeholder="Nick Name" className="flex-1 w-32" />
+          <Input
+            placeholder="Nick Name"
+            className="flex-1 w-32"
+            ref={newNickNameInputRef}
+          />
           <Button className="w-full">닉네임 변경</Button>
         </form>
       </div>

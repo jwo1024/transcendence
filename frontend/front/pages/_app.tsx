@@ -16,13 +16,13 @@ export default function App({ Component, pageProps }: AppProps) {
     console.log("CHECK : _app : MOUNT");
 
     if (window.location.pathname !== "/" && window.location.pathname !== "/signup"){
-      try {
-        const response = fetch(`${backendUrl}/auth/validity`, {
+      fetch(`${backendUrl}/auth/validity`, {
         headers: { authorization: `Bearer ${sessionStorage.getItem("accessToken")}` },
-        });
-      } catch (err) {
+      }).then((res) => {
+        if (res.status === 401) {
         window.location.href = "/";
-      }
+        }
+      });
     }   
     return () => {
       console.log("CHECK : _app : UNMOUNT");

@@ -1,4 +1,4 @@
-import React from "react";
+import { FC, useState, useEffect } from "react";
 import {
   Fieldset,
   Frame,
@@ -9,29 +9,52 @@ import {
 import Window from "../common/Window";
 
 type user = {
+  id: number;
   nickname: string;
-  state: string;
-  avatarSrc: string;
+  status: string;
   ladder: number;
-  win: number;
-  lose: number;
+  wins: number;
+  loses: number;
 };
 
 interface ProfileProps {
   selectedFriend: user;
 }
 
-const UserProfile: React.FC<ProfileProps> = ({ selectedFriend }) => {
+const UserProfile: FC<ProfileProps> = ({ selectedFriend }) => {
   const myProfile: boolean = true;
+  const [profileAvatarSrc, setProfileAvatarSrc] = useState<string | undefined>(
+    "https://github.com/React95.png"
+  );
+
+  useEffect(() => {
+    if (selectedFriend.id === undefined) return;
+    const token = sessionStorage.getItem("accessToken");
+     fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image/${selectedFriend.id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
+      .then((res) => {
+        if (res.ok) return res.blob();
+        else throw new Error("Failed to fetch image");
+      })
+      .then((blob) => {
+        const imageUrl = URL.createObjectURL(blob);
+        setProfileAvatarSrc(imageUrl);
+      })
+      .catch((error) => {
+        console.error("Error fetching image:", error);
+      });
+    
+  }, [selectedFriend]);
+
   return (
-    <Window title="User Profile" w="320" h="260">
+    <Window title="User Profile" w="320" h="260" xOption={false} minimizeOption={false}>
       <div className=" flex flex-col items-center justify-between p-4 pb-1">
         <div className="flex items-center space-x-8">
-          <img
-            src={selectedFriend.avatarSrc}
-            alt="Avatar"
-            className=" w-32 h-32"
-          />
+          <img src={profileAvatarSrc} alt='Avatar' className=" w-32 h-32" />
           <div className="flex flex-col items-center space-y-3 w-28">
             <span className=" text-3xl">{selectedFriend.nickname}</span>
           </div>
@@ -41,8 +64,8 @@ const UserProfile: React.FC<ProfileProps> = ({ selectedFriend }) => {
         <Fieldset legend="Information">
           <div className="flex flex-col p-2">
             <div>Ladder: {selectedFriend.ladder}</div>
-            <div>Win: {selectedFriend.win}</div>
-            <div>Lose: {selectedFriend.lose}</div>
+            <div>Win: {selectedFriend.wins}</div>
+            <div>Lose: {selectedFriend.loses}</div>
           </div>
         </Fieldset>
       </div>

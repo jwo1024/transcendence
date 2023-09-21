@@ -67,6 +67,7 @@ export class AuthController {
     if (!AuthService.isTokenValid(userId, accessToken)) {
         console.log(`[session request for invalid or outdated token] - (user : ${userId})`);
         console.log(`value : {${accessToken}}`);
+        console.log(`valid token : ${AuthService.getSession(userId)}`);
         throw new UnauthorizedException('session request for invalid or outdated token');
     }
   }
