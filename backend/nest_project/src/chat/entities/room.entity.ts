@@ -3,6 +3,7 @@ import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, Pri
 import { MessageEntity } from "./message.entity";
 import { roomType } from "../types/roomTypes";
 import { JoinedRoomEntity } from "./joined-room.entity";
+import { ConnectedUserEntity } from "./connected-user.entity";
 
 @Entity()
 export class RoomEntity {
@@ -19,7 +20,6 @@ export class RoomEntity {
   @Column({default: null})
   roomPass: string;
 
-  // @Column({default: -1})
   @Column()
   roomOwner: number;
 
@@ -29,12 +29,11 @@ export class RoomEntity {
   @Column({type: 'integer', array: true, default: []})
   roomBanned: number[];
 
-  @ManyToMany(() => UserEntity)
-  @JoinTable()
+  @ManyToMany(() => UserEntity, (user) => user.rooms)
   users: UserEntity[];
 
-  @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
-  joinedUsers: JoinedRoomEntity[];
+  @OneToMany(() => ConnectedUserEntity, conncetion => conncetion.rooms)
+  connections: ConnectedUserEntity[];
 
   @OneToMany(() => MessageEntity, message => message.room)
   messages: MessageEntity[];

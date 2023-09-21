@@ -29,9 +29,8 @@ export class MessageService {
       return this.messageRepository.save(this.messageRepository.create(newMessage));
     }
     
-    async findMessagesForRoom(room: RoomI): Promise<MessageI[]> {
-      this.logger.log(`findMessages Start!`);
-    
+    async findMessagesForRoom(room: RoomI): Promise<MessageI[]> 
+    {
       const messages = await this.messageRepository
         .createQueryBuilder('message')
         .leftJoin('message.room', 'room')
@@ -39,20 +38,9 @@ export class MessageService {
         .leftJoinAndSelect('message.user', 'user')
         .orderBy('message.created_at', 'DESC')
         .getMany();
-    
+      
       return messages;
     }
-
-    // async findMessagesForRoom(room: RoomI, options: IPaginationOptions): Promise<Pagination<MessageI>> {
-    //   this.logger.log(`findMessages Start!`);
-    //   const query = this.messageRepository
-    //   .createQueryBuilder('message')
-    //   .leftJoin('message.room', 'room')
-    //   .where('room.roomId = :roomId', { roomId: room.roomId })
-    //   .leftJoinAndSelect('message.user', 'user')
-    //   .orderBy('message.created_at', 'DESC');
       
-    //   return paginate(query, options);
-      
-    }
+  }
     

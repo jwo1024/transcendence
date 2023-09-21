@@ -41,7 +41,7 @@ export class RoomService {
     this.logger.log(`first step : ${room.roomName}, ${room.roomType}`);
    
     //비밀번호 있다면 hash화 해서 저장
-    if (room.roomPass)
+    if (room.roomPass != undefined)
       room.roomPass = await this.hashPassword(room.roomPass);
 		//   newUser.password = passwordHash;
     const Room_dtoToEntity = this.roomRepository.create(this.roomMapper.Create_dtoToEntity(room));
@@ -63,6 +63,13 @@ export class RoomService {
     room.roomOwner = creator.id;
     room.roomAdmins.push(creator.id);
     return room;
+  }
+
+  async addUserToRoom(newUser : UserI, theroom: RoomI) : Promise<RoomI>
+  {
+    theroom.users.push(newUser);
+    // 방에 사용자 추가
+    return await this.roomRepository.save(theroom);
   }
 
   async getAllRooms(): Promise<RoomI[]> {
@@ -158,10 +165,14 @@ export class RoomService {
 
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
   async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
-    if (joinDTO.roomPass)
+    if (joinDTO.roomPass !== undefined)
       joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
-    if ( roomFromDB.roomPass !== undefined && joinDTO.roomPass === roomFromDB.roomPass)
+    if (roomFromDB.roomPass === null)
       return true;
+    else if ( joinDTO.roomPass === roomFromDB.roomPass)
+      return true;
+    console.log("dto pass",  joinDTO.roomPass);
+    console.log("room pass",  roomFromDB.roomPass);
     return false;
   }
 

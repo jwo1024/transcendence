@@ -23,7 +23,7 @@ export class RoomMapper{
     if(dto.roomPass !== undefined)
       entity.roomPass = dto.roomPass;
     entity.roomType = dto.roomType;
-    entity.joinedUsers = [];
+    // entity.joinedUsers = [];
     entity.users = [];
     entity.roomAdmins = [];
   
@@ -41,7 +41,7 @@ export class RoomMapper{
     entity.roomAdmins = room_interface.roomAdmins;
     entity.roomBanned = room_interface.roomBanned;
     entity.users = room_interface.users;
-    entity.joinedUsers = room_interface.joinedUsers;
+    // entity.joinedUsers = room_interface.joinedUsers;
     entity.messages = room_interface.messages;
     entity.created_at = null;
     
@@ -71,7 +71,7 @@ export class RoomMapper{
     dto.roomId = entity.roomId;
     dto.roomName = entity.roomName;
     dto.roomType = entity.roomType;
-    if (entity.roomPass == undefined || entity.roomPass === "undefined")
+    if (entity.roomPass === null) 
      dto.hasPass = false;
     else
       dto.hasPass = true;
@@ -83,7 +83,7 @@ export class RoomMapper{
 
   Create_simpleDTOArrays(entityArray :RoomEntity[]){
     const dtoArray : SimpleRoomDTO[] = [];
-    if (entityArray.length === 0)
+    if (entityArray === undefined)
       return dtoArray;
     for (const roomEntity of entityArray)
     {

@@ -1,5 +1,6 @@
+import { RoomEntity } from "./room.entity";
 import { UserEntity } from "./user.entity"; 
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class ConnectedUserEntity {
@@ -10,8 +11,10 @@ export class ConnectedUserEntity {
   @Column()
   socketId: string;
 
-  @ManyToOne(() => UserEntity, user => user.connections)
+  @OneToOne(() => UserEntity, user => user.connection)
   @JoinColumn()
   user: UserEntity;
 
+  @ManyToMany(() => RoomEntity, room => room.connections)
+  rooms : RoomEntity[];
 }
