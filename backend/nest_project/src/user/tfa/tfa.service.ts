@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import emailConfig from '../reftfa/email.config';
+import emailConfig from './email.config';
 import { isEmail } from 'class-validator';
 import { pseudoRandomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
