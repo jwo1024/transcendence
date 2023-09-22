@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, UpdateResult } from 'typeorm';
 import { Player } from '../interface/game.interface';
 
 import { ConnectedPlayerEntity } from '../entities/connectedPlayer.entity';
@@ -12,7 +12,7 @@ import { SignupDto } from 'src/user/profile/dto/signup.dto';
 export class ConnectedPlayerService {
 	constructor(
 		@InjectRepository(ConnectedPlayerEntity) private connectedPlayerRepository: Repository<ConnectedPlayerEntity>,
-		// @InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
+		@InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
 		private dataSource: DataSource,
 		private profileService: ProfileService,
 	) {}
@@ -38,27 +38,29 @@ export class ConnectedPlayerService {
 		});
 	}
 
-	// async upladder(id: number): Promise<UpdateResult>
+	async upladder(id: number): Promise<UpdateResult>
+	{
+		const ladder = await this.profileService.getLadderById(id);
+		return await this.userProfileRepository.update({id: id}, {ladder: ladder + 5});
+	}
 
-	// async upLadder(id :number) : Promise<UpdateResult> {
-    //     const ladder = (await this.getUserProfileById(id)).ladder;
-    //     return await this.userProfileRepository.update({id: id}, {ladder: (ladder + 100)});
-    // }
+    async downLadder(id :number): Promise<UpdateResult>
+	{
+		const ladder = await this.profileService.getLadderById(id);
+		return await this.userProfileRepository.update({id: id}, {ladder: ladder - 5});
+    }
 
-    // async downLadder(id :number) : Promise<UpdateResult> {
-    //     const ladder = (await this.getUserProfileById(id)).ladder;
-    //     return await this.userProfileRepository.update({id: id}, {ladder: (ladder - 100)});
-    // }
+    async updateWins(id: number): Promise<UpdateResult>
+	{
+		const wins = (await this.profileService.getUserProfileById(id)).wins;
+		return await this.userProfileRepository.update({id: id}, {wins: wins + 1});
+    }
 
-    // async updateWins(id :number) : Promise<UpdateResult> {
-    //     const wins = (await this.getUserProfileById(id)).wins;
-    //     return await this.userProfileRepository.update({id: id}, {wins: (wins + 1)});
-    // }
-
-    // async updateLoses(id :number) : Promise<UpdateResult> {
-    //     const loses = (await this.getUserProfileById(id)).loses;
-    //     return await this.userProfileRepository.update({id: id}, {loses: (loses + 1)});
-    // }
+    async updateLoses(id: number): Promise<UpdateResult>
+	{
+		const loses = (await this.profileService.getUserProfileById(id)).loses;
+		return await this.userProfileRepository.update({id: id}, {loses: loses + 1});
+    }
 
 	async deletePlayerBySocketId(socketId: string)
 	{

@@ -116,26 +116,6 @@ export class ProfileService {
         return this.userProfileRepository.update({id: id}, {avatar: avatar});
     }
 
-    async upLadder(id :number) : Promise<UpdateResult> {
-        const ladder = (await this.getUserProfileById(id)).ladder;
-        return await this.userProfileRepository.update({id: id}, {ladder: (ladder + 100)});
-    }
-
-    async downLadder(id :number) : Promise<UpdateResult> {
-        const ladder = (await this.getUserProfileById(id)).ladder;
-        return await this.userProfileRepository.update({id: id}, {ladder: (ladder - 100)});
-    }
-
-    async updateWins(id :number) : Promise<UpdateResult> {
-        const wins = (await this.getUserProfileById(id)).wins;
-        return await this.userProfileRepository.update({id: id}, {wins: (wins + 1)});
-    }
-
-    async updateLoses(id :number) : Promise<UpdateResult> {
-        const loses = (await this.getUserProfileById(id)).loses;
-        return await this.userProfileRepository.update({id: id}, {loses: (loses + 1)});
-    }
-
     // async storeImage(imageData: string, path : string): Promise<string> {
     //     const imageBuffer = Buffer.from(imageData, 'base64');
     //     await new Promise((resolve, reject) => {
