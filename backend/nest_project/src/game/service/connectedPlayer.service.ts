@@ -38,7 +38,7 @@ export class ConnectedPlayerService {
 		});
 	}
 
-	async upladder(id: number): Promise<UpdateResult>
+	async upLadder(id: number): Promise<UpdateResult>
 	{
 		const ladder = await this.profileService.getLadderById(id);
 		return await this.userProfileRepository.update({id: id}, {ladder: ladder + 5});
@@ -61,6 +61,19 @@ export class ConnectedPlayerService {
 		const loses = (await this.profileService.getUserProfileById(id)).loses;
 		return await this.userProfileRepository.update({id: id}, {loses: loses + 1});
     }
+
+	async updateRecentHistory(id: number, match_id: number): Promise<UpdateResult>
+	{
+		const recents = (await this.profileService.getUserProfileById(id)).recent_history;
+		if (recents.length < 5)
+		{
+			recents.push(match_id);
+			return this.userProfileRepository.update({id: id}, {recent_history: recents});
+		}
+		recents.shift();
+		recents.push(match_id);
+		return this.userProfileRepository.update({id: id}, {recent_history: recents});
+	}
 
 	async deletePlayerBySocketId(socketId: string)
 	{

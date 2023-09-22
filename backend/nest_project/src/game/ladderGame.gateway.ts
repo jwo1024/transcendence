@@ -244,13 +244,14 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		}
 	}
 
-	private async updateProfile(winner_id: number, loser_id: number)
+	private async updateProfile(winner_id: number, loser_id: number, match_id: number)
 	{
-		this.profileService.upLadder(winner_id);
-		this.profileService.downLadder(loser_id);
-		this.profileService.updateWins(winner_id);
-		this.profileService.updateLoses(loser_id);
-		// todo: user profile의 match 전적에 들어갈 match_id 업데이트
+		this.connectedPlayerService.upLadder(winner_id);
+		this.connectedPlayerService.downLadder(loser_id);
+		this.connectedPlayerService.updateWins(winner_id);
+		this.connectedPlayerService.updateLoses(loser_id);
+		this.connectedPlayerService.updateRecentHistory(winner_id, match_id);
+		this.connectedPlayerService.updateRecentHistory(loser_id, match_id);
 	}
 
 	private async sendMatchResult(winner_id: number, loser_id:number, normal_end: boolean)
@@ -277,13 +278,13 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			{
 				this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
 				winner_id = match.playerRight;
-				this.updateProfile(winner_id, loser_id);
+				this.updateProfile(winner_id, loser_id, match_id);
 			}
 			else
 			{
 				this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
 				winner_id = match.playerLeft;
-				this.updateProfile(winner_id, loser_id);
+				this.updateProfile(winner_id, loser_id, match_id);
 			}
 
 			this.sendMatchResult(winner_id, loser_id, false);
@@ -297,14 +298,14 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
 			winner_id = match.playerLeft;
 			loser_id = match.playerRight;
-			this.updateProfile(winner_id, loser_id);
+			this.updateProfile(winner_id, loser_id, match_id);
 	}
 		else
 		{
 			this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
 			winner_id = match.playerRight;
 			loser_id = match.playerLeft;
-			this.updateProfile(winner_id, loser_id);
+			this.updateProfile(winner_id, loser_id, match_id);
 		}
 
 		this.sendMatchResult(winner_id, loser_id, true);
