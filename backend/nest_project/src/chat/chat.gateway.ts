@@ -428,13 +428,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const roomToleave = await this.roomService.getRoom(roomId);
     this.logger.log(`roomToleave : ${roomToleave}`);
     this.logger.log(`roomToleave : ${roomToleave.users}`);
+    this.logger.log(`roomToleave : ${roomToleave.users[0]}`);
     if (!roomToleave)
     {
       this.emitErrorEvent(socket.id,"Response-Room-leave", "the room is not exist now.")
       return ;
     }
     const userId = socket.data.userId;
+    this.logger.log(`userId : ${userId}`);
     const userProfile = await this.profileService.getUserProfileById(userId);
+    this.logger.log(`userProfile : ${userProfile}`);
     if (!userProfile)
     {
       this.emitErrorEvent(socket.id,"Response-Room-leave", "not found user");
