@@ -10,7 +10,7 @@ import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
 
 import io from "socket.io-client";
-// todo: token 필요 시 socket과 함께 백에 넘겨야 함
+
 // const token = sessionStorage.getItem(“accessToken”);
 //   const socket = io('http://localhost:4000/ladder_game', {
 //     extraHeaders: {
@@ -27,7 +27,7 @@ export default function GamePage() {
   socket.on("disconnect", (reason) => {
     // todo: debug
     console.log("disconnect event emit!!!");
-    router.push("http://localhost:3001");
+    setTimeout(() => {router.push("http://localhost:3001");}, 5000);
   });
 
   const [left, setLeft] = useState({

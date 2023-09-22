@@ -43,7 +43,7 @@ export default function GamePage() {
   const [winNickName, setWinNickName] = useState("");
   const [loseNickName, setLoseNickName] = useState("");
 
-  // 만약 내가 호스트라면 setIsInvited(true);
+  // setIsInvited(true);
   const [isInvited, setIsInvited] = useState(false);
   
   // 이 형태로 쓸것, 그리고 이 중괄호 블럭에 코드를 쓰면 그것이 실행됨. 

@@ -61,6 +61,10 @@ export class ConnectedPlayerService {
     async downLadder(id :number): Promise<UpdateResult>
 	{
 		const ladder = await this.getLadderById(id);
+		if (ladder - 5 < 0)
+		{
+			return await this.userProfileRepository.update({id: id}, {ladder: 0});
+		}
 		return await this.userProfileRepository.update({id: id}, {ladder: ladder - 5});
     }
 

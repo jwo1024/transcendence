@@ -67,6 +67,23 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
 
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
+
+		// todo: 초대자 프로세스
+		//@chat 초대자는 초대 버튼 누르면 /game/frinedly로 자동 접속
+		// 초대자가 player 레포에 등록됨 -> 상대방 수락 시까지 대기
+		// 상대방이 수락 -> 상대방에 의해 setGame()으로 게임 시작
+		//@chat 상대방이 거절 -> ('거절 이벤트')를 감지해 endPlayer(초대자 id) 종료
+		// 기다리다 지쳐 취소 -> 그냥 페이지 나가면 됨(취소 버튼 만들어도 됨)
+		//@chat						: 근데 이 경우 상대방도 초대 취소를 인지해야 하는 문제
+		//							상대방 id로 뭔가를 보내려면 상대방 id 데이터 받아야 함
+		//							현재는 상대방이 들어오면 그냥 게임 취소되고 메인으로 돌아감
+		// this.waitGame();
+		// 그냥 기본 화면 보여주고 대기하면 waitGame()도 필요 없을 듯
+
+		// todo: 초대 받은 invited 프로세스
+		//@chat 수락 버튼 누르면 /game/friendly로 접속됨
+		//@chat 초대 받은 자임을 알아야 함 -> 그래야 커스텀 모드 선택지 화면 띄울 수 있음
+		// 커스텀 모드를 선택하면 game type 정보와 함께 this.acceptGame(); 실행
 	}
 
 	async handleDisconnect(socket: Socket)
@@ -186,8 +203,10 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	@SubscribeMessage("waitGame")
 	async waitGame( @ConnectedSocket() socket: Socket, @MessageBody() proposedId : number)
 	{
-		// todo: 대기 화면
-		// waiter or accepter가 game_type에 대한 데이터 받고 setGame()에 인자 넘겨주며 실행
+		// todo: 상대방이 수락하지 않고 거절한 경우
+		// todo: 시간이 너무 지나서 강제로 종료시키는 경우
+
+		// accepter가 game_type에 대한 데이터 받고 setGame()에 인자 넘겨주며 실행
 		// @MessageBody() { proposedId: number, gameType: string }
 	}
 

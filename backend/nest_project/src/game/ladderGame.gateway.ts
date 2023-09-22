@@ -65,27 +65,23 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
 		// user의 소켓 id 정보
 		// 인증 관련 부분(토큰 및 user 정보 socket에 주입 )
-		// const token = socket.handshake.headers.authorization;
+		const token = socket.handshake.headers.authorization;
 		// jiwolee님이 알려주신 대로 프론트에 추가 -> ok
 		
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
 		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
 		if (!userId)
 		{
-			// todo: to main
 			return socket.disconnect();
 		}
 		const userProfile = await this.profileService.getUserProfileById(userId);
 		if (!userProfile)
 		{
-			// todo: to main
 			return socket.disconnect();
 		}
-		// const userId = 99833;
+
 		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
-
 		ladderQueue.push(current);
-
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 	}
 
@@ -173,7 +169,8 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
 		if (!currentMatch)
 		{
-			// todo: 매치가 성사되지 않음을 알리고 게임 메인 화면 등으로 나가는 프론트
+			this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId1), userId1);
+			this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId2), userId2);
 			return ;
 		}
 		this.logger.log(`setGame : ${currentMatch} match will soon start!`);
