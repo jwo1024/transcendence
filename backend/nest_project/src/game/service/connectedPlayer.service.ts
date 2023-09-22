@@ -31,17 +31,25 @@ export class ConnectedPlayerService {
 		});
 	}
 
-	async getLadderById(id: number) : Promise<number>
-	{
-		const ladder = (await this.profileService.getUserProfileById(id)).ladder;
-        return ladder;
-    }
-
 	async getPlayerBySocketId(socketId: string): Promise<ConnectedPlayerEntity>
 	{
 		return this.connectedPlayerRepository.findOne({
 			where: { "socketId": socketId }
 		});
+	}
+
+	async getSocketIdById(id: number) : Promise<string>
+	{
+		const player = await this.getPlayer(id);
+		return player.socketId;
+	}
+
+	// 소켓 아이디 받아서 소켓 객체 반환하는 함수
+
+	async getLadderById(id: number) : Promise<number>
+	{
+		const ladder = (await this.profileService.getUserProfileById(id)).ladder;
+		return ladder;
 	}
 
 	async upLadder(id: number): Promise<UpdateResult>

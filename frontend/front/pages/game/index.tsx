@@ -23,7 +23,10 @@ export default function GamePage() {
 
   // todo: 게임 종료 후 router 작동
   const router = useRouter();
-  //router.push("http://localhost:3001/~");
+
+  socket.on("disconnect", (reason) => {
+    router.push("http://localhost:3001");
+  });
 
   const [left, setLeft] = useState({
     nickname: "left player",

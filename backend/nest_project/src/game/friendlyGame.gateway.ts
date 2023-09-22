@@ -86,7 +86,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
 	}
 
-	@WebSocketServer() // 현재 동작 중인 웹소켓 서버 객체
+	@WebSocketServer()
 	server: Server;
 
 	private async setGame(userId1: number, userId2: number)

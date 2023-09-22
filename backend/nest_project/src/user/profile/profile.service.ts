@@ -101,11 +101,9 @@ export class ProfileService {
         //return await this.getUserProfileById(id);
     }
 
-
     async updateUserProfileByNickname(nickname: string, updateDto: UserProfile) {
         return await this.userProfileRepository.update({nickname}, updateDto); 
     }
-
 
     async updateAvatar(id : number, avatar : Buffer) : Promise<any> {
         return this.userProfileRepository.update({id: id}, {avatar: avatar});
