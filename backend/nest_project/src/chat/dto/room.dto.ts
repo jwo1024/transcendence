@@ -28,6 +28,11 @@ export class RoomInviteDTO
 
 }
 
+export class RoomleaveDTO
+{
+  roomId: number;
+}
+
 export class AdminRelatedDTO 
 {
   targetUserId: number;

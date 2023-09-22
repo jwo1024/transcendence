@@ -17,18 +17,18 @@ export class UserEntity {
   id: number;
 
   @ManyToMany(() => RoomEntity, (room) => room.users)
-  @JoinTable()
+  @JoinColumn()
   rooms: RoomEntity[];
 
-  @OneToOne(() => ConnectedUserEntity, connection => connection.user)
+  @OneToMany(() => ConnectedUserEntity, connection => connection.user)
   connection: ConnectedUserEntity;
   
   @OneToMany(() => MessageEntity, message => message.user)
   messages: MessageEntity[];
 
-  // @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
-  // joinedRooms: JoinedRoomEntity[] = [];
 }
+// @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
+// joinedRooms: JoinedRoomEntity[] = [];
 
 // @OneToOne(() => ConnectedUserEntity, (connection) => connection.user, {
 //   eager: true,

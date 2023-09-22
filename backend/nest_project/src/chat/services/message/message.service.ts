@@ -41,6 +41,19 @@ export class MessageService {
       
       return messages;
     }
-      
+
+    async deleteByRoomId(roomId : number) 
+    {
+      const messagesToDelete = await this.messageRepository.find({
+        where: { room: { roomId: roomId } },
+      });
+  
+      if (!messagesToDelete) {
+        return ;
+      }
+  
+      // ConnectedUserEntity를 삭제합니다.
+      await this.messageRepository.remove(messagesToDelete);
+    }
   }
     

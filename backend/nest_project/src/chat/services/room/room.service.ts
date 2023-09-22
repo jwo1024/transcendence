@@ -12,8 +12,8 @@ import { UserI } from '../../interfaces/user.interface';
 import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO, SimpleRoomDTO } from '../../dto/room.dto';
 
 import { RoomMapper } from '../../mapper/room.mapper';
-import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
+import { UserEntity } from '../../entities/user.entity';
 
 const bcrypt = require('bcrypt');
 
@@ -27,6 +27,8 @@ export class RoomService {
     @InjectRepository(RoomEntity)
     private readonly roomRepository: Repository<RoomEntity>,
     private readonly connectedService : ConnectedUserService,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private roomMapper: RoomMapper,
     ) { }
 
@@ -53,26 +55,56 @@ export class RoomService {
     return await this.roomRepository.save(Room_dtoToEntity);
   }
 
-  async addUserToRoom(newUser : UserI, theroom: RoomI) : Promise<RoomI>
+  async addUserToRoom(newUser : UserI, socketId : string, theroom: RoomEntity) : Promise<RoomI>
   {
     theroom.users.push(newUser);
     const connection = await this.connectedService.findByUser(newUser);
-    if (theroom.connections === undefined)
-      theroom.connections = [];
-    if (connection !== undefined)
-    {
-      this.logger.log(`conect : ${connection}, ${connection.user}`);
-      this.logger.log(`conect : ${connection}`);
-      this.logger.log(`theroom.connections : ${theroom.connections}`);
-      theroom.connections.push(connection);
-      this.logger.log(`!!!!!!!!!!!After push`);
-
-    }
-    
-    this.logger.log(`!!!!!!!!!!!before save`);
-
+    await this.connectedService.createfast(socketId, newUser, theroom);
     return await this.roomRepository.save(theroom);
   }
+
+  async removeUserFromRoom(user: UserI, socketId : string, roomId: number) 
+  {
+    const room = await this.roomRepository
+      .createQueryBuilder('room')
+      .leftJoinAndSelect('room.users', 'users')
+      .leftJoinAndSelect('room.connections', 'connections')
+      .where('room.roomId = :roomId', { roomId: roomId })
+      .getOne();
+
+    const userId = user.id;
+    // 사용자의 참여중인 방 목록에서 현재 방 삭제
+    const userEntity = await this.userRepository.findOne({where: {id : userId}});
+    this.logger.log(`user: ${userEntity}`);
+    this.logger.log(`userId: ${userEntity.id}`);
+    this.logger.log(`userRooms: ${userEntity.rooms}`);
+    userEntity.rooms = userEntity.rooms.filter((userRoom) => userRoom.roomId !== roomId);
+    await this.userRepository.save(userEntity);
+    
+    //현재 방의 참여자 목록에서 현재 사용자 삭제
+    room.users = room.users.filter((u) => u.id !== userId);
+
+    await this.connectedService.removeByUserIdAndRoomId(userId, roomId);
+
+    await this.roomRepository.save(room);
+  }
+
+  // async deleteRoomById(user: UserI, socketId : string, roomId: number) {
+  //   // 1. 방(RoomEntity)을 찾습니다.
+  //   const room = await this.roomRepository.findOne({where: {roomId}});
+
+  //   if (!room)
+  //     return;
+
+  //   // 2. 방(RoomEntity)과 연결된 사용자(UserEntity)의 rooms 배열에서 해당 방(RoomEntity)을 삭제합니다.
+  //   // 이때, TypeORM에서는 자동으로 연관 관계가 해제됩니다.
+  //   for (const user of room.users) {
+  //     user.rooms = user.rooms.filter((userRoom) => userRoom.roomId !== roomId);
+  //   }
+
+  //   // 3. 방(RoomEntity)을 삭제합니다.
+  //   await this.roomRepository.remove(room);
+  // }
 
   async getAllRooms(): Promise<RoomI[]> {
     return await this.roomRepository.find();
@@ -83,13 +115,15 @@ export class RoomService {
       where: { roomId },
       relations: ['users'] //관련 엔터티도 함께 가져오겠다.
     });
-    
-
     return temp;
-    // return this.roomRepository.findOne({
-    //   where: { roomId },
-    //   relations: ['users'] //관련 엔터티도 함께 가져오겠다.
-    // });
+  }
+
+  async getRoomEntity(roomId: number): Promise<RoomEntity> {
+    const temp = await this.roomRepository.findOne({
+      where: { roomId },
+      relations: ['users'] //관련 엔터티도 함께 가져오겠다.
+    });
+    return temp;
   }
 
   async isRoomExist(roomId: number) : Promise<boolean> {
@@ -117,6 +151,8 @@ export class RoomService {
 
   async isBannedUser(userId: number, roomId: number) : Promise<boolean> {
     const room = await this.getRoom(roomId);
+    if (room.roomBanned === undefined || room.roomBanned.length === 0)
+      return false;
     if (room.roomBanned.find(target => target === userId))
       return true;
     return false;
@@ -198,19 +234,7 @@ export class RoomService {
     return this.roomMapper.Create_simpleDTOArrays(rooms);
   }
 
-  // async getRoomsForUser(userId: number, options: IPaginationOptions): Promise<Pagination<RoomI>> {
-  //   const query = this.roomRepository
-  //     .createQueryBuilder('room')
-  //     .leftJoin('room.users', 'users')
-  //     .where('users.id = :userId', { userId })
-  //     .leftJoinAndSelect('room.users', 'all_users')
-  //     .orderBy('room.created_at', 'DESC');
-
-  //   return paginate(query, options);
-  // }
-
   async deleteById(roomId: number) {
 		return this.roomRepository.delete({ roomId });
 	  }
-
 }

@@ -36,12 +36,12 @@ export class RoomEntity {
   @JoinTable()
   connections: ConnectedUserEntity[];
 
-  @ManyToMany(() => MessageEntity, message => message.room)
+  @ManyToMany(() => MessageEntity, message => message.room, {cascade : true})
+  @JoinTable()
   messages: MessageEntity[];
 
   @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
   created_at: Date;
-
-  // @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
-  // joinedUsers: JoinedRoomEntity[];
 }
+// @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
+// joinedUsers: JoinedRoomEntity[];

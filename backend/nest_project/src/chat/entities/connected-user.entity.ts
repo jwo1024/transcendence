@@ -12,7 +12,7 @@ export class ConnectedUserEntity {
   @Column()
   socketId: string;
 
-  @OneToOne(() => UserEntity, user => user.connection)
+  @ManyToOne(() => UserEntity, user => user.connection)
   @JoinColumn()
   user: UserEntity;
 
