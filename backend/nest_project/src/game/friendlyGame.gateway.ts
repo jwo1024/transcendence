@@ -141,7 +141,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		// }
 
 		this.gameFieldArr.push(gameField);
-		gameField.gameTimer = setInterval(playGame, 30, this.server, match, gameField);
+		gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
 	}
 
 	private async getGameFieldByMatchId(match_id: number)
@@ -286,7 +286,7 @@ async function resetBall(gameField: GameField)
 	gameField.ballSpeed = 3;
 }
 
-async function playGame(server: Server, match: MatchEntity, gameField: GameField)
+async function playGame(server: Server, match: MatchEntity, player1: Player, player2: Player, gameField: GameField)
 {
 	// location of ball
 	gameField.ballX += gameField.ballXvelocity;
@@ -361,6 +361,6 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		resetBall(gameField);
 	}
 
-	server.to(this.connectedPlayerService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
-	server.to(this.connectedPlayerService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
+	server.to(player1.socketId).emit('updateCanvas', gameField);
+	server.to(player2.socketId).emit('updateCanvas', gameField);
 }
