@@ -31,6 +31,12 @@ export class ConnectedPlayerService {
 		});
 	}
 
+	async getLadderById(id: number) : Promise<number>
+	{
+		const ladder = (await this.profileService.getUserProfileById(id)).ladder;
+        return ladder;
+    }
+
 	async getPlayerBySocketId(socketId: string): Promise<ConnectedPlayerEntity>
 	{
 		return this.connectedPlayerRepository.findOne({
@@ -40,13 +46,13 @@ export class ConnectedPlayerService {
 
 	async upLadder(id: number): Promise<UpdateResult>
 	{
-		const ladder = await this.profileService.getLadderById(id);
+		const ladder = await this.getLadderById(id);
 		return await this.userProfileRepository.update({id: id}, {ladder: ladder + 5});
 	}
 
     async downLadder(id :number): Promise<UpdateResult>
 	{
-		const ladder = await this.profileService.getLadderById(id);
+		const ladder = await this.getLadderById(id);
 		return await this.userProfileRepository.update({id: id}, {ladder: ladder - 5});
     }
 

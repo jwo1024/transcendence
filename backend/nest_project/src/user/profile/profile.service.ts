@@ -80,11 +80,6 @@ export class ProfileService {
         return this.userProfileRepository.find();
     }
 
-    async getLadderById(id: number) : Promise<number> {
-        const user =  this.userProfileRepository.findOne({where : {id: id}});
-        return (await user).ladder;
-    }
-
     async getUserProfileById(id: number): Promise<UserProfile> {
         return this.userProfileRepository.findOne({where : {id: id}});
     }
