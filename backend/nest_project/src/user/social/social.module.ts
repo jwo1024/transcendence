@@ -7,6 +7,7 @@ import { ProfileModule } from '../profile/profile.module';
 import { UserEntity } from 'src/chat/entities/user.entity';
 import { UserProfile } from '../profile/user-profile.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtStrategy } from '../auth/jwt.strategy';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserProfile, UserEntity]),

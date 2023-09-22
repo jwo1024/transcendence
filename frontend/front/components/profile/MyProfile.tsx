@@ -9,7 +9,7 @@ import {
 } from "@react95/core";
 import Window from "../common/Window";
 import { UserLocalStorage } from "@/types/SignUpType";
-import sendAvatar from "../common/sendAvatar";
+import sendAvatar from "../func/sendAvatar";
 import type { SignupDto, User42Dto } from "@/types/SignUpType";
 import imageCompression from "browser-image-compression";
 

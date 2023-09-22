@@ -11,16 +11,57 @@ const TwoFactorAuthentication = ({ email }: NickNameBlockProps) => {
   const textFromEmail = useRef<HTMLInputElement>();
   // 0 = 미인증, 1 = 실패, 2 = 성공
   const [success, setSuccess] = useState<number>(0);
+  const [notifyStr, setNotifyStr] = useState<string>("");
+  const [twoFAEmailValid, setTwoFAEmailValid] = useState<boolean>(false);
 
   const sendingMailSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const token = sessionStorage.getItem("accessToken");
+    fetch("http://localhost:4000/tfa/send", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: email }),
+    }).then((res) => {
+      if (res.ok) {
+        setNotifyStr("");
+        res.text().then((issuedAt) => {
+          console.log(JSON.parse(issuedAt));
+          // setElapsedTime(JSON.parse(issuedAt));
+        });
+      } else {
+        setSuccess(1);
+        setTwoFAEmailValid(false);
+        setNotifyStr(
+          "메일 전송에 실패했습니다. 다시 시도하거나 다른 이메일을 입력해 주세요"
+        );
+      }
+    });
   };
   const validationSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // 인증 성공이라면
-    // setSuccess(2);
-    /// 인증 실패라면
-    // setSuccess(1);
+    const token = sessionStorage.getItem("accessToken");
+    fetch("http://localhost:4000/tfa/verify", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ code: textFromEmail.current?.value }),
+    }).then((res) => {
+      if (res.ok) {
+        setNotifyStr("");
+        setSuccess(2);
+        setNotifyStr("인증에 성공하였습니다.");
+        setTwoFAEmailValid(true); // 등록 성공을 알려야 함
+      } else {
+        setSuccess(1);
+        setNotifyStr("인증에 실패하였습니다.");
+        setTwoFAEmailValid(false);
+      }
+    });
   };
 
   return (
@@ -47,9 +88,9 @@ const TwoFactorAuthentication = ({ email }: NickNameBlockProps) => {
           <Button className="w-full">제출하기</Button>
         </form>
         {success === 1 ? (
-          <span className=" text-red-600 text-lg">인증에 실패하였습니다.</span>
+          <span className=" text-red-600 text-lg">{notifyStr}</span>
         ) : success === 2 ? (
-          <span className=" text-blue-600 text-lg">인증에 성공하였습니다.</span>
+          <span className=" text-blue-600 text-lg">{notifyStr}</span>
         ) : null}
       </div>
       <Button
@@ -57,6 +98,7 @@ const TwoFactorAuthentication = ({ email }: NickNameBlockProps) => {
           router.push("/menu");
         }}
         className="w-full"
+        disabled={!twoFAEmailValid}
       >
         Menu로 가기
       </Button>
