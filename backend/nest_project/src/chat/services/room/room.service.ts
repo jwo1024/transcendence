@@ -295,7 +295,7 @@ export class RoomService {
       .createQueryBuilder()
       .delete()
       .from('user_entity_rooms_room_entity') // 조인 테이블 이름
-      .where('roomId = :roomId', { roomId })
+      .where('roomEntityRoomId = :roomId', { roomId })
       .execute();
   
     // RoomEntity에서 해당 roomId를 가진 방 삭제
