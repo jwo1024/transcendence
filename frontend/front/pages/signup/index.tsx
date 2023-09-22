@@ -30,24 +30,26 @@ const SignUpPage = () => {
   const [twoFactorPage, setTwoFactorPage] = useState<boolean>(false);
 
   const [signupErrorStr, setSignupErrorStr] = useState<string>("");
+  const [cookieTwoFA, setCookieTwoFA] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // Init Data & Route Page
     const cookie_data = Cookies.get("accessToken");
     const cookie_user = Cookies.get("user42Dto");
+    const cookie_twoFA = Cookies.get("twoFA");
+    setCookieTwoFA(cookie_twoFA);
+    Cookies.remove("accessToken");
+    Cookies.remove("user42Dto");
+    Cookies.remove("twoFA");
     if (cookie_data) {
       sessionStorage.setItem("accessToken", cookie_data);
-      Cookies.remove("accessToken");
     } else router.push(`${errorPage}?error=failed_get_access_token_cookie`);
     if (cookie_user) {
       const user = JSON.parse(cookie_user);
-      Cookies.remove("user42Dto");
       setUser42Dto(user);
-    } else {
-      // is 2FA 를 사용하는 user?
-      if (0) setTwoFactorPage(true); // & => 2FA page
-      else logonAndGoMenuPage();
-    }
+    } else if (cookie_twoFA) {
+      setTwoFactorPage(true); // & => 2FA page
+    } else logonAndGoMenuPage();
   }, []);
 
   // Sign-up
@@ -126,7 +128,7 @@ const SignUpPage = () => {
   return (
     <div className="flex flex-col  h-90vh items-center justify-center">
       <Window title="Sign in Page" w="300" h="550" xOption={false}>
-        {user42Dto && !twoFactorPage ? (
+        {!twoFactorPage && user42Dto ? (
           <div className="flex flex-col space-y-3 m-3 items-right">
             <InfoBlock user42Dto={user42Dto} />
             <NickNameBlock nickName={nickName} setNickName={setNickName} />
@@ -151,8 +153,8 @@ const SignUpPage = () => {
               </div>
             </form>
           </div>
-        ) : twoFactorPage && user42Dto?.email ? (
-          <TwoFactorAuthentication email={user42Dto?.email} />
+        ) : twoFactorPage && cookieTwoFA ? (
+          <TwoFactorAuthentication email={cookieTwoFA} />
         ) : (
           <div className=" text-2xl text-center pt-60">Loading...</div>
         )}
