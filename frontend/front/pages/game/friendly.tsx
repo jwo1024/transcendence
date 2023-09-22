@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { ThemeProvider } from "@react95/core";
+import React, { useEffect, useState } from "react";
+import { Button, ThemeProvider } from "@react95/core";
 import { useRouter } from "next/router";
 
 import Window from "@/components/common/Window";
@@ -43,6 +43,26 @@ export default function GamePage() {
   const [winNickName, setWinNickName] = useState("");
   const [loseNickName, setLoseNickName] = useState("");
 
+  // 만약 내가 호스트라면 setIsInvited(true);
+  const [isInvited, setIsInvited] = useState(false);
+  
+  // 이 형태로 쓸것, 그리고 이 중괄호 블럭에 코드를 쓰면 그것이 실행됨. 
+  useEffect(()=>{setIsInvited(true)},[]);
+
+  const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const clickedButton = event.nativeEvent.submitter.name;
+    console.log(clickedButton);
+    // clieckedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
+    }
+        
+
+  // socket.on('invite', (invitedId: Number) => {});
+  // socket.on('accept', (hostId: Number) => {
+  //   socket.emit('acceptGame', hostId, gameType);
+  // });
+
+
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
     setLeft({
       nickname: profile1.nickname,
@@ -67,12 +87,19 @@ export default function GamePage() {
       setLoseNickName(loser_nickname);
       setGameEnd(true);
   });
-
   return (
     <div className="flex items-center justify-center h-screen">
       <Window title="pong game" w="900" h="850">
         <div className="h-screen flex flex-col justify-center items-center">
-          {!gameStart && !gameEnd ? (
+          {!gameStart && !gameEnd && isInvited ? (<form
+          onSubmit={modeSelect}
+          className="flex flex-col items-center w-[800px] h-[600px] bg-gray-500 justify-center space-y-6 "
+        >
+          <Button className="w-60 h-16" name="normal"><span className="text-5xl">Normal</span></Button>
+          <Button className="w-60 h-16" name="speedUp"><span className="text-5xl">Speed Up</span></Button>
+          <Button className="w-60 h-16" name="smallBall"><span className="text-5xl">Small Ball</span></Button>
+          <Button className="w-60 h-16" name="enjoyAll"><span className="text-5xl">Enjoy all</span></Button>
+        </form>) : !gameStart && !gameEnd ? (
             <GameLoading />
           ) : gameStart && !gameEnd ? (
             <PongGame socket={socket} />
@@ -90,7 +117,7 @@ export default function GamePage() {
               lose={left.lose}
               avatarSrc="https://github.com/React95.png"
             />
-            <img className="h-40 mx-10" src="versus.png" />
+            <span className=" text-9xl">VS</span>
             <MiniProfile
               nickname={right.nickname}
               ladder={right.ladder}

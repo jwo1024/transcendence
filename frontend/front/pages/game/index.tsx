@@ -100,7 +100,7 @@ export default function GamePage() {
               lose={left.lose}
               avatarSrc="https://github.com/React95.png"
             />
-            <img className="h-40 mx-10" src="versus.png" />
+            <span className=" text-9xl">VS</span>
             <MiniProfile
               nickname={right.nickname}
               ladder={right.ladder}
