@@ -74,7 +74,6 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		// socket.emit('Error', new UnauthorizedException());
 		this.logger.log(`Friendly Game Server: socketId [ ${socket.id} ] disconnected.`);
 
-		// 게임 도중 끊긴 연결이면, 게임 종료(매치 패배 처리)
 		const player_id = (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id;
 		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
 		if (match_id)
@@ -82,7 +81,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			this.endGame(match_id, player_id);
 		}
 
-		this.connectedPlayerService.deletePlayerBySocketId(socket.id); //id로 삭제
+		this.connectedPlayerService.deletePlayer(player_id);
 		socket.disconnect();
 		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
 	}

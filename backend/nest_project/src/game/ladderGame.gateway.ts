@@ -107,7 +107,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			}
 		}
 
-		this.connectedPlayerService.deletePlayerBySocketId(socket.id);
+		this.connectedPlayerService.deletePlayer(player_id);
 		socket.disconnect();
 		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
 	}

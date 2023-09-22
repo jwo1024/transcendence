@@ -75,11 +75,9 @@ export class ConnectedPlayerService {
 		return this.userProfileRepository.update({id: id}, {recent_history: recents});
 	}
 
-	async deletePlayerBySocketId(socketId: string)
+	async deletePlayer(id: number)
 	{
-		await this.connectedPlayerRepository.softDelete({
-			socketId: socketId
-		});
+		await this.connectedPlayerRepository.softDelete({id: id});
 	}
 
 	async deleteAll() {
