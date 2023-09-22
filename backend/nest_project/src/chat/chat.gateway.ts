@@ -121,19 +121,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
         //새로 만들어진 socket Id를 참여중인 room 들이 알 수 있도록 생성
         const rooms = await this.roomService.getRoomsForUser(userForChat.id);
-        if (rooms !== undefined && rooms.length > 0)
+        if (rooms === undefined && rooms.length > 0)
         {
           for (const room of rooms)
-          {
             await this.connectedUserService.createfastWithRoomId(socket.id, userForChat, room.roomId);
-          }
         }
 
-        this.logger.log(`after rooms : ${rooms.length}`);
-        // Only emit rooms to the specific connected client
         return this.server.to(socket.id).emit('rooms', rooms);
-
-        this.logger.log(`after emit rooms : ${rooms.length}`);
 
       } catch {
        this.logger.log(`error occur`); 
@@ -192,7 +186,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     const theroom  = await this.roomService.getRoomEntity(createdRoom.roomId);
     // 유저를 방에 추가 시킴 
-    this.roomService.addUserToRoom(userEntity, socket.id, theroom);
+    const user = await this.userService.getOne(socket.data.userId);
+    this.logger.log(`User!!!!!!!!!!!!!!!!! : ${user}`);
+    this.logger.log(`User!!!!!!!!!!!!!!!!! : ${userEntity}`);
+    this.roomService.addUserToRoom(user, socket.id, theroom);
     this.logger.log(`after add User!!!!!!!!!!!!!!!!!`);
     // 방을 만든 사용자에게 현재 방의 정보 제공 
     await this.server.to(socket.id).emit('new_join_room',
@@ -204,8 +201,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
        //현 서버에 소켓 연결된 모든 채팅 사용자에게 room 정보를 보냄
     for (const user of createdRoom.users)
     {
-
+      this.logger.log(`dddd`);
       const connection: ConnectedUserI = await this.connectedUserService.findByUser(user);
+      this.logger.log(`connection : ${connection}`);
+      this.logger.log(`connection : ${connection.id}`);
       const rooms = await this.roomService.getRoomsForUser(user.id);
 
       // for (const connection of connections) { // 한 유저당 하나의 소켓만 들어온다고 가정하고 바뀐부분
@@ -410,7 +409,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private async deleteRoom(roomId:number)
   {
     await this.messageService.deleteByRoomId(roomId);
-    await this.roomService.deleteById(roomId);
+    await this.roomService.deleteRoomById(roomId);
   }
   
   private async changeOwner(room :RoomI)

@@ -1,8 +1,7 @@
 import { UserEntity } from "./user.entity";
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { MessageEntity } from "./message.entity";
 import { roomType } from "../types/roomTypes";
-import { JoinedRoomEntity } from "./joined-room.entity";
 import { ConnectedUserEntity } from "./connected-user.entity";
 
 @Entity()
@@ -30,6 +29,7 @@ export class RoomEntity {
   roomBanned: number[];
 
   @ManyToMany(() => UserEntity, (user) => user.rooms)
+  @JoinTable()
   users: UserEntity[];
 
   @OneToMany(() => ConnectedUserEntity, (conncetion) => conncetion.room)
@@ -43,5 +43,3 @@ export class RoomEntity {
   @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
   created_at: Date;
 }
-// @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
-// joinedUsers: JoinedRoomEntity[];

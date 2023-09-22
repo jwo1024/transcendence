@@ -42,6 +42,14 @@ export class ConnectedUserService {
     });
   }
 
+  async findByUserAndRoom(userId: number, roomId: number)
+  {
+    return await this.connectedUserRepository.findOne({
+      where: { user: { id: userId },
+               room: { roomId: roomId } },
+    });
+  }
+
   async deleteBySocketId(socketId: string) {
     return this.connectedUserRepository.delete({ socketId });
   }
