@@ -80,20 +80,12 @@ export class MatchService {
 		await this.matchRepository.update({match_id: id}, {scoreLeft : score});
 	}
 
-	// // temp code
-	// async getPlayerBySocketId(socketId: string): Promise<Player>
-	// {
-	// 	return this.connectedPlayerRepository.findOne({
-	// 		where: { "socketId": socketId }
-	// 	});
-	// }
-
 	async deleteByMatchId(match_id: number)
 	{
 		await this.matchRepository.delete({ match_id });
 	}
 
-	// //
+	//
 	// async deleteAll() {
 	// 	await this.connectedPlayerRepository
 	// 	  .createQueryBuilder()

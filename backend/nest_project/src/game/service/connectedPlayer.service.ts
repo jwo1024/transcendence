@@ -38,6 +38,28 @@ export class ConnectedPlayerService {
 		});
 	}
 
+	// async upladder(id: number): Promise<UpdateResult>
+
+	// async upLadder(id :number) : Promise<UpdateResult> {
+    //     const ladder = (await this.getUserProfileById(id)).ladder;
+    //     return await this.userProfileRepository.update({id: id}, {ladder: (ladder + 100)});
+    // }
+
+    // async downLadder(id :number) : Promise<UpdateResult> {
+    //     const ladder = (await this.getUserProfileById(id)).ladder;
+    //     return await this.userProfileRepository.update({id: id}, {ladder: (ladder - 100)});
+    // }
+
+    // async updateWins(id :number) : Promise<UpdateResult> {
+    //     const wins = (await this.getUserProfileById(id)).wins;
+    //     return await this.userProfileRepository.update({id: id}, {wins: (wins + 1)});
+    // }
+
+    // async updateLoses(id :number) : Promise<UpdateResult> {
+    //     const loses = (await this.getUserProfileById(id)).loses;
+    //     return await this.userProfileRepository.update({id: id}, {loses: (loses + 1)});
+    // }
+
 	async deletePlayerBySocketId(socketId: string)
 	{
 		await this.connectedPlayerRepository.softDelete({

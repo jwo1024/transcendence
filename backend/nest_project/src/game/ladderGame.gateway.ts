@@ -20,7 +20,6 @@ import { HistoryEntity } from './entities/history.entity';
 import { Player } from './dto/player.dto';
 
 
-// variables
 let ladderQueue: Player[];
 let resetQueueTime: number;
 let currentQueueTime: number;
