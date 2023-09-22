@@ -13,8 +13,7 @@ export default function App({ Component, pageProps }: AppProps) {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "failed";
   
   useEffect(() => {
-    console.log("CHECK : _app : MOUNT");
-
+    console.log("App : Mount");
     if (window.location.pathname !== "/" && window.location.pathname !== "/signup"){
       fetch(`${backendUrl}/auth/validity`, {
         headers: { authorization: `Bearer ${sessionStorage.getItem("accessToken")}` },
@@ -22,12 +21,14 @@ export default function App({ Component, pageProps }: AppProps) {
         if (res.status === 401) {
         window.location.href = "/";
         }
+      }).catch((err) => {
+        console.log("_app.tsx : fetch failed",err);
       });
-    }   
+    }
     return () => {
-      console.log("CHECK : _app : UNMOUNT");
-    };
-  });
+      console.log("App : Unmount");
+    }
+  }, []);
 
   return (
     <ThemeProvider>
