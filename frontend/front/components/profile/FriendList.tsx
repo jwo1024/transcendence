@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 import { access } from "fs";
 
 type user = {
-  id : number;
+  id: number;
   nickname: string;
   status: string;
   ladder: number;
@@ -33,7 +33,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
     fetch("http://localhost:4000/social/friend/list", {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
         return res.json();
@@ -87,8 +87,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     // 친구추가 버튼을 눌렀다면 clickedButton = "addFriendButton"
     // 차단하기 버튼을 눌렀다면 clickedButton = "blockButton"
     // submitter의 빨간줄은 무시해도됨. 브라우저에서 알아먹음
-    
-    
+
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
     const clickedButton = event.nativeEvent.submitter.name;
@@ -96,34 +95,38 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     if (nickname == "") return alert("비었잖아..");
 
     let urlSuffix = "/social";
-    if (clickedButton == "addFriendButton")
-      urlSuffix += "/friend/add";
-    else if (clickedButton == "blockButton")
-      urlSuffix += "/block/add";
+    if (clickedButton == "addFriendButton") urlSuffix += "/friend/add";
+    else if (clickedButton == "blockButton") urlSuffix += "/block/add";
     else return;
 
     fetch(`http://localhost:4000${urlSuffix}/${nickname}`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
-      if (res.status == 404)
-        return alert("존재하지 않는 유저입니다.");
-      else if (res.status == 409)
-        return alert("이미 등록된 유저입니다.");
+      if (res.status == 404) return alert("존재하지 않는 유저입니다.");
+      else if (res.status == 409) return alert("이미 등록된 유저입니다.");
       else if (res.status == 400)
         return alert("나 자신은 영원한 인생의 친구입니다.");
       else if (res.status == 200) {
         fetchFriendList();
         fetchBlockList();
         return alert("등록되었습니다");
-      } 
-      else
-        return alert("알 수 없는 오류가 발생했습니다.");
-      });
-    }
+      } else return alert("알 수 없는 오류가 발생했습니다.");
+    });
+  };
+
+  const handleDeleteClick = (user: user) => {
+    console.log(user);
+  };
 
   return (
-    <Window title="Friend & Block List" w="370" h="620" xOption={false} minimizeOption={false}>
+    <Window
+      title="Friend & Block List"
+      w="370"
+      h="620"
+      xOption={false}
+      minimizeOption={false}
+    >
       <div className="overflow-auto flex-grow p-2">
         <div className="flex flex-col p-1 w-full space-y-3">
           <Fieldset legend="Friend List" className="pb-2 pr-2">
@@ -138,9 +141,15 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
                     <span>{user.status}</span>
                     <Button
                       onClick={() => handleProfileClick(user)}
-                      className=" h-7 flex items-center justify-center"
+                      className="w-16 h-7 flex items-center justify-center"
                     >
-                      프로필 보기
+                      Profile
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteClick(user)}
+                      className="w-16 h-7 flex items-center justify-center"
+                    >
+                      Delete
                     </Button>
                   </div>
                 </List.Item>
@@ -157,11 +166,17 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
                   <strong>{user.nickname}</strong>
                   <div className="flex items-center space-x-2">
                     <Button
-          onClick={() => handleProfileClick(user)}
-          className=" h-7 flex items-center justify-center"
-        >
-          프로필 보기
-        </Button>
+                      onClick={() => handleProfileClick(user)}
+                      className="w-16 h-7 flex items-center justify-center"
+                    >
+                      Profile
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteClick(user)}
+                      className="w-16 h-7 flex items-center justify-center"
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </List.Item>
               ))}
@@ -174,10 +189,14 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
           onSubmit={addFriendOrBlock}
           className="flex flex-row w-full aitems-center justify-between"
         >
-          <Input className=" w-52" />
+          <Input className=" w-64" />
           {/* <Button onClick={addFriend}>친구추가</Button> */}
-          <Button name="addFriendButton">친구추가</Button>
-          <Button name="blockButton">차단하기</Button>
+          <Button className="w-20" name="addFriendButton">
+            Add
+          </Button>
+          <Button className="w-20" name="blockButton">
+            Block
+          </Button>
         </form>
       </div>
     </Window>
