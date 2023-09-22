@@ -25,6 +25,8 @@ export default function GamePage() {
   const router = useRouter();
 
   socket.on("disconnect", (reason) => {
+    // todo: debug
+    console.log("disconnect event emit!!!");
     router.push("http://localhost:3001");
   });
 

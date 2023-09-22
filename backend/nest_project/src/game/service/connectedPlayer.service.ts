@@ -8,6 +8,8 @@ import { UserProfile } from 'src/user/profile/user-profile.entity';
 import { ProfileService } from 'src/user/profile/profile.service';
 import { SignupDto } from 'src/user/profile/dto/signup.dto';
 
+import { Socket, Server } from 'socket.io';
+
 @Injectable()
 export class ConnectedPlayerService {
 	constructor(
@@ -38,13 +40,11 @@ export class ConnectedPlayerService {
 		});
 	}
 
-	async getSocketIdById(id: number) : Promise<string>
+	async getSocketIdById(id: number): Promise<string>
 	{
 		const player = await this.getPlayer(id);
 		return player.socketId;
 	}
-
-	// 소켓 아이디 받아서 소켓 객체 반환하는 함수
 
 	async getLadderById(id: number) : Promise<number>
 	{

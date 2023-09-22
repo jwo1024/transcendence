@@ -71,10 +71,16 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
 		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
 		if (!userId)
-			return this.disconnect(socket);
+		{
+			// todo: to main
+			return socket.disconnect();
+		}
 		const userProfile = await this.profileService.getUserProfileById(userId);
 		if (!userProfile)
-			return this.disconnect(socket);
+		{
+			// todo: to main
+			return socket.disconnect();
+		}
 		// const userId = 99833;
 		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
 
@@ -92,7 +98,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		const match_id = (await this.matchService.getByPlayerId(player.id)).match_id;
 		if (match_id)
 		{
-			this.endGame(match_id, player.id);
+			await this.endGame(match_id, player.id);
 		}
 
 		// 큐 잡는 도중 끊긴 연결이면, 래더 큐 배열에서도 삭제
@@ -105,18 +111,15 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			}
 		}
 
-		return this.disconnect(socket, player.id);
-		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
+		this.endPlayer(socket.id, player.id);
 	}
 
-	private disconnect(socket: Socket, player_id: number)
+	private async endPlayer(socket_id: string, player_id: number)
 	{
 		// socket.emit('Error', new UnauthorizedException());
-		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] disconnected.`);
 		this.connectedPlayerService.deletePlayer(player_id);
-
-		// todo : main 화면으로 돌아가기
-		socket.disconnect();
+		this.server.in(socket_id).disconnectSockets(true);
+		this.logger.log(`Ladder Game Server: [ ${player_id} -> ${socket_id} ] disconnected.`);
 	  };
 
 	async queueProcess()
@@ -302,9 +305,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 			this.sendMatchResult(winner_id, loser_id, false);
 			this.matchService.deleteByMatchId(match.match_id);
-			// todo : disconnect에 소켓, 아이디 넘겨주기
-			// this.disconnect(, winner_id);
-			// todo: 메인 화면으로 돌아가는 프론트
+			this.endPlayer((await this.connectedPlayerService.getPlayer(winner_id)).socketId, winner_id);
 			return ;
 		}
 
@@ -314,7 +315,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			winner_id = match.playerLeft;
 			loser_id = match.playerRight;
 			this.updateProfile(winner_id, loser_id, match_id);
-	}
+		}
 		else
 		{
 			this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
@@ -325,7 +326,8 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 		this.sendMatchResult(winner_id, loser_id, true);
 		this.matchService.deleteByMatchId(match.match_id);
-		// todo: 메인 화면으로 돌아가는 프론트
+		this.endPlayer((await this.connectedPlayerService.getPlayer(winner_id)).socketId, winner_id);
+		this.endPlayer((await this.connectedPlayerService.getPlayer(loser_id)).socketId, loser_id);
 	}
 }
 
