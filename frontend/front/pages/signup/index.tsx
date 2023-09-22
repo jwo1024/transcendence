@@ -13,6 +13,7 @@ import sendAvatar from "@/components/common/sendAvatar";
 import type { UserInfo } from "@/types/UserInfo";
 import type { SignupDto, User42Dto } from "@/types/SignUpType";
 import TwoFactorAuthentication from "@/components/signup/TwoFactorAuthentication";
+import TwoFABlock from "@/components/signup/TwoFABlock";
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -25,7 +26,8 @@ const SignUpPage = () => {
   const menuUrl = frontendUrl + "/menu";
   const [twoFAchecked, setTwoFAchecked] = useState<boolean>(false);
   const twoFARef = useRef<HTMLInputElement>();
-
+  const [twoFAEmail, setTwoFAEmail] = useState<string | null>(null);
+  const [twoFAEmailValid, setTwoFAEmailValid] = useState<string | null>(null); // 2FA 이메일 유효성 검사 null: 검사안함, true: 유효, false: 유효하지 않음
   const [TwoFactorPage, setTwoFactorPage] = useState<boolean>(false);
 
   useEffect(() => {
@@ -66,8 +68,6 @@ const SignUpPage = () => {
   const handleSubmitSignUP = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     // tmp get twoFA email valuel
-    const twoFAemail = twoFARef.current?.value;
-    if (twoFAchecked && (!twoFAemail || twoFAemail === "")) return;
     // 마음에 들지 않는 구조이지만 일딴 이렇게 하죠
     // 왜 마음에 안들어요
     if (!nickName || nickName === "") return;
@@ -75,11 +75,15 @@ const SignUpPage = () => {
     if (!token)
       return router.push(`${errorPage}?error=failed_get_access_token_cookie`);
     if (!user42Dto) return router.push(`${errorPage}?error=no_user42Dto`);
+    if (twoFAchecked && twoFAEmailValid === null)
+      return setTwoFAEmailValid(
+        "2FA 설정시 이메일을 등록해야 Sign-up이 가능합니다"
+      );
     const sendData: SignupDto = {
       id: user42Dto.id,
       nickname: nickName,
       enable2FA: twoFAchecked,
-      data2FA: twoFAemail || undefined,
+      data2FA: twoFAEmail && twoFAEmail !== "" ? twoFAEmail : undefined,
     };
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/signup`, {
       method: "POST",
@@ -97,13 +101,12 @@ const SignUpPage = () => {
           } else router.push(`${errorPage}?error=no_user42Dto_or_no_nickname`);
         } else {
           res
-            .text()
-            .then((text) => JSON.parse(text).message)
+            .text() //.then((text) => JSON.parse(text).message)
             .then((msg) => {
               if (msg === "user already exists")
                 router.push(`${errorPage}?error=user_already_exist`);
-              else if (msg === "invalid 2FA") setNickName("");
-              else if (msg === "duplicated nickname") setNickName("");
+              else if (msg === "duplicated nickname")
+                setNickName(""); // nickname 밑에 표시
               else throw new Error(`unknown: ${res.status} ${res.statusText}`);
             });
         }
@@ -139,9 +142,23 @@ const SignUpPage = () => {
       });
   };
 
-  console.log(user42Dto?.email);
-  console.log(TwoFactorPage);
-  console.log(user42Dto);
+  const onSubmitTwoFAEmail = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setTwoFAEmail(twoFARef.current?.value || "");
+    if (twoFAchecked && (!twoFAEmail || twoFAEmail === "")) return;
+
+    if (twoFAEmail === "") return;
+
+    // if (is)
+    // else if (msg === "invalid email")
+    // setTwoFAEmail(""); // 2FA 밑에 표시
+
+    // if (backend가 Vaild 하다고 하면은)
+    //   twoFAEmailValid === "true"
+
+    setTwoFactorPage(true);
+  };
+
   return (
     <div className="flex flex-col  h-90vh items-center justify-center">
       <Window title="Sign in Page" w="300" h="550" xOption={false}>
@@ -157,30 +174,14 @@ const SignUpPage = () => {
               setAvatarURL={setAvatarURL}
               setUploadAvatar={setUploadAvatar}
             />
-            {/* 2FA Block 
-              checkbox + input
-            */}
+            {/* 2FA Block */}
             <CheckBox
               label="2FA Enable (이중 인증 활성화)"
               checked={twoFAchecked}
               setChecked={setTwoFAchecked}
             />
-            {twoFAchecked ? (
-              <>
-                <div>유효한 이메일을 입력해 주세요</div>
-                <Input
-                  placeholder=" ex) jchoi@student.42seoul.kr"
-                  ref={twoFARef}
-                />
-              </>
-            ) : null}
-            {/* <br /> */}
-            {/* Sign - Up Form*/}
-            <form onSubmit={handleSubmitSignUP} className="w-full">
-              <div className=" text-center">
-                <Button>Sign - up</Button>
-              </div>
-            </form>
+            {/* TwoFAChecked */}
+            <TwoFABlock />
           </div>
         ) : TwoFactorPage && user42Dto?.email ? (
           <TwoFactorAuthentication email={user42Dto?.email} />
