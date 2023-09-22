@@ -114,9 +114,30 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
       } else return alert("알 수 없는 오류가 발생했습니다.");
     });
   };
+  const handleFriendDeleteClick = (user: user) => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+    fetch(`http://localhost:4000/social/friend/delete/${user.id}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    }).then((res) => {
+      if (res.ok) alert("삭제되었습니다.");
+      else alert("알 수 없는 오류가 발생했습니다.");
+      fetchFriendList();
+    });
+  };
 
-  const handleDeleteClick = (user: user) => {
-    console.log(user);
+  const handleBlockDeleteClick = (user: user) => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+    fetch(`http://localhost:4000/social/block/delete/${user.id}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    }).then((res) => {
+      if (res.ok) alert("삭제되었습니다.");
+      else alert("알 수 없는 오류가 발생했습니다.");
+      fetchFriendList();
+    });
   };
 
   return (
@@ -145,9 +166,8 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
                     >
                       Profile
                     </Button>
-                    <Button
-                      onClick={() => handleDeleteClick(user)}
-                      className="w-16 h-7 flex items-center justify-center"
+                    <Button onClick={() => handleFriendDeleteClick(user)}
+                    className="w-16 h-7 flex items-center justify-center"
                     >
                       Delete
                     </Button>
@@ -172,7 +192,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
                       Profile
                     </Button>
                     <Button
-                      onClick={() => handleDeleteClick(user)}
+                      onClick={() => handleBlockDeleteClick(user)}
                       className="w-16 h-7 flex items-center justify-center"
                     >
                       Delete
