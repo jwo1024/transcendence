@@ -314,7 +314,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     
     // 타겟에게 초대 팝업 띄우기용 이벤트
     this.emitResponseEvent(socket.id,  "Responsse-Room-invite");
-    this.server.to(targetEntity.connection.socketId).emit("invite-to-chat", roomInvite.roomId);
+    this.server.to(targetEntity.connection[0].socketId).emit("invite-to-chat", roomInvite.roomId);
   }
 
 

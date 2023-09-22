@@ -21,7 +21,7 @@ export class UserEntity {
   rooms: RoomEntity[];
 
   @OneToMany(() => ConnectedUserEntity, connection => connection.user)
-  connection: ConnectedUserEntity;
+  connection: ConnectedUserEntity[];
   
   @OneToMany(() => MessageEntity, message => message.user)
   messages: MessageEntity[];

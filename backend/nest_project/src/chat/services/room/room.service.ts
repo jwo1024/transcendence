@@ -69,16 +69,25 @@ export class RoomService {
     theroom.users.push(newUser);
     this.logger.log(`theroom : ${theroom.users[0].id}`)
     this.logger.log(`newUser : ${newUser.id}`)
-
+    
+    await this.connectedService.createfast(socketId, newUser, theroom);
+    
     const connection = await this.connectedService.findByUserAndRoom(newUser.id, theroom.roomId);
     if (theroom.connections === undefined)
       theroom.connections = [];
     theroom.connections.push(connection);
-    
-    // 나머지 작업을 수행합니다.
-    await this.connectedService.createfast(socketId, newUser, theroom);
-    // this.logger.log(`lllll`);
-    return theroom;
+
+    this.logger.log(`user = ${newUser.id}`);
+    const UserEntity = await this.userRepository.findOne({where : {id : newUser.id}});
+    this.logger.log(`userE = ${UserEntity.id}`);
+    if (UserEntity.rooms === undefined)
+      UserEntity.rooms = [];
+    UserEntity.rooms.push(theroom);
+    if (UserEntity.connection === undefined)
+      UserEntity.connection = [];
+    UserEntity.connection.push(connection);
+    await this.userRepository.save(UserEntity);
+    return this.roomRepository.save(theroom);
   }
 
   async removeUserFromRoom(user: UserI, socketId : string, roomId: number) 
