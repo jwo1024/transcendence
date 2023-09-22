@@ -1,19 +1,18 @@
-import { useEffect, useState, useRef } from "react";
+// Libraries
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { Button, Input, Frame } from "@react95/core";
+import { Button } from "@react95/core";
 import Cookies from "js-cookie";
-
+// Components
+import sendAvatar from "@/components/func/sendAvatar";
 import Window from "@/components/common/Window";
 import InfoBlock from "@/components/signup/InfoBlock";
 import AvatarBlock from "@/components/signup/AvatarBlock";
 import NickNameBlock from "@/components/signup/NickNameBlock";
-import CheckBox from "@/components/common/CheckBox";
-import sendAvatar from "@/components/common/sendAvatar";
-// import { User42Dto } from "@/types/User42Dto"; // have to delete that file
-import type { UserInfo } from "@/types/UserInfo";
-import type { SignupDto, User42Dto } from "@/types/SignUpType";
-import TwoFactorAuthentication from "@/components/signup/TwoFactorAuthentication";
 import TwoFABlock from "@/components/signup/TwoFABlock";
+import TwoFactorAuthentication from "@/components/signup/TwoFactorAuthentication";
+// Types
+import type { SignupDto, User42Dto } from "@/types/SignUpType";
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -21,16 +20,19 @@ const SignUpPage = () => {
   const [user42Dto, setUser42Dto] = useState<User42Dto | null>(null);
   const [avatarURL, setAvatarURL] = useState<string | null>(null);
   const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
+
   const errorPage = process.env.NEXT_PUBLIC_ERROR_PAGE_SIGNUP;
   const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
   const menuUrl = frontendUrl + "/menu";
-  const [twoFAchecked, setTwoFAchecked] = useState<boolean>(false);
-  const twoFARef = useRef<HTMLInputElement>();
-  const [twoFAEmail, setTwoFAEmail] = useState<string | null>(null);
-  const [twoFAEmailValid, setTwoFAEmailValid] = useState<string | null>(null); // 2FA 이메일 유효성 검사 null: 검사안함, true: 유효, false: 유효하지 않음
-  const [TwoFactorPage, setTwoFactorPage] = useState<boolean>(false);
+
+  const [twoFAEmail, setTwoFAEmail] = useState<string | undefined>(undefined);
+  const [twoFAEmailValid, setTwoFAEmailValid] = useState<boolean>(false);
+  const [twoFactorPage, setTwoFactorPage] = useState<boolean>(false);
+
+  const [signupErrorStr, setSignupErrorStr] = useState<string>("");
 
   useEffect(() => {
+    // Init Data & Route Page
     const cookie_data = Cookies.get("accessToken");
     const cookie_user = Cookies.get("user42Dto");
     if (cookie_data) {
@@ -41,10 +43,67 @@ const SignUpPage = () => {
       const user = JSON.parse(cookie_user);
       Cookies.remove("user42Dto");
       setUser42Dto(user);
-    } else goToMenuPage();
+    } else {
+      // is 2FA 를 사용하는 user?
+      if (0) setTwoFactorPage(true); // & => 2FA page
+      else logonAndGoMenuPage();
+    }
   }, []);
 
-  const goToMenuPage = () => {
+  // Sign-up
+  const handleSubmitSignUP = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const token = sessionStorage.getItem("accessToken");
+    if (!token)
+      return router.push(`${errorPage}?error=failed_get_access_token_cookie`);
+    if (!user42Dto) return router.push(`${errorPage}?error=no_user42Dto`);
+    if (!nickName || nickName === "")
+      return setSignupErrorStr("닉네임을 입력해 주세요");
+    if (isTwoFAChecked() && !twoFAEmailValid)
+      return setSignupErrorStr("유효한 이메일을 먼저 등록해 주세요");
+    const sendData: SignupDto = {
+      id: user42Dto.id,
+      nickname: nickName,
+      enable2FA: isTwoFAChecked(),
+      data2FA: isTwoFAChecked() ? twoFAEmail : undefined,
+    };
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/signup`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(sendData),
+    })
+      .then((res) => {
+        if (res.ok) {
+          if (user42Dto && nickName) {
+            sendAvatar({ setAvatarURL, uploadAvatar });
+            logonAndGoMenuPage();
+          } else router.push(`${errorPage}?error=no_user42Dto_or_no_nickname`);
+        } else {
+          res.text().then((msg) => {
+            if (msg === "user already exists")
+              router.push(`${errorPage}?error=user_already_exist`);
+            else if (msg === "duplicated nickname")
+              setSignupErrorStr("중복된 닉네임 입니다");
+            else throw new Error(`unknown: ${res.status} ${res.statusText}`);
+          });
+        }
+      })
+      .catch((err) => {
+        console.log("Error: " + err);
+        router.push(`${errorPage}?error=unknown_error`);
+      });
+  };
+
+  // Utils
+  const isTwoFAChecked = () => {
+    return twoFAEmail !== undefined;
+  };
+
+  const logonAndGoMenuPage = () => {
+    // logon 신청
     const token = sessionStorage.getItem("accessToken");
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logon`, {
       method: "POST",
@@ -64,126 +123,35 @@ const SignUpPage = () => {
     router.push(menuUrl);
   };
 
-  // send SignUpDto to backend
-  const handleSubmitSignUP = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // tmp get twoFA email valuel
-    // 마음에 들지 않는 구조이지만 일딴 이렇게 하죠
-    // 왜 마음에 안들어요
-    if (!nickName || nickName === "") return;
-    const token = sessionStorage.getItem("accessToken");
-    if (!token)
-      return router.push(`${errorPage}?error=failed_get_access_token_cookie`);
-    if (!user42Dto) return router.push(`${errorPage}?error=no_user42Dto`);
-    if (twoFAchecked && twoFAEmailValid === null)
-      return setTwoFAEmailValid(
-        "2FA 설정시 이메일을 등록해야 Sign-up이 가능합니다"
-      );
-    const sendData: SignupDto = {
-      id: user42Dto.id,
-      nickname: nickName,
-      enable2FA: twoFAchecked,
-      data2FA: twoFAEmail && twoFAEmail !== "" ? twoFAEmail : undefined,
-    };
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/signup`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(sendData),
-    })
-      .then((res) => {
-        if (res.ok) {
-          if (user42Dto && nickName) {
-            sendAvatar();
-            goToMenuPage();
-          } else router.push(`${errorPage}?error=no_user42Dto_or_no_nickname`);
-        } else {
-          res
-            .text() //.then((text) => JSON.parse(text).message)
-            .then((msg) => {
-              if (msg === "user already exists")
-                router.push(`${errorPage}?error=user_already_exist`);
-              else if (msg === "duplicated nickname")
-                setNickName(""); // nickname 밑에 표시
-              else throw new Error(`unknown: ${res.status} ${res.statusText}`);
-            });
-        }
-      })
-      .catch((err) => {
-        console.log("Error: " + err);
-        router.push(`${errorPage}?error=unknown_error`);
-      });
-  };
-  // 나중에 refactor 사항
-  // fetch 안에 fetch 밖으로 꺼내서 분리 (Error 처리변수 생성)
-  // twoFA 입력사항 블록 컴포넌트화
-
-  const sendAvatar = () => {
-    const formData = new FormData();
-    formData.append("image", uploadAvatar as Blob); // 필드 이름을 'image'로 변경
-    //  formData.append("ext", `.${uploadAvatar?.name?.split(".").pop()}`);
-    const token = sessionStorage.getItem("accessToken");
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    })
-      .then((res) => {
-        if (res.ok) {
-          // console.log("이미지 업로드 성공");
-          setAvatarURL(URL.createObjectURL(uploadAvatar as Blob)); // as 써도 괜찮을까?
-        } else setAvatarURL(""); // console.error("이미지 업로드 실패");
-      })
-      .catch((err) => {
-        setAvatarURL("");
-        console.error(err);
-      });
-  };
-
-  const onSubmitTwoFAEmail = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setTwoFAEmail(twoFARef.current?.value || "");
-    if (twoFAchecked && (!twoFAEmail || twoFAEmail === "")) return;
-
-    if (twoFAEmail === "") return;
-
-    // if (is)
-    // else if (msg === "invalid email")
-    // setTwoFAEmail(""); // 2FA 밑에 표시
-
-    // if (backend가 Vaild 하다고 하면은)
-    //   twoFAEmailValid === "true"
-
-    setTwoFactorPage(true);
-  };
-
   return (
     <div className="flex flex-col  h-90vh items-center justify-center">
       <Window title="Sign in Page" w="300" h="550" xOption={false}>
-        {user42Dto && !TwoFactorPage ? (
+        {user42Dto && !twoFactorPage ? (
           <div className="flex flex-col space-y-3 m-3 items-right">
-            {/* User Info Block */}
             <InfoBlock user42Dto={user42Dto} />
-            {/* Nickname Block */}
             <NickNameBlock nickName={nickName} setNickName={setNickName} />
-            {/* Avatar Block */}
             <AvatarBlock
               avatarURL={avatarURL}
               setAvatarURL={setAvatarURL}
               setUploadAvatar={setUploadAvatar}
             />
-            {/* 2FA Block */}
-            <CheckBox
-              label="2FA Enable (이중 인증 활성화)"
-              checked={twoFAchecked}
-              setChecked={setTwoFAchecked}
+            <TwoFABlock
+              twoFAEmail={twoFAEmail}
+              setTwoFAEmail={setTwoFAEmail}
+              twoFAEmailValid={twoFAEmailValid}
+              setTwoFAEmailValid={setTwoFAEmailValid}
             />
-            {/* TwoFAChecked */}
-            <TwoFABlock />
+            {/* Sign-up Button */}
+            <form onSubmit={handleSubmitSignUP} className="w-full">
+              <div className=" text-center">
+                <Button>Sign - up</Button>
+              </div>
+              <div className="px-5 text-red-700 font-bold">
+                {signupErrorStr}
+              </div>
+            </form>
           </div>
-        ) : TwoFactorPage && user42Dto?.email ? (
+        ) : twoFactorPage && user42Dto?.email ? (
           <TwoFactorAuthentication email={user42Dto?.email} />
         ) : (
           <div className=" text-2xl text-center pt-60">Loading...</div>
@@ -194,3 +162,7 @@ const SignUpPage = () => {
 };
 
 export default SignUpPage;
+
+// 나중에 refactor 사항
+// fetch 안에 fetch 밖으로 꺼내서 분리 (Error 처리변수 생성)
+// twoFA 입력사항 블록 컴포넌트화
