@@ -9,10 +9,10 @@ import SettingMenuBox from "./chat_window/SettingMenu";
 import StatusBlock from "./chat_window/StatusBlock";
 // Types & Hooks & Contexts
 import {
-  MessageI,
+  RecvMessageDTO,
   SimpUserI,
   SimpRoomI,
-  MessageDTO,
+  SendMessageDTO,
 } from "@/types/ChatInfoType";
 import useMessageForm from "@/hooks/chat/useMessageForm";
 import useMenuBox from "@/hooks/useMenuBox";
@@ -22,18 +22,21 @@ interface ChatDMWindowProps {
   className?: string;
   userInfo: SimpUserI;
   roomInfo: SimpRoomI;
+  customOnClickXOption?: () => void;
 }
 
 const ChatDMWindow = ({
   className,
   userInfo,
   roomInfo,
+  customOnClickXOption,
 }: ChatDMWindowProps) => {
-  const [messageList, setMessageList] = useState<MessageI[]>([]);
-  const { inputRef, sentMessage, handleFormSubmit } = useMessageForm({
-    roomInfo,
-    userInfo,
-  });
+  const [messageList, setMessageList] = useState<RecvMessageDTO[]>([]);
+  const { inputRef, sentMessageList, deleteSentMessage, handleFormSubmit } =
+    useMessageForm({
+      roomInfo,
+      userInfo,
+    });
   const friendName = "<Loading...>"; /// tmp data
 
   useEffect(() => {
@@ -43,12 +46,12 @@ const ChatDMWindow = ({
   }, []);
 
   useEffect(() => {
-    if (sentMessage === undefined || sentMessage.text === "") return;
-    setMessageList((messageList) => [...messageList, makeMessage(sentMessage)]);
-  }, [sentMessage]);
+    if (sentMessageList.length !== 0) return;
+    // socket?.emit("Message-add", sentMessageList[0]);
+  }, [sentMessageList]);
 
-  const makeMessage = (sentMessage: MessageDTO) => {
-    const message: MessageI = {
+  const makeMessage = (sentMessage: SendMessageDTO) => {
+    const message: RecvMessageDTO = {
       text: sentMessage.text,
       room: roomInfo,
       user: userInfo,
@@ -62,7 +65,11 @@ const ChatDMWindow = ({
   const { menuItemsWithHandlers, showMenuBox } = useMenuBox(menuItems);
 
   return (
-    <Window title={`DM Room / ${friendName}`} className={className}>
+    <Window
+      title={`DM Room / ${friendName}`}
+      className={className}
+      customOnClickXOption={customOnClickXOption}
+    >
       {/* menu bar */}
       <MenuBar menu={menuItemsWithHandlers} />
       {/* main box */}
@@ -76,7 +83,11 @@ const ChatDMWindow = ({
             <Frame className="p-3" boxShadow="in" bg="white">
               <StatusBlock>{`${friendName}과의 DM 방`}</StatusBlock>
             </Frame>
-            <MessageBox messageList={messageList} userInfo={userInfo} />
+            <MessageBox
+              messageList={messageList}
+              sentMessageList={sentMessageList}
+              userInfo={userInfo}
+            />
           </Frame>
           <form onSubmit={handleFormSubmit} className="flex flex-row p-1">
             <Input
@@ -88,7 +99,7 @@ const ChatDMWindow = ({
           </form>
         </div>
         {/* menu box */}
-        {showMenuBox[0] ? <SettingMenuBox roomInfo={roomInfo}/> : null}
+        {showMenuBox[0] ? <SettingMenuBox roomInfo={roomInfo} /> : null}
       </div>
     </Window>
   );

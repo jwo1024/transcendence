@@ -52,8 +52,6 @@ const useChatRoomListReducer = () => {
 
   const addState = ({ roomData }: { roomData: SimpRoomI }) => {
     dispatch({ type: "ADD", room: roomData });
-    console.log("addState");
-    console.log(state);
   };
 
   const removeState = ({ roomId }: { roomId: number }) => {

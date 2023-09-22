@@ -41,19 +41,33 @@ export class ProfileController {
         return this.profileService.deleteUserProfileByNickname(nickname);
     }
     
-    @Post('/update/id/:id')
-    updateUserProfileById(@Param('id') id : number, @Body() updateDto: SignupDto): Promise<UserProfile> {
+    @Post('/rename')
+    async renameUserProfile(@Req() req, @Res() res, @Body() body) {
+        const rename = body.rename;
+        if (!rename || rename === undefined) return res.status(400).send('invalid nickname');
+        const renamed = await this.profileService.getUserProfileByNickname(rename);
+        if (renamed != null) return res.status(409).send('nickname already exists');
+        const user = await this.profileService.getUserProfileById(req.user.userId);
+        user.nickname = rename;
+        await this.profileService.updateUserProfileById(req.user.userId, user);
+        return res.status(200).send('nickname changed');
+    }
+
+    @Post('/update/id/:id') // 이 라우터로는 요청 안올거다.
+    updateUserProfileById(@Param('id') id : number, @Body() updateDto: any) {
         return this.profileService.updateUserProfileById(id, updateDto);
     }
     
-    @Post('/update/nickname/:nickname')
-    updateUserProfileByNickname(@Param('nickname') nickname : string, @Body() updateDto: SignupDto): Promise<UserProfile> {
+    @Post('/update/nickname/:nickname') // 이 라우터로는 요청 안올거다.
+    updateUserProfileByNickname(@Param('nickname') nickname : string, @Body() updateDto: any) {
         return this.profileService.updateUserProfileByNickname(nickname, updateDto);
     }
         
 
-    @Get('image') //!!!!!!!!!!!!!!!!!!!!!!!!!!! 아무래도 param으로 바꿔야할듯 싶다. 친구 profile도 띄워야하니까
-    async getImage(@Req() req, @Res() res : Response) {
+    @Get('image')
+    async getImage(@Req() req, @Res() res) {
+        console.log('myImageData requested, req.user : ' , req.user);
+
         const user = await this.profileService.getUserProfileById(req.user.userId);
         if (!user)
             throw new BadRequestException('user not found');
@@ -62,7 +76,19 @@ export class ProfileController {
         res.set('Content-Type', 'image/jpeg');
         return res.send(imageBuffer);
     } 
-    
+
+    @Get('image/:id')
+    async getMyImage(@Req() req, @Res() res, @Param('id') id : number) {
+        console.log('id : ', id);
+        const user = await this.profileService.getUserProfileById(id);
+        if (!user)
+            throw new BadRequestException('user not found');
+        const imageBase64 = user.avatar.toString('base64');
+        const imageBuffer = Buffer.from(imageBase64, 'base64');
+        res.set('Content-Type', 'image/jpeg');
+        return res.send(imageBuffer);
+    }
+
     @Post('image')
     @UseInterceptors(FileInterceptor('image', {storage: memoryStorage()})) // 이미지를 메모리에 저장합니다.
     async uploadImage(@Req() req, @UploadedFile() image: Express.Multer.File) {

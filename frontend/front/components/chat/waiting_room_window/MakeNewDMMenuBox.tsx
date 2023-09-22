@@ -40,7 +40,7 @@ const MakeNewDMBOX = ({ userInfo }: MakeNewChatMenuBoxProps) => {
         <form className="flex flex-col" onSubmit={handleSubmit}>
           <Input placeholder="DM 친구찾기" ref={friendNickRef} />
           <br />
-          <Button className=" font-semibold">DM 방 만들기</Button>
+          <Button className=" font-semibold">DM방 만들기</Button>
           <span className=" mt-2 text-red-700"> {errorMsg}</span>
         </form>
       </Fieldset>
