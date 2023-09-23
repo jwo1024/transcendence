@@ -461,35 +461,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() messageDTO: MessageDTO) 
   {
-    if ( !(this.roomService.isRoomExist(messageDTO.roomId)))
+    const room: RoomI  = await this.roomService.getRoomEntityWithConnections(
+      messageDTO.roomId);
+    if ( room === undefined)
     {
       //존재하지 않는 roomId 요청일 경우 무시
       this.emitErrorEvent(socket.id, "Response-Message-add", "the room is not exist now.")
       return ;
     }
-    this.logger.log(`before Message`);
     const createdMessage: MessageI 
-      = await this.messageService.create(messageDTO, socket.data.user);
-    this.logger.log(`Message : ${createdMessage}`);
-    this.logger.log(`text : ${createdMessage.text}`);
-      const room: RoomI 
-      = await this.roomService.getRoom(createdMessage.room.roomId);
-    // const joinedUsers: JoinedRoomI[] 
-      // =  await this.joinedRoomService.findByRoom(room);
-    this.logger.log(`room : ${room}`);
-    this.logger.log(`room : ${room.roomName}`);
+      = await this.messageService.create(messageDTO, socket.data.userId);
 
     const connetedUsers = room.connections;
+    if (connetedUsers === undefined)
+    {
+      //현재 실시간으로 받을 유저들이 없을 뿐, 데이터 베이스에 해당 메세지는 저장 되었다.
+      this.emitResponseEvent(socket.id, "Response-Message-add");
+      return ;
+    }
 
-    // Send new Message to all joined Users of the room (currently online)
+    // 현재 방에 소켓 연결된 사람들에게 메세지 전달
     const currentRoomId = room.roomId;
-    
     for(const user of connetedUsers) 
     {
       this.emitResponseEvent(socket.id, "Response-Message-add");
-      await this.server.to(user.socketId).emit(
+      const temp = await this.messageMapper.Create_entityToSimpleDto(createdMessage);
+      // this.logger.log(`temp : ${temp.text}`);
+      this.server.to(user.socketId).emit(
         `messageAdded_${currentRoomId}`,
-         this.messageMapper.Create_entityToSimpleDto(createdMessage));
+         await this.messageMapper.Create_entityToSimpleDto(createdMessage));
     }
   }
   
@@ -553,22 +553,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   } 
 
-  // private async emitOneRoomToUsersInRoom(roomId : number)
-  // {
-  //   const room: RoomI 
-  //     = await this.roomService.getRoom(roomId);
-  //   if (!room)
-  //     return;
-  //   const connectedUsers = room.connections;
-  //   // const joinedUsers: JoinedRoomI[] 
-  //   //   =  await this.joinedRoomService.findByRoom(room);
-    
-  //   const currentRoomId = room.roomId; 
-  //   for (const user of connectedUsers) 
-  //     await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, room);
-  // }
-
-  private async emitUserArrayToUsersInRoom(roomId : number)
+  private async emitOneRoomToUsersInRoom(roomId : number)
   {
     const room: RoomI 
       = await this.roomService.getRoom(roomId);
@@ -582,6 +567,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     for (const user of connectedUsers) 
       await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, room);
   }
+
+  // private async emitUserArrayToUsersInRoom(roomId : number)
+  // {
+  //   const room: RoomI 
+  //     = await this.roomService.getRoom(roomId);
+  //   if (!room)
+  //     return;
+  //   const connectedUsers = room.connections;
+  //   // const joinedUsers: JoinedRoomI[] 
+  //   //   =  await this.joinedRoomService.findByRoom(room);
+    
+  //   const currentRoomId = room.roomId; 
+  //   for (const user of connectedUsers) 
+  //     await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, room);
+  // }
 
   private async emitOneRoomToOneUser(roomId : number, socketId: string, responseEvent: string)
   {

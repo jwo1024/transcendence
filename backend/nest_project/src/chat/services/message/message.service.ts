@@ -22,10 +22,10 @@ export class MessageService {
     private messageMapper : MessageMapper,
     ) { }
     
-    async create(messageDto: MessageDTO, user: UserI): Promise<MessageI> 
+    async create(messageDto: MessageDTO, userId: number): Promise<MessageI> 
     {
       const newMessage 
-        = await this.messageMapper.Create_dtoToEntity(messageDto); 
+        = await this.messageMapper.Create_dtoToEntity(messageDto, userId); 
       return this.messageRepository.save(this.messageRepository.create(newMessage));
     }
     
