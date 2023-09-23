@@ -4,9 +4,9 @@ import { Frame, Tabs, Tab } from "@react95/core";
 // Components
 import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
-import MakeNewChatMenu from "./waiting_room_window/MakeNewChatMenuBox";
+import MakeNewChatMenu from "./waiting_room_window/MakeNewChatMenu";
 import ChatRoomListBox from "./waiting_room_window/ChatRoomListBox";
-import MakeNewDMMenuBox from "./waiting_room_window/MakeNewDMMenuBox";
+import MakeNewDMMenuBox from "./waiting_room_window/MakeNewDMMenu";
 // Types & Hooks & Contexts
 import useMenuBox from "@/hooks/useMenuBox";
 import type { MenuItemInfo } from "@/hooks/useMenuBox";

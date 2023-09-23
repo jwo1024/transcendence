@@ -3,7 +3,6 @@ import { ThemeProvider } from "@react95/core";
 import type { AppProps } from "next/app";
 import { useRouter } from 'next/router';
 
-import MainTaskBar from "@/components/common/MainTaskBar";
 import TaskBar from "@/components/common/taskbar/TaskBar";
 import React, { useEffect } from "react";
 import { PageContext } from "@/context/PageContext";

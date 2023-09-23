@@ -1,11 +1,11 @@
 // chat socket event name
 // emit
+export const EMIT_DM_CREATE = "DM-create";
 export const EMIT_ROOM_CREATE = "Room-create";
 export const EMIT_ROOM_JOIN = "Room-join";
 export const EMIT_ROOM_LEAVE = "Room-leave";
 export const EMIT_MESSAGE_ADD = "Message-add";
 export const EMIT_OWNER_ROOM_EDIT = "Owner-Room-edit";
-export const EMIT_DM_CREATE = "DM-create";
 export const EMIT_ADMIN_ADD = "Admin-add";
 export const EMIT_ADMIN_KICK = "Admin-kick";
 export const EMIT_ADMIN_BAN = "Admin-Ban";
@@ -28,6 +28,7 @@ export const ON_CURRENT_ROOM_ROOMID = "current-room_";
 export const ON_VISIBLE_ROOMS = "visible_rooms";
 export const ON_BAD_REQUEST = "Bad-request";
 // response
+export const ON_RESPONSE_DM_CREATE = "Response-DM-create"
 export const ON_RESPONSE_ROOM_CREATE = "Response-Room-create"
 export const ON_RESPONSE_ADMIN_MUTE = "Response-Admin-mute"
 export const ON_RESPONSE_ROOM_INVITE = "Responsse-Room-invite"
@@ -35,7 +36,6 @@ export const ON_RESPONSE_ROOM_ENTER = "Response-Room-enter"
 export const ON_RESPONSE_ROOM_LEAVE = "Response-Room-leave"
 export const ON_RESPONSE_MESSAGE_ADD = "Response-Message-add"
 export const ON_RESPONSE_ADMIN_ADD = "Response-Admin-add"
-export const ON_RESPONSE_DM_CREATE = "Response-DM-create"
 export const ON_RESPONSE_ADMIN_KICK = "Response-Admin-kick"
 export const ON_RESPONSE_ADMIN_BAN = "Response-Admin-Ban"
 

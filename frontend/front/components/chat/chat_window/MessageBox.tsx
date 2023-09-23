@@ -14,19 +14,19 @@ interface MessageBoxProps {
   messageList?: RecvMessageDTO[];
   // sentMessage?: MessageDTO;
   userInfo: SimpUserI;
-  sentMessageList: SendMessageDTO[];
+  sentMsgList: SendMessageDTO[];
 }
 
 const MessageBox = ({
   messageList,
   userInfo,
-  sentMessageList,
+  sentMsgList,
 }: MessageBoxProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messageList]);
+  }, [messageList, sentMsgList]);
 
   return (
     <Frame
@@ -50,7 +50,7 @@ const MessageBox = ({
           </div>
         );
       })}
-      {sentMessageList.map((messageInfo, index) => {
+      {sentMsgList.map((messageInfo, index) => {
         return (
           <div
             className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "

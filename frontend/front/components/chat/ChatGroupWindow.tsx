@@ -34,7 +34,6 @@ interface ChatGroupWindowProps {
   roomInfo: SimpRoomI;
   customOnClickXOption?: () => void;
 }
-
 const ChatGroupWindow = ({
   className,
   userInfo,
@@ -43,52 +42,52 @@ const ChatGroupWindow = ({
 }: ChatGroupWindowProps) => {
   const socket = useContext(SocketContext);
   const [messageList, setMessageList] = useState<RecvMessageDTO[]>([]);
-  const { inputRef, sentMessageList, deleteSentMessage, handleFormSubmit } =
+  const { inputRef, sentMsgList, deleteSentMessage, handleFormSubmit } =
     useMessageForm({
       roomInfo,
       userInfo,
+      socket,
     });
-  const [setUsers, setSetUsers] = useState<SimpUserI[]>([]); // TODO : roomInfo.users
   const [roomInfoState, setRoomInfoState] = useState<RoomI | undefined>(
     undefined
   ); // TODO : roomInfo
   const [isAdmin, setIsAdmin] = useState<boolean>(false); // TODO : check
 
-  // chatRoom 에 대한  구체적인 정보 저장 필요
-  const initMessageEvent = `messages_${roomInfo.roomId.toString}`;
-  const currentRoomEvent = `current-room_${roomInfo.roomId.toString}`;
-  const messageAddEvent = `messageAdded_${roomInfo.roomId.toString}`;
-
   useEffect(() => {
     // 초기데이터 받기 messages & user data
-    setRoomInfoState({
-      ...roomInfo,
-      users: [
-        { nickname: "user1", id: 98069 },
-        { nickname: "user2", id: 99833 },
-        { nickname: "user3", id: 98989 },
-        { nickname: "user4", id: 11111 },
-      ],
-      roomOwner: 99800,
-      roomAdmins: [99800],
-      roomBanned: [11111],
-      created_at: new Date(),
-    }); // tmp
-    checkAdmin();
-
+    // setRoomInfoState({
+    //   ...roomInfo,
+    //   users: [
+    //     { nickname: "user1", id: 98069 },
+    //     { nickname: "user2", id: 99833 },
+    //     { nickname: "user3", id: 98989 },
+    //     { nickname: "user4", id: 11111 },
+    //   ],
+    //   roomOwner: 99800,
+    //   roomAdmins: [99800],
+    //   roomBanned: [11111],
+    //   created_at: new Date(),
+    // }); // tmp
+    // room 초기 정보 가져오기
+    // console.log("Check :ChatGroupWindow : Mount");
+    inputRef.current?.focus();
     socket?.once(`${ON_MESSAGES_ROOMID}${roomInfo.roomId}`, (data) => {
       console.log("socket.on ON_MESSAGES_ROOMID: ", data);
       setMessageList((messageList) => [...messageList, data]);
     });
     socket?.once(`${ON_CURRENT_ROOM_ROOMID}${roomInfo.roomId}`, (data) => {
       console.log("socket.on ON_CURRENT_ROOM_ROOMID: ", data.users);
-      setSetUsers(data.users); //
+      const roomData: RoomI = data;
+      setRoomInfoState(roomData);
+      checkAdmin();
     });
     socket?.emit(EMIT_ROOM_ENTER, { roomId: roomInfo.roomId });
+    // 오는 메시지 듣기
     socket?.on(`${ON_MESSAGE_ADDED_ROOMID}${roomInfo.roomId}`, (data) => {
       console.log("socket.on ON_MESSAGE_ADDED_ROOMID: ", data);
-      if (data.user.id === userInfo.id) deleteSentMessage(data);
-      setMessageList((messageList) => [...messageList, data]);
+      const msg: RecvMessageDTO = data;
+      if (msg.user.id === userInfo.id) deleteSentMessage(msg);
+      adddMsgToList(msg);
     });
 
     return () => {
@@ -96,21 +95,23 @@ const ChatGroupWindow = ({
     };
   }, []);
 
-  // sentMessage가 생성되면은 => 메시지 전송
-  useEffect(() => {
-    if (sentMessageList.length !== 0) return;
-    sentMessageList.map((message) => {
-      socket?.emit(EMIT_MESSAGE_ADD, message);
-    });
-  }, [sentMessageList]);
-
+  // utils
   const checkAdmin = () => {
     // TODO
-    // if (roomInfoState?.roomOwner === userInfo.id) setIsAdmin(true);
-    // else if (roomInfoState?.roomAdmins.find((admin) => admin === userInfo.id))
-    //   setIsAdmin(true);
-    // else setIsAdmin(false);
-    setIsAdmin(true); // tmp
+    if (roomInfoState?.roomOwner === userInfo.id) setIsAdmin(true);
+    else if (roomInfoState?.roomAdmins.find((admin) => admin === userInfo.id))
+      setIsAdmin(true);
+    else setIsAdmin(false);
+    // setIsAdmin(true); // tmp
+  };
+
+  const adddMsgToList = (msg: RecvMessageDTO) => {
+    if (
+      messageList.length !== 0 &&
+      messageList[messageList.length - 1].id >= msg.id
+    )
+      return;
+    setMessageList((messageList) => [...messageList, msg]);
   };
 
   // Menu Items
@@ -149,7 +150,7 @@ const ChatGroupWindow = ({
             </Frame>
             <MessageBox
               messageList={messageList}
-              sentMessageList={sentMessageList}
+              sentMsgList={sentMsgList}
               userInfo={userInfo}
             />
           </Frame>
