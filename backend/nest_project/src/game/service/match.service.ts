@@ -32,6 +32,7 @@ export class MatchService {
 			where : {id : id2}});
 		if (!player2)
 			return null;
+		// todo: 매치에 참여 중인 플레이어 제외?
 		return this.matchRepository.save({playerLeft : id1, playerRight: id2, game_type: game_type, scoreLeft : 0, scoreRight : 0});
 	}
 
@@ -80,20 +81,12 @@ export class MatchService {
 		await this.matchRepository.update({match_id: id}, {scoreLeft : score});
 	}
 
-	// // temp code
-	// async getPlayerBySocketId(socketId: string): Promise<Player>
-	// {
-	// 	return this.connectedPlayerRepository.findOne({
-	// 		where: { "socketId": socketId }
-	// 	});
-	// }
-
 	async deleteByMatchId(match_id: number)
 	{
 		await this.matchRepository.delete({ match_id });
 	}
 
-	// //
+	//
 	// async deleteAll() {
 	// 	await this.connectedPlayerRepository
 	// 	  .createQueryBuilder()

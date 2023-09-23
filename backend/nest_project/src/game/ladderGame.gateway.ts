@@ -20,7 +20,6 @@ import { HistoryEntity } from './entities/history.entity';
 import { Player } from './dto/player.dto';
 
 
-// variables
 let ladderQueue: Player[];
 let resetQueueTime: number;
 let currentQueueTime: number;
@@ -66,52 +65,58 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
 		// user의 소켓 id 정보
 		// 인증 관련 부분(토큰 및 user 정보 socket에 주입 )
-		// const token = socket.handshake.headers.authorization;
+		const token = socket.handshake.headers.authorization;
 		// jiwolee님이 알려주신 대로 프론트에 추가 -> ok
 		
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
-		// const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
-		// if (!userId)
-		// 	return this.disconnect(socket);
-		// const userProfile = await this.profileService.getUserProfileById(userId);
-		// if (!userProfile)
-		// 	return this.disconnect(socket);
-		const userId = 99833;
+		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
+		if (!userId)
+		{
+			return socket.disconnect();
+		}
+		const userProfile = await this.profileService.getUserProfileById(userId);
+		if (!userProfile)
+		{
+			return socket.disconnect();
+		}
+
 		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
-
 		ladderQueue.push(current);
-
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 	}
 
 	async handleDisconnect(socket: Socket)
 	{
 		// socket.emit('Error', new UnauthorizedException());
-		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] disconnected.`);
 
 		// 게임 도중 끊긴 연결이면, 게임 종료(매치 패배 처리)
-		const player_id = (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id;
-		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
+		const player = await this.connectedPlayerService.getPlayerBySocketId(socket.id);
+		const match_id = (await this.matchService.getByPlayerId(player.id)).match_id;
 		if (match_id)
 		{
-			this.endGame(match_id, player_id);
+			await this.endGame(match_id, player.id);
 		}
 
 		// 큐 잡는 도중 끊긴 연결이면, 래더 큐 배열에서도 삭제
-		const dis_player = await this.connectedPlayerService.getPlayerBySocketId(socket.id);
 		for (let i = 0; i < ladderQueue.length; ++i)
 		{
-			if (dis_player.id === ladderQueue[i].id)
+			if (player.id === ladderQueue[i].id)
 			{
 				ladderQueue.splice(i, 1);
 				break ;
 			}
 		}
 
-		this.connectedPlayerService.deletePlayerBySocketId(socket.id);
-		socket.disconnect();
-		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
+		this.endPlayer(socket.id, player.id);
 	}
+
+	private async endPlayer(socket_id: string, player_id: number)
+	{
+		// socket.emit('Error', new UnauthorizedException());
+		this.connectedPlayerService.deletePlayer(player_id);
+		this.server.in(socket_id).disconnectSockets(true);
+		this.logger.log(`Ladder Game Server: [ ${player_id} -> ${socket_id} ] disconnected.`);
+	  };
 
 	async queueProcess()
 	{
@@ -136,14 +141,16 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		{
 			for (let j = i + 1; j < ladderQueue.length; ++j)
 			{
-				const player1Ladder = await this.profileService.getLadderById(ladderQueue[i].id);
+				// const player1Ladder = await this.profileService.getLadderById(ladderQueue[i].id);
+				const player1Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[i].id);
 				const player1less = player1Ladder - ladderRange;
 				const player1greater = player1Ladder + ladderRange;
-				const player2Ladder = await this.profileService.getLadderById(ladderQueue[j].id);
+				const player2Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[j].id);
 
 				if ((player2Ladder >= player1less) && (player2Ladder <= player1greater))
 				{
 					this.setGame(ladderQueue[i].id, ladderQueue[j].id);
+					this.logger.log(`queueProcess : [ ${ladderQueue[i].id} ] vs [${ladderQueue[j].id}]`);
 					ladderQueue.splice(i, 1);
 					ladderQueue.splice(j - 1, 1); // 바로 위에서 요소 하나 삭제되므로 인덱스가 하나씩 당겨짐
 					resetQueueTime = Date.now();
@@ -162,9 +169,11 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
 		if (!currentMatch)
 		{
-			// todo: 매치가 성사되지 않음을 알리고 게임 메인 화면 등으로 나가는 프론트
+			this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId1), userId1);
+			this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId2), userId2);
 			return ;
 		}
+		this.logger.log(`setGame : ${currentMatch} match will soon start!`);
 		this.startGame(currentMatch);
 	}
 
@@ -201,8 +210,9 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			gameTimer: null,
 		}
 
+		this.logger.log(`startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
 		this.gameFieldArr.push(gameField);
-		gameField.gameTimer = setInterval(playGame, 30, this.server, match, gameField);
+		gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
 	}
 
 	private async getGameFieldByMatchId(match_id: number)
@@ -245,16 +255,31 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		}
 	}
 
-	private async updateProfile(winner_id: number, loser_id: number)
+	private async updateProfile(winner_id: number, loser_id: number, match_id: number)
 	{
-		this.profileService.upLadder(winner_id);
-		this.profileService.downLadder(loser_id);
-		this.profileService.updateWins(winner_id);
-		this.profileService.updateLoses(loser_id);
+		this.connectedPlayerService.upLadder(winner_id);
+		this.connectedPlayerService.downLadder(loser_id);
+		this.connectedPlayerService.updateWins(winner_id);
+		this.connectedPlayerService.updateLoses(loser_id);
+		this.connectedPlayerService.updateRecentHistory(winner_id, match_id);
+		this.connectedPlayerService.updateRecentHistory(loser_id, match_id);
+	}
+
+	private async sendMatchResult(winner_id: number, loser_id:number, normal_end: boolean)
+	{
+		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
+		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
+		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		if (normal_end == true)
+		{
+			this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		}
 	}
 
 	async endGame(match_id: number, loser_id: number)
 	{
+		this.logger.log(`endGame : match finished.`);
+
 		const gameField = await this.getGameFieldByMatchId(match_id);
 		clearInterval(gameField.gameTimer);
 		const match = await this.matchService.getByMatchId(match_id);
@@ -266,21 +291,18 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			{
 				this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
 				winner_id = match.playerRight;
-				this.updateProfile(winner_id, loser_id);
+				this.updateProfile(winner_id, loser_id, match_id);
 			}
 			else
 			{
 				this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
 				winner_id = match.playerLeft;
-				this.updateProfile(winner_id, loser_id);
+				this.updateProfile(winner_id, loser_id, match_id);
 			}
 
-			const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
-			const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-			this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
-
+			this.sendMatchResult(winner_id, loser_id, false);
 			this.matchService.deleteByMatchId(match.match_id);
-			// todo: 메인 화면으로 돌아가는 프론트
+			this.endPlayer((await this.connectedPlayerService.getPlayer(winner_id)).socketId, winner_id);
 			return ;
 		}
 
@@ -289,22 +311,20 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
 			winner_id = match.playerLeft;
 			loser_id = match.playerRight;
-			this.updateProfile(winner_id, loser_id);
-	}
+			this.updateProfile(winner_id, loser_id, match_id);
+		}
 		else
 		{
 			this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
 			winner_id = match.playerRight;
 			loser_id = match.playerLeft;
-			this.updateProfile(winner_id, loser_id);
+			this.updateProfile(winner_id, loser_id, match_id);
 		}
-		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
-		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
-		this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
 
+		this.sendMatchResult(winner_id, loser_id, true);
 		this.matchService.deleteByMatchId(match.match_id);
-		// todo: 메인 화면으로 돌아가는 프론트
+		this.endPlayer((await this.connectedPlayerService.getPlayer(winner_id)).socketId, winner_id);
+		this.endPlayer((await this.connectedPlayerService.getPlayer(loser_id)).socketId, loser_id);
 	}
 }
 
@@ -344,7 +364,7 @@ async function resetBall(gameField: GameField)
 	gameField.ballSpeed = 3;
 }
 
-async function playGame(server: Server, match: MatchEntity, gameField: GameField)
+async function playGame(server: Server, match: MatchEntity, player1: Player, player2: Player, gameField: GameField)
 {
 	// location of ball
 	gameField.ballX += gameField.ballXvelocity;
@@ -419,6 +439,6 @@ async function playGame(server: Server, match: MatchEntity, gameField: GameField
 		resetBall(gameField);
 	}
 
-	server.to(this.connectedPlayerService.getPlayer(match.playerLeft)).emit('updateCanvas', gameField);
-	server.to(this.connectedPlayerService.getPlayer(match.playerRight)).emit('updateCanvas', gameField);
+	server.to(player1.socketId).emit('updateCanvas', gameField);
+	server.to(player2.socketId).emit('updateCanvas', gameField);
 }

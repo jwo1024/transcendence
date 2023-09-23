@@ -52,4 +52,7 @@ export class UserProfile extends BaseEntity {
 
     @Column({ type: 'bytea', default: null})
     avatar: Buffer;
+
+    @Column({ type: 'integer', array: true, default: [] })
+    recent_history: number[];
 }

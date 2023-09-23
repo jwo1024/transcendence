@@ -10,20 +10,25 @@ import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
 
 import io from "socket.io-client";
-// todo: token 필요 시 socket과 함께 백에 넘겨야 함
-// const token = sessionStorage.getItem(“accessToken”);
-//   const socket = io('http://localhost:4000/ladder_game', {
-//     extraHeaders: {
-//         Authorization: `Bearer ${token}`
-//     }
-// });
-const socket = io("http://localhost:4000/ladder_game");
+
+    const token = sessionStorage.getItem("accessToken");
+    const socket = io('http://localhost:4000/ladder_game', {
+    extraHeaders: {
+        Authorization: `Bearer ${token}`
+    }
+});
+// const socket = io("http://localhost:4000/ladder_game");
 
 export default function GamePage() {
 
   // todo: 게임 종료 후 router 작동
   const router = useRouter();
-  //router.push("http://localhost:3001/~");
+
+  socket.on("disconnect", (reason) => {
+    // todo: debug
+    console.log("disconnect event emit!!!");
+    setTimeout(() => {router.push("/menu");}, 5000);
+  });
 
   const [left, setLeft] = useState({
     nickname: "left player",
@@ -100,7 +105,7 @@ export default function GamePage() {
               lose={left.lose}
               avatarSrc="https://github.com/React95.png"
             />
-            <img className="h-40 mx-10" src="versus.png" />
+            <span className=" text-9xl">VS</span>
             <MiniProfile
               nickname={right.nickname}
               ladder={right.ladder}

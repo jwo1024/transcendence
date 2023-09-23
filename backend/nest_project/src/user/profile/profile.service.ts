@@ -65,11 +65,6 @@ export class ProfileService {
         return this.userProfileRepository.find();
     }
 
-    async getLadderById(id: number) : Promise<number> {
-        const user =  this.userProfileRepository.findOne({where : {id: id}});
-        return (await user).ladder;
-    }
-
     async getUserProfileById(id: number): Promise<UserProfile> {
         return this.userProfileRepository.findOne({where : {id: id}});
     }
@@ -91,34 +86,12 @@ export class ProfileService {
         //return await this.getUserProfileById(id);
     }
 
-
     async updateUserProfileByNickname(nickname: string, updateDto: UserProfile) {
         return await this.userProfileRepository.update({nickname}, updateDto); 
     }
 
-
     async updateAvatar(id : number, avatar : Buffer) : Promise<any> {
         return this.userProfileRepository.update({id: id}, {avatar: avatar});
-    }
-
-    async upLadder(id :number) : Promise<UpdateResult> {
-        const ladder = (await this.getUserProfileById(id)).ladder;
-        return await this.userProfileRepository.update({id: id}, {ladder: (ladder + 100)});
-    }
-
-    async downLadder(id :number) : Promise<UpdateResult> {
-        const ladder = (await this.getUserProfileById(id)).ladder;
-        return await this.userProfileRepository.update({id: id}, {ladder: (ladder - 100)});
-    }
-
-    async updateWins(id :number) : Promise<UpdateResult> {
-        const wins = (await this.getUserProfileById(id)).wins;
-        return await this.userProfileRepository.update({id: id}, {wins: (wins + 1)});
-    }
-
-    async updateLoses(id :number) : Promise<UpdateResult> {
-        const loses = (await this.getUserProfileById(id)).loses;
-        return await this.userProfileRepository.update({id: id}, {loses: (loses + 1)});
     }
 
 }
