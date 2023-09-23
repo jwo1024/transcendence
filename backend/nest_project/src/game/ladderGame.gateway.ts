@@ -3,9 +3,9 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { GameField, Ball, Paddle } from './interface/game.interface';
 import { ConnectedPlayerService } from './service/connectedPlayer.service';
 
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
+// import { from, Observable } from 'rxjs';
+// import { map } from 'rxjs/operators';
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
 import * as jwt from 'jsonwebtoken';
@@ -15,7 +15,7 @@ import { MatchEntity } from './entities/match.entity';
 
 import { MatchService } from './service/match.service';
 import { HistoryService } from './service/history.service';
-import { HistoryEntity } from './entities/history.entity';
+// import { HistoryEntity } from './entities/history.entity';
 
 import { Player } from './dto/player.dto';
 
@@ -26,7 +26,6 @@ let currentQueueTime: number;
 let ladderRange: number;
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
-// todo: 게임 시작하기 전에 대기 화면 -> test
 
 @Injectable()
 @WebSocketGateway({ namespace: 'ladder_game' })
@@ -47,11 +46,15 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		ladderQueue = [];
 		resetQueueTime = Date.now();
 		currentQueueTime = Date.now();
-		ladderRange = 500;
+		ladderRange = 100;
 		this.gameFieldArr = [];
 
 		setInterval(this.queueProcess, 1000);
 	}
+
+
+	@WebSocketServer()
+	server: Server;
 
 
 	async onModuleInit() 
@@ -62,25 +65,23 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	async handleConnection(socket: Socket)
 	{
 		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] connected.`);
-		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
-		// user의 소켓 id 정보
-		// 인증 관련 부분(토큰 및 user 정보 socket에 주입 )
 		const token = socket.handshake.headers.authorization;
-		// jiwolee님이 알려주신 대로 프론트에 추가 -> ok
 		
-		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
+		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결 끊음
 		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
 		if (!userId)
 		{
 			return socket.disconnect();
+			// 클라이언트에서 이벤트 인지하면 menu로 리다이렉션
 		}
 		const userProfile = await this.profileService.getUserProfileById(userId);
 		if (!userProfile)
 		{
 			return socket.disconnect();
+			// 클라이언트에서 이벤트 인지하면 menu로 리다이렉션
 		}
 
-		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
+		const current = await this.connectedPlayerService.createPlayer(userId, socket.id);
 		ladderQueue.push(current);
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 	}
@@ -90,24 +91,24 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// socket.emit('Error', new UnauthorizedException());
 
 		// 게임 도중 끊긴 연결이면, 게임 종료(매치 패배 처리)
-		const player = await this.connectedPlayerService.getPlayerBySocketId(socket.id);
-		const match_id = (await this.matchService.getByPlayerId(player.id)).match_id;
+		const player_id = (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id;
+		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
 		if (match_id)
 		{
-			await this.endGame(match_id, player.id);
+			await this.endGame(match_id, player_id);
 		}
 
 		// 큐 잡는 도중 끊긴 연결이면, 래더 큐 배열에서도 삭제
 		for (let i = 0; i < ladderQueue.length; ++i)
 		{
-			if (player.id === ladderQueue[i].id)
+			if (player_id === ladderQueue[i].id)
 			{
 				ladderQueue.splice(i, 1);
 				break ;
 			}
 		}
 
-		this.endPlayer(socket.id, player.id);
+		this.endPlayer(socket.id, player_id);
 	}
 
 	private async endPlayer(socket_id: string, player_id: number)
@@ -116,32 +117,23 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.connectedPlayerService.deletePlayer(player_id);
 		this.server.in(socket_id).disconnectSockets(true);
 		this.logger.log(`Ladder Game Server: [ ${player_id} -> ${socket_id} ] disconnected.`);
-	  };
+	};
 
 	async queueProcess()
 	{
-		// [ first-come, first-served basis queue ] //
-		// if (ladderQueue.length > 1)
-		// {
-		// 	this.setGame(ladderQueue[0].id, ladderQueue[1].id);
-		// 	ladderQueue.splice(0, 2);
-		// }
-
-		// [ ladder basis queue ] //
 		if (ladderQueue.length < 2)
 			return ;
 
 		currentQueueTime = Date.now();
 		if (currentQueueTime - resetQueueTime > 10000) // 1000 milliseconds == 1 second
 		{
-			ladderRange += 500;
+			ladderRange += 100;
 		}
 
 		for (let i = 0; i < ladderQueue.length; ++i)
 		{
 			for (let j = i + 1; j < ladderQueue.length; ++j)
 			{
-				// const player1Ladder = await this.profileService.getLadderById(ladderQueue[i].id);
 				const player1Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[i].id);
 				const player1less = player1Ladder - ladderRange;
 				const player1greater = player1Ladder + ladderRange;
@@ -160,13 +152,10 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			}
 		}
 	}
-	
-	@WebSocketServer()
-	server: Server;
 
 	private async setGame(userId1: number, userId2: number)
 	{
-		const currentMatch = await this.matchService.create(userId1, userId2, "ladder");
+		const currentMatch = await this.matchService.create(userId1, userId2);
 		if (!currentMatch)
 		{
 			this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId1), userId1);
@@ -210,7 +199,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			gameTimer: null,
 		}
 
-		this.logger.log(`startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
+		this.logger.log(`ladder/startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
 		this.gameFieldArr.push(gameField);
 		gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
 	}

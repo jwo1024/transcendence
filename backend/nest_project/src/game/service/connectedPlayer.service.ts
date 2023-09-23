@@ -8,8 +8,6 @@ import { UserProfile } from 'src/user/profile/user-profile.entity';
 import { ProfileService } from 'src/user/profile/profile.service';
 import { SignupDto } from 'src/user/profile/dto/signup.dto';
 
-import { Socket, Server } from 'socket.io';
-
 @Injectable()
 export class ConnectedPlayerService {
 	constructor(

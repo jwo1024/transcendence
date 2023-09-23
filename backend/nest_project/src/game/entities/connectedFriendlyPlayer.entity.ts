@@ -1,8 +1,9 @@
-import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { FindOneOptions } from "typeorm";
 
 @Entity()
-export class ConnectedFriendlyPlayerEntity {
+export class ConnectedFriendlyPlayerEntity
+{
 
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false})
   id: number;
@@ -11,15 +12,15 @@ export class ConnectedFriendlyPlayerEntity {
   socketId: string;
 
   @Column()
-  hostId: number;
+  hostId: number = 0;
 
   @Column()
-  guestId: number;
+  guestId: number = 0;
 
   @Column()
   refuseGame: boolean = false;
 
   @Column()
-  checkRefuseTimer: NodeJS.Timeout;
+  checkTimer: number = null;
 
 }

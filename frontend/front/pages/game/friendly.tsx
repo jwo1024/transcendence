@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, ThemeProvider } from "@react95/core";
+import { Button } from "@react95/core";
 import { useRouter } from "next/router";
 
 import Window from "@/components/common/Window";
@@ -10,20 +10,54 @@ import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
 
 import io from 'socket.io-client';
-// todo: token 필요 시 socket과 함께 백에 넘겨야 함
-// const token = sessionStorage.getItem(“accessToken”);
-//   const socket = io('http://localhost:4000/ladder_game', {
-//     extraHeaders: {
-//         Authorization: `Bearer ${token}`
-//     }
-// });
-const socket = io('http://localhost:4000/friendly_game');
+
+  const token = sessionStorage.getItem("accessToken");
+  const socket = io('http://localhost:4000/friendly_game', {
+    extraHeaders: {
+        Authorization: `Bearer ${token}`
+    }
+});
+// const socket = io('http://localhost:4000/friendly_game');
+
+interface SimpUserI
+{
+  id: number;
+  nickname: string;
+}
+
+interface gameInvitationI{
+	fromUser: SimpUserI;
+	toUser: SimpUserI;
+}
+
+// todo:
+// const invitation = sessionStorage.getItem("gameInvitation");
+// const invitationObj = JSON.parse(invitation);
+const user1: SimpUserI =
+{
+  id: 12345,
+  nickname: "mango"
+}
+const user2: SimpUserI =
+{
+  id: 67890,
+  nickname: "watermelon"
+}
+const invite: gameInvitationI =
+{
+  fromUser: user1,
+  toUser: user2
+}
 
 export default function GamePage() {
 
-  // todo: 게임 종료 후 router 작동
   const router = useRouter();
-  //router.push("http://localhost:3001/~");
+
+  socket.on("disconnect", (reason) => {
+    // todo: remove
+    console.log("disconnect!");
+    setTimeout(() => {router.push("/menu");}, 5000);
+  });
 
   const [left, setLeft] = useState({
     nickname: "left player",
@@ -43,24 +77,7 @@ export default function GamePage() {
   const [winNickName, setWinNickName] = useState("");
   const [loseNickName, setLoseNickName] = useState("");
 
-  // setIsInvited(true);
   const [isInvited, setIsInvited] = useState(false);
-  
-  // 이 형태로 쓸것, 그리고 이 중괄호 블럭에 코드를 쓰면 그것이 실행됨. 
-  useEffect(()=>{setIsInvited(true)},[]);
-
-  const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const clickedButton = event.nativeEvent.submitter.name;
-    console.log(clickedButton);
-    // clieckedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
-    }
-        
-
-  // socket.on('invite', (invitedId: Number) => {});
-  // socket.on('accept', (hostId: Number) => {
-  //   socket.emit('acceptGame', hostId, gameType);
-  // });
 
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
@@ -78,17 +95,39 @@ export default function GamePage() {
     });
   });
 
+  const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const clickedButton = event.nativeEvent.submitter.name;
+    console.log(clickedButton);
+    socket.emit("chooseGameType", clickedButton);
+    // clickedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
+    }
+
+
+    socket.on("savePlayer", (callback) => {
+      callback(invite);
+    });
+
+    socket.on("guestArrive", () => {
+      useEffect(() => {setIsInvited(true)}, []);
+    });
+
   socket.on('startGame', () => {
     setGameStart(true);
   });
-
+  
   socket.on('endGame', (winner_nickname, loser_nickname) => {
       setWinNickName(winner_nickname);
       setLoseNickName(loser_nickname);
       setGameEnd(true);
-  });
-  return (
-    <div className="flex items-center justify-center h-screen">
+    });
+
+  // socket.on('refuseGame', () => {
+  //   router.push("/menu");
+  // });
+
+    return (
+      <div className="flex items-center justify-center h-screen">
       <Window title="pong game" w="900" h="850">
         <div className="h-screen flex flex-col justify-center items-center">
           {!gameStart && !gameEnd && isInvited ? (<form
