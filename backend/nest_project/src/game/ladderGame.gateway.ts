@@ -215,8 +215,8 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 		this.logger.log(`ladder/startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
 		this.gameFieldArr.push(gameField);
-		gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
-		// gameField.gameTimer = setInterval(() => {playGame(this.server, match, player1, player2, gameField);}, 30);
+		// gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
+		gameField.gameTimer = setInterval(() => {playGame(this.server, match, player1, player2, gameField);}, 500);
 	}
 
 	private async getGameFieldByMatchId(match_id: number)
