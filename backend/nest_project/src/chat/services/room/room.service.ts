@@ -18,7 +18,6 @@ import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
 
 const bcrypt = require('bcrypt');
 
-
 @Injectable()
 export class RoomService {
 
@@ -35,15 +34,15 @@ export class RoomService {
     private roomMapper: RoomMapper,
     ) { }
 
-    async hashPassword(password: string): Promise<string> {
+    hashPassword(password: string): string 
+    {
       return bcrypt.hash(password, 12);
     }
-  
-    async comparePasswords(password: string, storedPasswordHash: string): Promise<any> {
-      return bcrypt.compare(password, storedPasswordHash);
+    comparePasswords(inputPassword: string, storedPasswordHash: string): boolean 
+    {
+      return bcrypt.compare(inputPassword, storedPasswordHash);
     }
-
-
+    
   async createRoom(room: RoomCreateDTO, creator: UserI): Promise<RoomI> 
   {
     this.logger.log(`first step : ${room.roomName}, ${room.roomType}`);
@@ -289,10 +288,8 @@ export class RoomService {
       joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
     if (roomFromDB.roomPass === null)
       return true;
-    else if ( joinDTO.roomPass === roomFromDB.roomPass)
+    else if ( this.comparePasswords(joinDTO.roomPass, roomFromDB.roomPass))
       return true;
-    console.log("dto pass",  joinDTO.roomPass);
-    console.log("room pass",  roomFromDB.roomPass);
     return false;
   }
 
