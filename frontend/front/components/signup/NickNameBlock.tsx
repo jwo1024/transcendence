@@ -25,7 +25,7 @@ const NickNameBlock = ({ nickName, setNickName }: NickNameBlockProps) => {
       </div>
       {nickName === "" ? (
         <div className="px-5 text-red-700 font-bold">
-          유효하지 않은닉네임 입니다
+          유효하지 않은 닉네임 입니다
         </div>
       ) : null}
     </>

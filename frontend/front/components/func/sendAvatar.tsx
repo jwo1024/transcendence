@@ -6,7 +6,6 @@ interface sendAvatarProps {
 const sendAvatar = ({ setAvatarURL, uploadAvatar }: sendAvatarProps) => {
   const formData = new FormData();
   formData.append("image", uploadAvatar as Blob); // 필드 이름을 'image'로 변경
-  //  formData.append("ext", `.${uploadAvatar?.name?.split(".").pop()}`);
   const token = sessionStorage.getItem("accessToken");
   fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image`, {
     method: "POST",

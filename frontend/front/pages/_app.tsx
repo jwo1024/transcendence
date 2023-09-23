@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
-import type { AppProps } from "next/app";
 import { ThemeProvider } from "@react95/core";
+import type { AppProps } from "next/app";
+import { useRouter } from 'next/router';
 
 import MainTaskBar from "@/components/common/MainTaskBar";
 import TaskBar from "@/components/common/taskbar/TaskBar";
@@ -11,10 +12,11 @@ import Cookies from "js-cookie";
 export default function App({ Component, pageProps }: AppProps) {
   const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "failed";
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "failed";
-  
-  useEffect(() => {
-    console.log("CHECK : _app : MOUNT");
+  const router = useRouter();
 
+  useEffect(() => {
+    console.log("App : Mount");
+    console.log("App : router.asPath", router.asPath);
     if (window.location.pathname !== "/" && window.location.pathname !== "/signup"){
       fetch(`${backendUrl}/auth/validity`, {
         headers: { authorization: `Bearer ${sessionStorage.getItem("accessToken")}` },
@@ -22,12 +24,14 @@ export default function App({ Component, pageProps }: AppProps) {
         if (res.status === 401) {
         window.location.href = "/";
         }
+      }).catch((err) => {
+        console.log("_app.tsx : fetch failed",err);
       });
-    }   
+    }
     return () => {
-      console.log("CHECK : _app : UNMOUNT");
-    };
-  });
+      console.log("App : Unmount");
+    }
+  }, [router.asPath]);
 
   return (
     <ThemeProvider>

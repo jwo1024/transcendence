@@ -42,40 +42,25 @@ export class ProfileService {
     async signUp(signupDto: SignupDto): Promise<void> {
         const { id, nickname, enable2FA, data2FA } = signupDto;
         try {
-            console.log(id, nickname, enable2FA, data2FA);//
+            console.log(id, nickname, enable2FA, data2FA);
             const userProfile = await this.userProfileRepository.create({
                 id, nickname, enable2FA, data2FA, userEntity: null});
-                const createdProfile = await this.userProfileRepository.save(userProfile);
-                
-                // UserEntity 생성 && profile에 엔터티 추가 - for chat
-                const userEntity = await this.userService.create({ userProfile: createdProfile, id,
-                 rooms: [], connections: [], joinedRooms: [], messages: []});
-                 await this.userProfileRepository.update({id: id}, {userEntity: userEntity});
-                 
-                 console.log('wow signup is done! : ', userProfile);
-                }
-                catch (error) {
-                    if (error.code === '23505') { // 중복된 닉네임 처리
-                        throw new ConflictException('duplicated nickname');
-                    } else {
-                        console.log('error in signup : ', error);// 
-                        throw new Error('unknown error');
-                    }
-                }
+            const createdProfile = await this.userProfileRepository.save(userProfile);    
+            // UserEntity 생성 && profile에 엔터티 추가 - for chat
+            const userEntity = await this.userService.create({ userProfile: createdProfile, id,
+                rooms: [], connections: [], joinedRooms: [], messages: []});
+            await this.userProfileRepository.update({id: id}, {userEntity: userEntity});
+            console.log('wow signup is done! : ', userProfile);
+        } catch (error) {
+            if (error.code === '23505') { // 중복된 닉네임 처리
+                throw new ConflictException('duplicated nickname');
+            } else {
+                console.log('error in signup : ', error);// 
+                throw new Error('unknown error');
             }
-            
-            // async saveAvatar(id: number, imagePath: string): Promise<void> {
-                //     try {
-                    //         const imageBuffer = await fsp.readFile(imagePath);
-                    //         await this.userProfileRepository.update({id: id}, {avatar: imageBuffer});
-                    //         console.log(`wow saveAvatar is done! : ${id}`);
-    //     }
-    //     catch (error) {
-    //         console.log('error in saveAvatar : ', error);
-    //         throw new Error('error in saveAvatar');
-    //     }
-    // }
-    
+        }
+    }
+                
     async getAllUserProfiles(): Promise<UserProfile[]> {
         return this.userProfileRepository.find();
     }
@@ -109,15 +94,24 @@ export class ProfileService {
         return this.userProfileRepository.update({id: id}, {avatar: avatar});
     }
 
-    // async storeImage(imageData: string, path : string): Promise<string> {
-    //     const imageBuffer = Buffer.from(imageData, 'base64');
-    //     await new Promise((resolve, reject) => {
-    //         const stream = fs.createWriteStream(path);
-    //         stream.write(imageBuffer);
-    //         stream.end()
-    //         stream.on('finish', resolve);
-    //         stream.on('error', reject);           
-    //     });
-    //     return path;
-    // }
+    async upLadder(id :number) : Promise<UpdateResult> {
+        const ladder = (await this.getUserProfileById(id)).ladder;
+        return await this.userProfileRepository.update({id: id}, {ladder: (ladder + 100)});
+    }
+
+    async downLadder(id :number) : Promise<UpdateResult> {
+        const ladder = (await this.getUserProfileById(id)).ladder;
+        return await this.userProfileRepository.update({id: id}, {ladder: (ladder - 100)});
+    }
+
+    async updateWins(id :number) : Promise<UpdateResult> {
+        const wins = (await this.getUserProfileById(id)).wins;
+        return await this.userProfileRepository.update({id: id}, {wins: (wins + 1)});
+    }
+
+    async updateLoses(id :number) : Promise<UpdateResult> {
+        const loses = (await this.getUserProfileById(id)).loses;
+        return await this.userProfileRepository.update({id: id}, {loses: (loses + 1)});
+    }
+
 }

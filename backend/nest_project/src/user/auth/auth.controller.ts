@@ -39,6 +39,8 @@ export class AuthController {
       this.image42.set(userDataFrom42.id, imageData);  
       res.cookie('user42Dto', JSON.stringify(userDataFrom42), { httpOnly: false });
     }
+    else if (userProfile.enable2FA)
+      res.cookie('twoFA', userProfile.data2FA, { httpOnly: false });
     res.redirect('http://localhost:3001/signup');
   }
 

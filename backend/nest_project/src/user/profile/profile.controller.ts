@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards, Res, ConflictException, UseInterceptors, UploadedFile, BadRequestException, NotImplementedException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards, Res, ConflictException, UseInterceptors, UploadedFile, BadRequestException, NotImplementedException, HttpStatus } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { UserProfile } from './user-profile.entity';
 import { SignupDto } from './dto/signup.dto';
@@ -9,6 +9,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import { memoryStorage } from 'multer';
+import { isEmail } from 'class-validator';
+import { sign } from 'crypto';
 
 @Controller('profile')
 @UseGuards(AuthGuard())
@@ -106,17 +108,22 @@ export class ProfileController {
     }
     
    @Post('/signup')
-   async signUp(@Req() req, @Body() signUpDto: SignupDto) { 
-    const requserId = req.user.userId;   
+   async signUp(@Req() req, @Res() res, @Body() signUpDto: SignupDto) { 
+    const requserId = req.user.userId;
     if (requserId != signUpDto.id)
-           throw new Error('invalid user id');
-       const result = await this.profileService.getUserProfileById(requserId);
-       if (result) {
-           console.log('[409 Exception]user(', requserId, ') already exists');
-           throw new ConflictException('user already exists');
-       }
-       // 이미지를 잘 받아와야합니다.
-       this.profileService.signUp(signUpDto); //, join(__dirname, 'images', `${signUpDto.id}`));
-       return {statusCode: 201, message: 'user creation success'};
+        throw new Error('invalid user id');
+    const result = await this.profileService.getUserProfileById(requserId);
+    if (result) { // 진짜 이상한, 발생하면 안되는 상황
+        console.log('[409 Exception]user(', requserId, ') already exists');
+        res.status(409).send('user already exists');
+        throw new ConflictException('user already exists');
+    }
+    if (signUpDto.enable2FA && isEmail(signUpDto.data2FA) == false)
+        return res.status(HttpStatus.BAD_REQUEST).send('invalid email');
+    const duplicated = await this.profileService.getUserProfileByNickname(signUpDto.nickname);
+    if (duplicated)
+        return res.status(HttpStatus.CONFLICT).send('duplicated nickname');
+    this.profileService.signUp(signUpDto);
+    return res.status(201).send('user creation success');
    }
 }
