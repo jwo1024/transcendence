@@ -217,9 +217,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   @SubscribeMessage('DM-create')
   async chatDMCreate(
         @ConnectedSocket() socket: Socket,
-        @MessageBody() room:RoomCreateDTO, @MessageBody() userNickname: string)
+        @MessageBody() data: { room:RoomCreateDTO, userNickname: string })
         // room:RoomCreateDTO) 
   {
+    const room = data.room;
+    const userNickname = data.userNickname;
     if (room.roomType != 'dm')
     {
       this.emitErrorEvent(socket.id,"Response-DM-create", "not dm type");
@@ -237,14 +239,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitErrorEvent(socket.id,"Response-DM-create", "matching user not found");
       return ; //valid하지 않은 사용자 nickname을 넘긴경우 무시
     }
-    //내가 블락한 상대일 경우 실패(일단은 무시)
+    //내가 블락한 상대일 경우 실패
     const currentBlockList = await (await this.profileService.getUserProfileById(socket.data.userId)).block_list;
     if (currentBlockList.find(finding => userTheOther.id))
     {
       this.emitErrorEvent(socket.id, "Response-DM-create", "you've blocked that user");
       return ;
     }
-    //내가 블락된 상대일 경우 실패(일단은 무시)
+    //내가 블락된 상대일 경우 실패
     if (userTheOtherProfile.block_list.find(finding => socket.data.userId))
     {
       this.emitErrorEvent(socket.id, "Response-DM-create", "you've been blocked by that user");
@@ -258,26 +260,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return ;
     }
     
-    //방을 만든 사용자를 생성된 방에 join 시킴() --변경필요
-    // await this.joinedRoomService.create(
-    //   { socketId: socket.id, user: socket.data.user, room: createdRoom });
-    
+    this.roomService.addUserToRoom(socket.data.userId, createdRoom.roomId, socket.id);
     //초대할 상대방 소켓 정보 가져오기
     const socketTheOther = await this.connectedUserService.findByUser(userTheOther);
     if (socketTheOther === undefined)
     {
       this.deleteRoom(createdRoom.roomId); //만든 방 삭제
+      this.connectedUserService.removeByUserIdAndRoomId(socket.data.userId, createdRoom.roomId);
       this.emitErrorEvent(socket.id,"Response-DM-create", "the user is not connected to Chat");
-      // ++ joinedRoom entity(216번줄 생성)은 위의 room 지우면서 자동으로 사라질것으로 예상하나 테스트 후 아니라면 삭제 코드 작성
       return ;//상대방이 연결된 상태가 아닐때 dm 못 만듬.
     }
 
     //상대방 사용자를 초대
-    // await this.joinedRoomService.create(
-    //   { socketId: socketTheOther.socketId, user: socketTheOther.user, room: createdRoom });
+    this.roomService.addUserToRoom(userTheOther.id, createdRoom.roomId, socketTheOther.socketId);
     
     //상대방과 나에게 현재 만들어진 room 정보를 포함해 전체 Joinedroom 보냄
-    // this.emitResponseEvent()
+    this.emitOneRoomToUsersInRoom(createdRoom.roomId);
     this.emitAllRoomsToUsersInRoom(createdRoom.roomId);
   }
 
@@ -346,15 +344,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.roomService.addUserToRoom(socket.data.userId, roomFromDB.roomId, socket.id);
 
     //이전대화 불러와서 새로 들어온 사용자에게 보내주기.
+    const currentRoomId = (await roomFromDB).roomId;
     const messages = await this.messageMapper.Create_simpleDTOArrays(
-        await this.messageService.findMessagesForRoom(roomFromDB));
+        await this.messageService.findMessagesForRoom(roomFromDB), currentRoomId);
 
     const newUserProfile = await this.profileService.getUserProfileById(socket.data.userId);
     this.emitNotice(await roomFromDB, `[${newUserProfile.nickname}]님이 방에 새로 들어왔습니다!`);
     
     //이벤트명 동적생성
-    const currentRoomId = (await roomFromDB).roomId;
-        this.logger.log(`messages_${currentRoomId}`);
+        // this.logger.log(`messages_${currentRoomId}`);
       // Send last messages from Room to User
     this.emitResponseEvent(socket.id, "Response-Room-join");
     this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
@@ -383,15 +381,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
     const roomFromDB = this.roomService.getRoom(roomId);
    
+    const currentRoomId = (await roomFromDB).roomId;
     //DB에서 messages 불러와서 사용자에게 보내주기.
     const messages = 
       this.messageMapper.Create_simpleDTOArrays(
-        await this.messageService.findMessagesForRoom(await roomFromDB));
+        await this.messageService.findMessagesForRoom(await roomFromDB), currentRoomId);
 
     // await this.server.to(socket.id).emit('messages', messages);
 
     //이벤트명 동적생성
-    const currentRoomId = (await roomFromDB).roomId;
     // Send last messages from Room to User
     await this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
     
@@ -485,11 +483,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     for(const user of connetedUsers) 
     {
       this.emitResponseEvent(socket.id, "Response-Message-add");
-      const temp = await this.messageMapper.Create_entityToSimpleDto(createdMessage);
+      const temp = await this.messageMapper.Create_entityToSimpleDto(createdMessage, currentRoomId);
       // this.logger.log(`temp : ${temp.text}`);
       this.server.to(user.socketId).emit(
         `messageAdded_${currentRoomId}`,
-         await this.messageMapper.Create_entityToSimpleDto(createdMessage));
+         await this.messageMapper.Create_entityToSimpleDto(createdMessage, currentRoomId));
     }
   }
   
@@ -535,7 +533,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       // this.emitResponseEvent(user.socketId, "Response-Message-add");
       await this.server.to(user.socketId).emit(
         `messageAdded_${currentRoomId}`,
-         await this.messageMapper.Create_entityToSimpleDto(createdMessage));
+         await this.messageMapper.Create_entityToSimpleDto(createdMessage, currentRoomId));
     }
   }
 

@@ -42,25 +42,27 @@ export class MessageMapper{
 
   }
 
-  async Create_entityToSimpleDto(entity :MessageI)
+  async Create_entityToSimpleDto(entity :MessageI, roomId : number)
    {
     const dto = new SimpleMessageDTO;
 
+    dto.id = entity.id
     dto.text = entity.text;
     dto.user = this.userMapper.Create_EntityToDto(entity.user, (await this.profileService.getUserProfileById(entity.user.id)).nickname);
     dto.created_at = entity.created_at;
+    dto.roomId = roomId;
     
     return dto;
   }  
 
-   async Create_simpleDTOArrays(entityArray :MessageI[])
+   async Create_simpleDTOArrays(entityArray :MessageI[], roomId : number)
    {
     const dtoArray : SimpleMessageDTO[] = [];
     if (entityArray.length === 0)
       return dtoArray;
     for (const messageEntity of entityArray)
     {
-      dtoArray.push(await this.Create_entityToSimpleDto(messageEntity));
+      dtoArray.push(await this.Create_entityToSimpleDto(messageEntity, roomId));
     }
     return dtoArray;
   }
