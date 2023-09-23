@@ -29,7 +29,6 @@ import { RoomI } from './interfaces/room.interface';
 import { UserI } from './interfaces/user.interface';
 import { ConnectedUserI } from './interfaces/connected-user.interface';
 import { MessageI } from './interfaces/message.interface';
-import { JoinedRoomI } from './interfaces/joined-room.interface';
 
 //Injected Services
 import { UserService } from './services/user/user.service';
@@ -37,10 +36,7 @@ import { RoomService } from './services/room/room.service';
 import { ConnectedUserService } from './services/connected-user/connected-user.service';
 import { JoinedRoomService } from './services/joined-room/joined-room.service';
 import { MessageService } from './services/message/message.service';
-
-//temp - profile
 import { ProfileService } from '../user/profile/profile.service';
-// import { SignupDto } from './dto/signup.dto';
 
 //DTOs
 import { RoomCreateDTO, RoomJoinDTO, RoomInviteDTO, SimpleRoomDTO, RoomleaveDTO } from './dto/room.dto';
@@ -49,11 +45,10 @@ import { AdminRelatedDTO } from './dto/room.dto';
 
 //Mappers
 import { RoomMapper } from './mapper/room.mapper';
+import { UserMapper } from './mapper/user.mapper';
 
 import * as jwt from 'jsonwebtoken';
-import { create } from 'domain';
 import { MessageMapper } from './mapper/message.mapper';
-
 
 // @WebSocketGateway({ namespace: '/chat', cors: { origin: "http://localhost:3001", "*" } })
 @WebSocketGateway({ namespace: '/chat', cors: { origin: "*"} })
@@ -73,6 +68,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       private messageService: MessageService,
       private roomMapper: RoomMapper,
       private messageMapper: MessageMapper,
+      private userMaaper: UserMapper,
         ) { };
   
   //required by OnModuleInit
@@ -557,7 +553,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   } 
 
-  private async emitOneRoomToUsersInRoom(roomId : number)
+  // private async emitOneRoomToUsersInRoom(roomId : number)
+  // {
+  //   const room: RoomI 
+  //     = await this.roomService.getRoom(roomId);
+  //   if (!room)
+  //     return;
+  //   const connectedUsers = room.connections;
+  //   // const joinedUsers: JoinedRoomI[] 
+  //   //   =  await this.joinedRoomService.findByRoom(room);
+    
+  //   const currentRoomId = room.roomId; 
+  //   for (const user of connectedUsers) 
+  //     await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, room);
+  // }
+
+  private async emitUserArrayToUsersInRoom(roomId : number)
   {
     const room: RoomI 
       = await this.roomService.getRoom(roomId);
@@ -790,8 +801,39 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @MessageBody() targetId: number
     )
     {
-      const profile_info = this.profileService.getUserProfileById(targetId);
-      socket.emit("user-profile-info", profile_info);
+      const profile_info = await this.profileService.getUserProfileById(targetId);
+      await socket.emit( "user-profile-info",
+           (await this.userMaaper.Create_simpleProfileEntityToDto(profile_info)));
+    }
+
+    @SubscribeMessage('get-users')
+    async onGetUsersIntheRoom(
+      @ConnectedSocket() socket: Socket,
+      @MessageBody() roomId: number
+    )
+    {
+      const roomWithBoth = await this.roomService.getRoomEntityWithBoth(roomId);
+      if (roomWithBoth === undefined)
+      {
+        this.emitErrorEvent(socket.id, "Response-get-users", "the room is not found");
+        return ;
+      }
+      const users = roomWithBoth.users;
+      if (users === undefined)
+      {
+        this.emitErrorEvent(socket.id, "Response-get-users", "no one is not found in the room");
+        return ;
+      }
+      const simpleUsers = await this.userMaaper.Create_simpleDTOArrays(users);
+      const connectedUsers = roomWithBoth.connections;
+      if (connectedUsers === undefined)
+      {
+        this.emitErrorEvent(socket.id, "Response-get-users", "no one to emit");
+        return ;
+      }
+      
+      for (const user of connectedUsers) 
+        await this.server.to(user.socketId).emit(`current-users_${roomId}`, simpleUsers);     
     }
 
 }
