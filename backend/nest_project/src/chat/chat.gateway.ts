@@ -560,10 +560,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const connectedUsers = room.connections;
     // const joinedUsers: JoinedRoomI[] 
     //   =  await this.joinedRoomService.findByRoom(room);
-    
+    const simpleRoom = await this.roomMapper.Create_specificInterfaceToDto(room)
     const currentRoomId = room.roomId; 
     for (const user of connectedUsers) 
-      await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, room);
+      await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, simpleRoom);
   }
 
   // private async emitUserArrayToUsersInRoom(roomId : number)
@@ -587,8 +587,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       = await this.roomService.getRoom(roomId);
     if (!room)
       return;
+    const simpleRoom = await this.roomMapper.Create_specificInterfaceToDto(room);
     this.emitResponseEvent(socketId, responseEvent);
-    await this.server.to(socketId).emit('current-room_${roomId}', room);
+    await this.server.to(socketId).emit('current-room_${roomId}', simpleRoom);
   }
 
   //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
