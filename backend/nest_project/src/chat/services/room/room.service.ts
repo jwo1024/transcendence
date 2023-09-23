@@ -14,6 +14,7 @@ import { RoomCreateDTO, RoomJoinDTO, AdminRelatedDTO, SimpleRoomDTO } from '../.
 import { RoomMapper } from '../../mapper/room.mapper';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import { UserEntity } from '../../entities/user.entity';
+import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
 
 const bcrypt = require('bcrypt');
 
@@ -29,6 +30,8 @@ export class RoomService {
     private readonly connectedService : ConnectedUserService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(ConnectedUserEntity)
+    private readonly connectedUserRepository: Repository<ConnectedUserEntity>,
     private roomMapper: RoomMapper,
     ) { }
 
@@ -62,33 +65,66 @@ export class RoomService {
   //   return await this.roomRepository.save(theroom);
   // }
 
-  async addUserToRoom(newUser: UserI, socketId: string, theroom: RoomEntity): Promise<RoomI> 
-  {
-    // 먼저 조인 테이블에 데이터를 추가합니다.
-    this.logger.log(`addUser`)
-    theroom.users.push(newUser);
-    this.logger.log(`theroom : ${theroom.users[0].id}`)
-    this.logger.log(`newUser : ${newUser.id}`)
-    
-    await this.connectedService.createfast(socketId, newUser, theroom);
-    
-    const connection = await this.connectedService.findByUserAndRoom(newUser.id, theroom.roomId);
-    if (theroom.connections === undefined)
-      theroom.connections = [];
-    theroom.connections.push(connection);
+  async addUserToRoom(userId: number, roomId: number, socketId : string): Promise<RoomEntity> {
+    // UserEntity 가져오기
+    const user = await this.userRepository.findOne({where : {id : userId}});
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-    this.logger.log(`user = ${newUser.id}`);
-    const UserEntity = await this.userRepository.findOne({where : {id : newUser.id}});
-    this.logger.log(`userE = ${UserEntity.id}`);
-    if (UserEntity.rooms === undefined)
-      UserEntity.rooms = [];
-    UserEntity.rooms.push(theroom);
-    if (UserEntity.connection === undefined)
-      UserEntity.connection = [];
-    UserEntity.connection.push(connection);
-    await this.userRepository.save(UserEntity);
-    return this.roomRepository.save(theroom);
+    // RoomEntity 가져오기
+    const room = await this.roomRepository.findOne({where : {roomId}});
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    // ConnectedUserEntity 생성
+    const connectedUser = new ConnectedUserEntity();
+    connectedUser.user = user;
+    connectedUser.room = room;
+    connectedUser.socketId = socketId;
+    await this.connectedUserRepository.save(connectedUser);
+
+    // RoomEntity에 UserEntity 추가
+    if (!room.users) {
+      room.users = [user];
+    } else {
+      room.users.push(user);
+    }
+
+    // RoomEntity 저장
+    return this.roomRepository.save(room);
   }
+
+  // async addUserToRoom(userId: number, socketId: string, theroom: RoomEntity): Promise<RoomI> 
+  // {
+  //   const UserEntity = await this.userRepository.findOne({where : {id : userId}});
+    
+  //   theroom.users.push(UserEntity);
+
+  //   this.logger.log(`theroom : ${theroom.users[0].id}`)
+  //   this.logger.log(`UserEntity : ${UserEntity.id}`)
+    
+  //   const newConnect = await this.connectedService.createfast(socketId, UserEntity, theroom);
+    
+  //   // const connection = await this.connectedService.findByUserAndRoom(UserEntity.id, theroom.roomId);
+  //   if (theroom.connections === undefined)
+  //     theroom.connections = [];
+  //   theroom.connections.push(newConnect);
+  //   if (UserEntity.connection === undefined)
+  //   {
+  //     // return ;
+  //     UserEntity.connection = [];
+  //   }
+  //   UserEntity.connection.push(newConnect);    
+  //   if (UserEntity.rooms === undefined)
+  //     UserEntity.rooms = [];
+  //   UserEntity.rooms.push(theroom);
+    
+  //   this.logger.log(`user = ${UserEntity.id}`);
+  //   await this.userRepository.save(UserEntity);
+  //   return this.roomRepository.save(theroom);
+  // }
 
   private async deleteUserRoomRelationship(userId: number, roomId: number): Promise<void> 
   {

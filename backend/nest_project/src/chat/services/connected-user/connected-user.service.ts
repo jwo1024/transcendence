@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
 import { RoomEntity } from 'src/chat/entities/room.entity';
@@ -7,9 +7,11 @@ import { ConnectedUserI } from 'src/chat/interfaces/connected-user.interface';
 import { UserI } from 'src/chat/interfaces/user.interface';
 import { Repository } from 'typeorm';
 
-
 @Injectable()
 export class ConnectedUserService {
+
+  private logger = new Logger('ConnectService');
+
 
   constructor(
     @InjectRepository(ConnectedUserEntity)
@@ -23,6 +25,7 @@ export class ConnectedUserService {
   }
 
   async createfast(socketId : string, user: UserI, room : RoomEntity): Promise<ConnectedUserI> {
+    this.logger.log(`user : ${user.id}`);
     return this.connectedUserRepository.save({socketId, user, room });
   }
 
@@ -71,9 +74,21 @@ export class ConnectedUserService {
 
   async deleteAll() {
     await this.connectedUserRepository
-      .createQueryBuilder()
-      .delete()
-      .execute();
-  }
+    .createQueryBuilder()
+    .relation(ConnectedUserEntity, 'user')
+    .of(ConnectedUserEntity) // ConnectedUserEntity 객체를 전달합니다.
+    .remove([]);
 
+  await this.connectedUserRepository
+    .createQueryBuilder()
+    .relation(ConnectedUserEntity, 'room')
+    .of(ConnectedUserEntity) // ConnectedUserEntity 객체를 전달합니다.
+    .remove([]);
+
+  // ConnectedUserEntity 데이터 삭제
+  await this.connectedUserRepository
+    .createQueryBuilder()
+    .delete()
+    .execute();
+  }
 }

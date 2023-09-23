@@ -77,9 +77,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   
   //required by OnModuleInit
   async onModuleInit() {
-
     await this.connectedUserService.deleteAll();
-
   };
 
   //-------소켓 연결 관련 메서드----------------------
@@ -186,11 +184,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     const theroom  = await this.roomService.getRoomEntity(createdRoom.roomId);
     // 유저를 방에 추가 시킴 
-    const user = await this.userService.getOne(socket.data.userId);
-    this.logger.log(`User!!!!!!!!!!!!!!!!! : ${user}`);
-    this.logger.log(`User!!!!!!!!!!!!!!!!! : ${userEntity}`);
-    this.roomService.addUserToRoom(user, socket.id, theroom);
-    this.logger.log(`after add User!!!!!!!!!!!!!!!!!`);
+    // this.logger.log(`theroom : ${theroom}`);
+    // this.logger.log(`theroom : ${theroom.roomName}`);
+    // return ; 
+    // const user = await this.userService.getOne(socket.data.userId);
+    // this.roomService.addUserToRoom(socket.data.userId, socket.id, theroom);
+    this.roomService.addUserToRoom(socket.data.userId, createdRoom.roomId, socket.id);
+    // return ;
     // 방을 만든 사용자에게 현재 방의 정보 제공 
     await this.server.to(socket.id).emit('new_join_room',
        this.roomMapper.Create_simpleInterfaceToDto(createdRoom));
@@ -343,15 +343,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
     //새 참여자 추가하기
-    const newUserEntity = await this.userService.getOne(socket.data.userId);
-    if (newUserEntity != undefined)
-    this.roomService.addUserToRoom(newUserEntity, socket.id, roomFromDB);
-    else
-    {
-      this.emitErrorEvent(socket.id, "Response-Room-join", "not valid user");
-      return ;
-    }
-    this.roomService.addUserToRoom(newUserEntity, socket.id, roomFromDB);
+    // const newUserEntity = await this.userService.getOne(socket.data.userId);
+    // if (newUserEntity != undefined)
+      // this.roomService.addUserToRoom(socket.data.userId, socket.id, roomFromDB);
+      this.roomService.addUserToRoom(socket.data.userId, roomFromDB.roomId, socket.id);
+    // return ;
+      // else
+    // {
+      // this.emitErrorEvent(socket.id, "Response-Room-join", "not valid user");
+      // return ;
+    // }
+    // this.roomService.addUserToRoom(socket.data.userId, socket.id, roomFromDB);
 
     //이전대화 불러와서 새로 들어온 사용자에게 보내주기.
     const messages = await this.messageMapper.Create_simpleDTOArrays(
@@ -368,6 +370,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
     
     //내가 현재 참여하고 있는 방들 목록 emit하기
+    const newUserEntity = await this.userService.getOne(socket.data.userId);
     this.emitUserJoingingRooms(socket.id, newUserEntity);
 
     }

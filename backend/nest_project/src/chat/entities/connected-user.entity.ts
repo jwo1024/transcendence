@@ -12,8 +12,8 @@ export class ConnectedUserEntity {
   @Column()
   socketId: string;
 
-  @ManyToOne(() => UserEntity, user => user.connection)
-  @JoinColumn()
+  @ManyToMany(() => UserEntity, user => user.connection)
+  @JoinTable()
   user: UserEntity;
 
   @ManyToOne(() => RoomEntity, (room) => room.connections)

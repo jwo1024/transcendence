@@ -17,10 +17,9 @@ export class UserEntity {
   id: number;
 
   @ManyToMany(() => RoomEntity, (room) => room.users)
-  @JoinTable()
   rooms: RoomEntity[];
 
-  @OneToMany(() => ConnectedUserEntity, connection => connection.user)
+  @ManyToMany(() => ConnectedUserEntity, connection => connection.user)
   connection: ConnectedUserEntity[];
   
   @OneToMany(() => MessageEntity, message => message.user)
