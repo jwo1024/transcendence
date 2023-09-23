@@ -18,6 +18,7 @@ import { HistoryService } from './service/history.service';
 // import { HistoryEntity } from './entities/history.entity';
 
 import { Player } from './dto/player.dto';
+// import { Player } from './interface/game.interface';
 
 
 let ladderQueue: Player[];
@@ -49,7 +50,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		ladderRange = 100;
 		this.gameFieldArr = [];
 
-		setInterval(this.queueProcess, 1000);
+		setInterval(() => this.queueProcess(), 1000);
 	}
 
 
@@ -121,36 +122,49 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	async queueProcess()
 	{
-		if (ladderQueue.length < 2)
-			return ;
-
-		currentQueueTime = Date.now();
-		if (currentQueueTime - resetQueueTime > 10000) // 1000 milliseconds == 1 second
+		if (ladderQueue.length > 1)
 		{
-			ladderRange += 100;
+			// setGame(ladderQueue[0].id, ladderQueue[1].id);
+			this.setGame(ladderQueue[0].id, ladderQueue[1].id);
+			ladderQueue.splice(0, 2);
 		}
 
-		for (let i = 0; i < ladderQueue.length; ++i)
-		{
-			for (let j = i + 1; j < ladderQueue.length; ++j)
-			{
-				const player1Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[i].id);
-				const player1less = player1Ladder - ladderRange;
-				const player1greater = player1Ladder + ladderRange;
-				const player2Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[j].id);
+		// if (ladderQueue.length < 2)
+		// 	return ;
 
-				if ((player2Ladder >= player1less) && (player2Ladder <= player1greater))
-				{
-					this.setGame(ladderQueue[i].id, ladderQueue[j].id);
-					this.logger.log(`queueProcess : [ ${ladderQueue[i].id} ] vs [${ladderQueue[j].id}]`);
-					ladderQueue.splice(i, 1);
-					ladderQueue.splice(j - 1, 1); // 바로 위에서 요소 하나 삭제되므로 인덱스가 하나씩 당겨짐
-					resetQueueTime = Date.now();
-					ladderRange = 500;
-					return ;
-				}
-			}
-		}
+		// currentQueueTime = Date.now();
+		// if (currentQueueTime - resetQueueTime > 10000) // 1000 milliseconds == 1 second
+		// {
+		// 	ladderRange += 100;
+		// }
+
+		// for (let i = 0; i < ladderQueue.length; ++i)
+		// {
+		// 	for (let j = i + 1; j < ladderQueue.length; ++j)
+		// 	{
+		// 		// console.log(ladderQueue[i]);
+		// 		// const ppp = this.connectedPlayerService.getPlayer(ladderQueue[i].id);
+		// 		// console.log(ppp);
+		// 		const a = await ladderQueue[i].id;
+		// 		const player1Ladder = await this.connectedPlayerService.getLadderById(a);
+		// 		// const player1Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[i].id);
+		// 		console.log(player1Ladder);
+		// 		const player1less = player1Ladder - ladderRange;
+		// 		const player1greater = player1Ladder + ladderRange;
+		// 		const player2Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[j].id);
+
+		// 		if ((player2Ladder >= player1less) && (player2Ladder <= player1greater))
+		// 		{
+		// 			this.setGame(ladderQueue[i].id, ladderQueue[j].id);
+		// 			this.logger.log(`queueProcess : [ ${ladderQueue[i].id} ] vs [${ladderQueue[j].id}]`);
+		// 			ladderQueue.splice(i, 1);
+		// 			ladderQueue.splice(j - 1, 1); // 바로 위에서 요소 하나 삭제되므로 인덱스가 하나씩 당겨짐
+		// 			resetQueueTime = Date.now();
+		// 			ladderRange = 500;
+		// 			return ;
+		// 		}
+		// 	}
+		// }
 	}
 
 	private async setGame(userId1: number, userId2: number)
@@ -162,7 +176,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId2), userId2);
 			return ;
 		}
-		this.logger.log(`setGame : ${currentMatch} match will soon start!`);
+		this.logger.log(`setGame : match will soon start!`);
 		this.startGame(currentMatch);
 	}
 
@@ -202,6 +216,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.logger.log(`ladder/startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
 		this.gameFieldArr.push(gameField);
 		gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
+		// gameField.gameTimer = setInterval(() => {playGame(this.server, match, player1, player2, gameField);}, 30);
 	}
 
 	private async getGameFieldByMatchId(match_id: number)
@@ -431,3 +446,19 @@ async function playGame(server: Server, match: MatchEntity, player1: Player, pla
 	server.to(player1.socketId).emit('updateCanvas', gameField);
 	server.to(player2.socketId).emit('updateCanvas', gameField);
 }
+
+
+
+//
+// async function setGame(userId1: number, userId2: number)
+// {
+// 	const currentMatch = await this.matchService.create(userId1, userId2);
+// 	if (!currentMatch)
+// 	{
+// 		this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId1), userId1);
+// 		this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId2), userId2);
+// 		return ;
+// 	}
+// 	this.logger.log(`setGame : ${currentMatch} match will soon start!`);
+// 	this.startGame(currentMatch);
+// }
