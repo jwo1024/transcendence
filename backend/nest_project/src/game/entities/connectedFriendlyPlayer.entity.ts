@@ -2,12 +2,24 @@ import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinCol
 import { FindOneOptions } from "typeorm";
 
 @Entity()
-export class ConnectedPlayerEntity {
+export class ConnectedFriendlyPlayerEntity {
 
   @PrimaryColumn({ type: 'integer', unique: true, nullable: false})
   id: number;
 
   @Column()
   socketId: string;
+
+  @Column()
+  hostId: number;
+
+  @Column()
+  guestId: number;
+
+  @Column()
+  refuseGame: boolean = false;
+
+  @Column()
+  checkRefuseTimer: NodeJS.Timeout;
 
 }

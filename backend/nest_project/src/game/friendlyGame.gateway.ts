@@ -23,6 +23,8 @@ import { Player } from './dto/player.dto';
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 // todo: 게임 시작하기 전에 대기 화면 -> test
 
+// todo: player entity 교체
+
 @Injectable()
 @WebSocketGateway({ namespace: 'friendly_game' })
 export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
