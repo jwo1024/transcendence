@@ -11,13 +11,13 @@ import GameResult from "@/components/game/GameResult";
 
 import io from "socket.io-client";
 
-// const token = sessionStorage.getItem(“accessToken”);
-//   const socket = io('http://localhost:4000/ladder_game', {
-//     extraHeaders: {
-//         Authorization: `Bearer ${token}`
-//     }
-// });
-const socket = io("http://localhost:4000/ladder_game");
+    const token = sessionStorage.getItem("accessToken");
+    const socket = io('http://localhost:4000/ladder_game', {
+    extraHeaders: {
+        Authorization: `Bearer ${token}`
+    }
+});
+// const socket = io("http://localhost:4000/ladder_game");
 
 export default function GamePage() {
 
@@ -27,7 +27,7 @@ export default function GamePage() {
   socket.on("disconnect", (reason) => {
     // todo: debug
     console.log("disconnect event emit!!!");
-    setTimeout(() => {router.push("http://localhost:3001");}, 5000);
+    setTimeout(() => {router.push("/menu");}, 5000);
   });
 
   const [left, setLeft] = useState({
