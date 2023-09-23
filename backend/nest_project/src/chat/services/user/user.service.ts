@@ -50,20 +50,26 @@ export class UserService {
 	public getfull() : Promise<UserEntity[]>{
 		return  this.userRepository.find(
 			{
-				relations: {connection : true, rooms : true}
+				relations: {connections : true, rooms : true}
 			});
 	}
-	// 	return this.userRepository.find({relations : ['connections']});
-	// }
 
-	// async getUserWithConnections(userId: number): Promise<UserEntity | undefined> {
-	// 	return this.userRepository.findOne(userId, { relations: ['connection'] });
-	//   }
+	async getUserWithrooms(userId: number): Promise<UserEntity | undefined> 
+	{
+		return this.userRepository.findOne({
+			where : { id : userId}, relations: ['rooms'] 
+		});
+	}
 
-	async getUserWithConnections(): Promise<UserEntity[] | undefined> {
+	async getAllUsersWithConnections(): Promise<UserEntity[] | undefined> {
 		return this.userRepository.find(
-		  { relations: {connection : true} });
+		  { relations: {connections : true} });
 	  }
+
+	// async getOneUserWithConnections(): Promise<UserEntity[] | undefined> {
+	// 	return this.userRepository.find(
+	// 	  { relations: {connections : true} });
+	// }
 
 	// public async addBlockList(myId: number, targetId:number) : Promise<UserI>
 	// {

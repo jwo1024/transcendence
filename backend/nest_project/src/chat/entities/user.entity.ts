@@ -18,9 +18,11 @@ export class UserEntity {
 
   @ManyToMany(() => RoomEntity, (room) => room.users)
   rooms: RoomEntity[];
+  // @Column({array : true, default: []})
+  // rooms: RoomEntity[];
 
-  @ManyToMany(() => ConnectedUserEntity, connection => connection.user)
-  connection: ConnectedUserEntity[];
+  @OneToMany(() => ConnectedUserEntity, connection => connection.user)
+  connections: ConnectedUserEntity[];
   
   @OneToMany(() => MessageEntity, message => message.user)
   messages: MessageEntity[];

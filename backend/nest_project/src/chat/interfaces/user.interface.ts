@@ -9,7 +9,7 @@ export interface UserI {
 	userProfile: UserProfile;
 	id: number;
 	rooms: RoomEntity[]
-	connection: ConnectedUserEntity[];
+	connections: ConnectedUserEntity[];
 	messages: MessageEntity[];
 	// joinedRooms: JoinedRoomEntity[];
 }

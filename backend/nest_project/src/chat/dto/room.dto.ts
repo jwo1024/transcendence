@@ -1,4 +1,5 @@
 import { roomType } from "../types/roomTypes";
+import { SimpleUserDto } from "./simpleUser.dto";
 
 export class RoomCreateDTO {
 
@@ -46,4 +47,16 @@ export class SimpleRoomDTO {
   roomType: roomType;
   hasPass: boolean;
   joinUsersNum: number; 
+}
+
+export class SpecificRoomDTO {
+  roomId: number;
+  roomName: string;
+  roomType: roomType;
+  hasPass : boolean;
+  roomOwner: number; //owner user의 id
+  roomAdmins: number[]; //ids
+  roomBanned: number[]; //idsx
+  users: SimpleUserDto[];
+  created_at?: Date;
 }

@@ -134,16 +134,10 @@ export class RoomService {
     await this.roomRepository
       .createQueryBuilder()
       .delete()
-      .from('user_entity_rooms_room_entity')
-      .where('"userEntityId" = :userId AND "roomEntityRoomId" = :roomId', { userId, roomId })
+      .from('room_entity_users_user_entity')
+      .where('"roomEntityRoomId" = :roomId AND "userEntityId" = :userId', { userId, roomId })
       .execute();
-    // await this.roomRepository
-    // .createQueryBuilder()
-      // .delete()
-      // .from('user_entity_rooms_room_entity')
-      // .where('userEntityId = :userId AND roomEntityId = :roomId', { userId, roomId })
-      // .execute();
-    
+
     this.logger.log(`done with delete relationship`);
   }
 
@@ -155,27 +149,17 @@ export class RoomService {
       .leftJoinAndSelect('room.connections', 'connections')
       .where('room.roomId = :roomId', { roomId: roomId })
       .getOne();
-    this.logger.log(`room : ${room}`);
-    this.logger.log(`room : ${room.roomName}`);
+
     const userId = user.id;
     const userEntity = await this.userRepository.findOne({where : {id : userId}});
-    this.logger.log(`userEntity : ${userEntity.rooms}`);
     
     // 사용자의 참여중인 방 목록에서 현재 방 삭제
     await this.deleteUserRoomRelationship(userId, roomId); 
     // userEntity.rooms = userEntity.rooms.filter((userRoom) => userRoom.roomId !== roomId);
     // await this.userRepository.save(userEntity);
-    this.logger.log(`userEntity : ${userEntity.rooms}`);
     const roomNow = await this.roomRepository.findOne({ where: {roomId: roomId}});
-    this.logger.log(`room.users : ${roomNow.users}`);
-
-    //현재 방의 참여자 목록에서 현재 사용자 삭제
-    // room.users = room.users.filter((u) => u.id !== userId);
-
-    // this.logger.log(`room.users : ${room.users}`);
 
     await this.connectedService.removeByUserIdAndRoomId(userId, roomId);
-    // await this.roomRepository.save(room);
   }
 
   // async deleteRoomById(user: UserI, socketId : string, roomId: number) {
@@ -207,10 +191,26 @@ export class RoomService {
     return temp;
   }
 
-  async getRoomEntity(roomId: number): Promise<RoomEntity> {
+  async getRoomEntityWithUsers(roomId: number): Promise<RoomEntity> {
     const temp = await this.roomRepository.findOne({
       where: { roomId },
       relations: ['users'] //관련 엔터티도 함께 가져오겠다.
+    });
+    return temp;
+  }
+
+  async getRoomEntityWithConnections(roomId: number): Promise<RoomEntity> {
+    const temp = await this.roomRepository.findOne({
+      where: { roomId },
+      relations: ['connections'] //관련 엔터티도 함께 가져오겠다.
+    });
+    return temp;
+  }
+
+  async getRoomEntityWithBoth(roomId: number): Promise<RoomEntity> {
+    const temp = await this.roomRepository.findOne({
+      where: { roomId },
+      relations: ['connections'] //관련 엔터티도 함께 가져오겠다.
     });
     return temp;
   }
@@ -330,7 +330,7 @@ export class RoomService {
     await this.roomRepository
       .createQueryBuilder()
       .delete()
-      .from('user_entity_rooms_room_entity') // 조인 테이블 이름
+      .from('room_entity_users_user_entity') // 조인 테이블 이름
       .where('roomEntityRoomId = :roomId', { roomId })
       .execute();
   
@@ -342,4 +342,5 @@ export class RoomService {
   {
 	  	return this.roomRepository.delete({ roomId });
 	}
+
 }

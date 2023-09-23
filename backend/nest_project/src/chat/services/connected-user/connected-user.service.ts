@@ -35,9 +35,20 @@ export class ConnectedUserService {
     return this.connectedUserRepository.save({socketId, user, room });
   }
 
-  async getAllUser(): Promise<ConnectedUserI[]> {
+  async getAllConnections(): Promise<ConnectedUserI[]> {
     return await this.connectedUserRepository.find();
   }
+
+  async getByRoomId(roomId :number): Promise<ConnectedUserI[]> {
+    return await this.connectedUserRepository.find({
+      where: { room: {roomId : roomId}},
+      // relations : ['']
+    });
+  }
+  // const temp = await this.roomRepository.findOne({
+  //   where: { roomId },
+  //   relations: ['connections'] //관련 엔터티도 함께 가져오겠다.
+  // });
 
   async findByUser(user: UserI): Promise<ConnectedUserI> {
     return this.connectedUserRepository.findOne({ 
