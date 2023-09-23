@@ -833,7 +833,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       }
       
       for (const user of connectedUsers) 
+      {
         await this.server.to(user.socketId).emit(`current-users_${roomId}`, simpleUsers);     
+        this.emitResponseEvent(socket.id, "Response-get-users");
+      }
     }
 
 }
