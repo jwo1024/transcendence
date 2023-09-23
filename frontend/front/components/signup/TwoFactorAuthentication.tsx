@@ -4,9 +4,13 @@ import { useRef, useState } from "react";
 
 interface NickNameBlockProps {
   email: string;
+  logonAndGoMenuPage: () => void;
 }
 
-const TwoFactorAuthentication = ({ email }: NickNameBlockProps) => {
+const TwoFactorAuthentication = ({
+  email,
+  logonAndGoMenuPage,
+}: NickNameBlockProps) => {
   const router = useRouter();
   const textFromEmail = useRef<HTMLInputElement>();
   // 0 = 미인증, 1 = 실패, 2 = 성공
@@ -94,9 +98,7 @@ const TwoFactorAuthentication = ({ email }: NickNameBlockProps) => {
         ) : null}
       </div>
       <Button
-        onClick={() => {
-          router.push("/menu");
-        }}
+        onClick={logonAndGoMenuPage}
         className="w-full"
         disabled={!twoFAEmailValid}
       >
