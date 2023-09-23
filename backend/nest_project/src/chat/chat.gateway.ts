@@ -618,7 +618,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
       const joiningrooms = (await this.userService.getUserWithrooms(user.id)).rooms;
       // const joiningrooms = user.rooms;
-      await this.server.to(socketId).emit( 'me-joining-rooms', joiningrooms);
+      this.server.to(socketId).emit( 'me-joining-rooms', 
+        await this.roomMapper.Create_simpleDTOArrays(joiningrooms));
   }
   // }
  //----------------------------------
