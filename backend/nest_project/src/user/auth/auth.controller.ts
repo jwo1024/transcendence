@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Query, Req, Res, UnauthorizedException, UseGuards} from '@nestjs/common';
+import { Controller, Get, HttpStatus, Post, Query, Req, Res, UnauthorizedException, UseGuards} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { ProfileService } from '../profile/profile.service';
 import { User42Dto } from './dto/user42.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { userStatus } from '../profile/user-profile.entity';
+import { TfaService } from '../tfa/tfa.service';
 
 class Image42 {
   url: string;
@@ -17,6 +18,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private profileService: ProfileService,
+    private tfaService: TfaService
   ) {}
 
   @Get('getUrl')
@@ -63,15 +65,20 @@ export class AuthController {
 
   @Get('validity') // 로그인 이후 (/와 /signup을 제외한)_app.tsx의 모든 페이지에 대해서 시작 부분에 놓는다
   @UseGuards(AuthGuard())
-  async session(@Req() req) {
+  async session(@Req() req, @Res() res) {
     const accessToken = req.headers.authorization?.split('Bearer ')[1];
     const userId = req.user.userId;
     if (!AuthService.isTokenValid(userId, accessToken)) {
         console.log(`[session request for invalid or outdated token] - (user : ${userId})`);
         console.log(`value : {${accessToken}}`);
         console.log(`valid token : ${AuthService.getSession(userId)}`);
-        throw new UnauthorizedException('session request for invalid or outdated token');
+        return res.status(HttpStatus.UNAUTHORIZED).send({ message: '[validity fail] : invalid token' });
     }
+    if (this.tfaService.is2FARegistered(userId) && !this.tfaService.is2FAConfirmed(userId)) {
+      console.log('2fa is not confirmed');
+      return res.status(HttpStatus.UNAUTHORIZED).send({ message: '[validity fail] : 2fa is not confirmed' });
+    }
+    return res.status(HttpStatus.OK).send({ message: '[validity success] : valid session' });
   }
     
   @Post('logon') // signup을 나가면서 logon 요청
@@ -104,6 +111,7 @@ export class AuthController {
     console.log(`parsed token[${userId}] : ${accessToken}`);
     if (AuthService.isTokenValid(userId, accessToken)) {
       console.log('token is valid');
+      this.tfaService.remove2FAData(userId);
       AuthService.endSession(userId);
       await this.profileService.logOff(userId);
     }

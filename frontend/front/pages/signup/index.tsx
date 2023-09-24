@@ -154,7 +154,10 @@ const SignUpPage = () => {
             </form>
           </div>
         ) : twoFactorPage && cookieTwoFA ? (
-          <TwoFactorAuthentication email={cookieTwoFA} />
+          <TwoFactorAuthentication
+            email={cookieTwoFA}
+            logonAndGoMenuPage={logonAndGoMenuPage}
+          />
         ) : (
           <div className=" text-2xl text-center pt-60">Loading...</div>
         )}

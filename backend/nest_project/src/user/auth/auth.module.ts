@@ -12,6 +12,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { UserEntity } from '../../chat/entities/user.entity';
 import { UserService } from '../../chat/services/user/user.service';
+import { TfaService } from '../tfa/tfa.service';
 
 @Module({
   imports: [ ServeStaticModule.forRoot({
@@ -24,7 +25,7 @@ import { UserService } from '../../chat/services/user/user.service';
       signOptions: { expiresIn: 60 * 60,}
     })],
   controllers: [AuthController],
-  providers: [AuthService, ConfigService, ProfileService, JwtStrategy,UserService],
+  providers: [AuthService, ConfigService, ProfileService, JwtStrategy,UserService, TfaService],
   exports: [JwtStrategy, PassportModule]
 
 })
