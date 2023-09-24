@@ -1,8 +1,8 @@
 import { UserEntity } from "./user.entity";
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { MessageEntity } from "./message.entity";
 import { roomType } from "../types/roomTypes";
-import { JoinedRoomEntity } from "./joined-room.entity";
+import { ConnectedUserEntity } from "./connected-user.entity";
 
 @Entity()
 export class RoomEntity {
@@ -19,7 +19,6 @@ export class RoomEntity {
   @Column({default: null})
   roomPass: string;
 
-  // @Column({default: -1})
   @Column()
   roomOwner: number;
 
@@ -29,17 +28,19 @@ export class RoomEntity {
   @Column({type: 'integer', array: true, default: []})
   roomBanned: number[];
 
-  @ManyToMany(() => UserEntity)
+  @ManyToMany(() => UserEntity, (user) => user.rooms)
   @JoinTable()
   users: UserEntity[];
 
-  @OneToMany(() => JoinedRoomEntity, joinedRoom => joinedRoom.room)
-  joinedUsers: JoinedRoomEntity[];
+  // @Column({array : true, default: []})
+  // users: UserEntity[];
 
-  @OneToMany(() => MessageEntity, message => message.room)
+  @OneToMany(() => ConnectedUserEntity, (conncetion) => conncetion.room)
+  connections: ConnectedUserEntity[];
+
+  @OneToMany(() => MessageEntity, message => message.room, {cascade : true})
   messages: MessageEntity[];
 
   @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
   created_at: Date;
-
 }
