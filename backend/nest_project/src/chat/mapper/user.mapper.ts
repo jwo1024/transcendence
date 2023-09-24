@@ -22,7 +22,7 @@ export class UserMapper {
 
 	async Create_simpleDTOArrays(entityArray :UserI[]){
 		const dtoArray : SimpleUserDto[] = [];
-		if (entityArray.length === 0)
+		if (entityArray === undefined || entityArray === null || entityArray.length === 0)
 		  return dtoArray;
 		for (const user of entityArray)
 		{

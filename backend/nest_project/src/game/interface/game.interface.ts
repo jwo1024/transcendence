@@ -2,9 +2,20 @@ export interface Player
 {
 	id: number;
 	socketId: string;
+}
 
-	// 최근 전적 5개의 data(match_id)
-	// latelyMatch: number[];
+// for friendly game
+export interface InviteUser
+{
+  id: number;
+  nickname: string;
+}
+
+// for friendly game
+export interface GameInvitation
+{
+	fromUser: InviteUser;
+	toUser: InviteUser;
 }
 
 export interface GameField

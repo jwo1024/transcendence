@@ -217,7 +217,15 @@ export class RoomService {
   async getRoomEntityWithBoth(roomId: number): Promise<RoomEntity> {
     const temp = await this.roomRepository.findOne({
       where: { roomId },
-      relations: ['connections'] //관련 엔터티도 함께 가져오겠다.
+      relations: ['connections', 'users'] //관련 엔터티도 함께 가져오겠다.
+    });
+    return temp;
+  }
+
+  async getRoomEntityWithCUM(roomId: number): Promise<RoomEntity> {
+    const temp = await this.roomRepository.findOne({
+      where: { roomId },
+      relations: ['connections', 'users', 'messages'] //관련 엔터티도 함께 가져오겠다.
     });
     return temp;
   }
@@ -232,6 +240,8 @@ export class RoomService {
 
   async isRoomOwner(userId: number, roomId: number) : Promise<boolean> {
     const room = await this.getRoom(roomId);
+    // this.logger.log(`roomOwner : ${room.roomOwner}`);
+    // this.logger.log(`userId : ${userId}`);
     if (room.roomOwner === userId)
       return true;
     return false;
@@ -256,14 +266,12 @@ export class RoomService {
 
   async editRoom(roomId: number, newData : RoomCreateDTO) : Promise<RoomI> 
   {
-    const editedRoom = await this.getRoom(roomId);
-    editedRoom.roomName = newData.roomName;
     if (newData.roomType === 'dm')
     {
-      return ; //dm으로 만들어진 경우가 아닌데, dm으로 바꾸려는 경우 무시.
-      //클라이언트가 오픈 채팅 방에서만 editRoom을 부를 수 있다고 가정한다.
-      //(dm은 따로 이름 설정, 비밀번호 설정, 타입 설정을 하지 않는다.)
+      return null; //dm으로 만들어진 경우가 아닌데, dm으로 바꾸려는 경우 무시.
     }
+    const editedRoom = await this.getRoomEntityWithCUM(roomId);
+    // editedRoom.roomName = newData.roomName;
     editedRoom.roomType = newData.roomType;
     editedRoom.roomPass = newData.roomPass;
     

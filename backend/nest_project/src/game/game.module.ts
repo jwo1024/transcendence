@@ -14,11 +14,14 @@ import { HistoryService } from './service/history.service';
 import { HistoryEntity } from './entities/history.entity';
 import { UserService } from 'src/chat/services/user/user.service';
 import { UserEntity } from 'src/chat/entities/user.entity';
+import { ConnectedFriendlyPlayerService } from './service/connectedFriendlyPlayer.service';
+import { ConnectedFriendlyPlayerEntity } from './entities/connectedFriendlyPlayer.entity';
 
 @Module
 ({
 	imports: [TypeOrmModule.forFeature([
 		ConnectedPlayerEntity,
+		ConnectedFriendlyPlayerEntity,
 		UserProfile,
 		MatchEntity,
 		HistoryEntity,
@@ -32,6 +35,7 @@ import { UserEntity } from 'src/chat/entities/user.entity';
 		ProfileService,
 		MatchService,
 		ConnectedPlayerService,
+		ConnectedFriendlyPlayerService,
 		HistoryService,
 		UserService,
 	],
