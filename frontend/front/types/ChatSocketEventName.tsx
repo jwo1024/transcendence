@@ -14,31 +14,41 @@ export const EMIT_ADD_USER_BLOCK = "add-user-block";
 export const EMIT_ROOM_INVITE = "Room-invite";
 export const EMIT_ROOM_ENTER = "Room-enter";
 export const EMIT_GET_USER_PROFILE = "get-user-profile";
+export const EMIT_GET_USERS = "get-users";
 // on
 export const ON_ROOMS = "rooms";
-export const ON_NEW_JOIN_ROOM = "new_join_room";
+export const ON_ME_JOINING_ROOMS = "me-joining-rooms";
+// export const ON_NEW_JOIN_ROOM = "new_join_room";
 export const ON_MESSAGES_ROOMID = "messages_";
 export const ON_MESSAGE_ADDED_ROOMID = "messageAdded_";
 export const ON_INVITE_TO_CHAT = "invite-to-chat";
 export const ON_USER_PROFILE_INFO = "user-profile-info";
 export const ON_GOT_MUTED = "got-muted";
 export const ON_MY_BLOCK_LIST = "my-block-list";
-export const ON_ME_JOINING_ROOMS = "me-joining-rooms";
 export const ON_CURRENT_ROOM_ROOMID = "current-room_";
 export const ON_VISIBLE_ROOMS = "visible_rooms";
-export const ON_BAD_REQUEST = "Bad-request";
-// response
-export const ON_RESPONSE_DM_CREATE = "Response-DM-create"
-export const ON_RESPONSE_ROOM_CREATE = "Response-Room-create"
-export const ON_RESPONSE_ADMIN_MUTE = "Response-Admin-mute"
-export const ON_RESPONSE_ROOM_INVITE = "Responsse-Room-invite"
-export const ON_RESPONSE_ROOM_ENTER = "Response-Room-enter"
-export const ON_RESPONSE_ROOM_LEAVE = "Response-Room-leave"
-export const ON_RESPONSE_MESSAGE_ADD = "Response-Message-add"
-export const ON_RESPONSE_ADMIN_ADD = "Response-Admin-add"
-export const ON_RESPONSE_ADMIN_KICK = "Response-Admin-kick"
-export const ON_RESPONSE_ADMIN_BAN = "Response-Admin-Ban"
+export const ON_BAD_REQUEST = "Bad-request"; // ?
+export const ON_CURRENT_USERS_ROOMID = "current-users_";
 
+// response
+export const ON_RESPONSE_DM_CREATE = "Response-DM-create";
+export const ON_RESPONSE_ROOM_CREATE = "Response-Room-create";
+export const ON_RESPONSE_ADMIN_MUTE = "Response-Admin-mute";
+export const ON_RESPONSE_ROOM_INVITE = "Responsse-Room-invite";
+export const ON_RESPONSE_ROOM_ENTER_ROOMID = "Response-Room-enter_";
+export const ON_RESPONSE_ROOM_LEAVE = "Response-Room-leave";
+export const ON_RESPONSE_MESSAGE_ADD = "Response-Message-add";
+export const ON_RESPONSE_ADMIN_ADD = "Response-Admin-add";
+export const ON_RESPONSE_ADMIN_KICK = "Response-Admin-kick";
+export const ON_RESPONSE_ADMIN_BAN = "Response-Admin-Ban";
+export const ON_RESPONSE_ROOM_JOIN = "Response-Room-join";
+export const ON_RESPONSE_GET_USERS = "Response-get-users";
+export const ON_RESPONSE_GET_USER_PROFILE = "Response-get-user-profile";
+
+export const ON_RESPONSE_OWNER_ROOM_EDIT = "Response-Owner-Room-edit";
+
+// "get-users""current-users_${roomId}"
+// "Response-get-users"
 // 추천 by copilot
 export const ON_ANY = "onAny";
 export const ON_ERROR = "error";

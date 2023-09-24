@@ -43,7 +43,9 @@ const MessageBox = ({
             className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "
             key={index}
           >
-            <NameTag>{messageInfo.user?.nickname}</NameTag>
+            {!messageInfo.user.id ? null : (
+              <NameTag>{messageInfo.user?.nickname}</NameTag>
+            )}
             <span className="text-ellipsis break-all ">{messageInfo.text}</span>
             <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
               {messageInfo.created_at?.toLocaleString()}

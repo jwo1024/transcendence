@@ -5,14 +5,14 @@ import React, { useContext } from "react";
 import MenuBoxLayout from "@/components/chat/common/MenuBoxLayout";
 import { SocketContext } from "@/context/ChatSocketContext";
 // Types & Hooks & Contexts
-import { SimpRoomI, ResponseDTO } from "@/types/ChatInfoType";
+import { RoomI, ResponseDTO } from "@/types/ChatInfoType";
 import {
   EMIT_ROOM_LEAVE,
   ON_RESPONSE_ROOM_LEAVE,
 } from "@/types/ChatSocketEventName";
 
 interface LeaveRoomMenuBoxProps {
-  roomInfo: SimpRoomI;
+  roomInfo: RoomI;
   triggerClose?: () => void;
 }
 
@@ -40,7 +40,7 @@ const LeaveRoomMenuBox = ({
     <MenuBoxLayout>
       <Fieldset
         className="flex flex-col p-2 h-min gap-2 min-w-max"
-        legend="Chat-Room Settings"
+        legend="Leave Channel"
       >
         <form onSubmit={onSubmitForm}>
           <span>정말 떠나시겠다면 </span>

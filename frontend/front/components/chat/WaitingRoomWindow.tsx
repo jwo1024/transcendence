@@ -13,8 +13,8 @@ import type { MenuItemInfo } from "@/hooks/useMenuBox";
 import { HandleChatOpenWindowContext } from "@/context/ChatOpenWindowContext";
 import useChatRoomListReducer from "@/hooks/chat/useChatRoomListReducer";
 import { SocketContext } from "@/context/ChatSocketContext";
-import type { SimpUserI } from "@/types/ChatInfoType";
-import { ON_ROOMS, ON_NEW_JOIN_ROOM } from "@/types/ChatSocketEventName";
+import type { SimpRoomI, SimpUserI } from "@/types/ChatInfoType";
+import { ON_ROOMS, ON_ME_JOINING_ROOMS } from "@/types/ChatSocketEventName";
 
 interface WaitingRoomWindowProps {
   className?: string;
@@ -33,15 +33,18 @@ const WaitingRoomWindow = ({ className, userInfo }: WaitingRoomWindowProps) => {
     // 참여가능한 채팅방 목록 & 참여중인 채팅방 목록
     socket?.on(ON_ROOMS, (data) => {
       console.log("socket.on ON_ROOMS", data);
-      waitingRoomState.setListState({ roomList: data });
+      const roomList: SimpRoomI[] = data;
+      waitingRoomState.setListState({ roomList });
     }); // 궁금한것 : 형태가 다른 data가 들어오면 어떻게 되는가?
-    socket?.on(ON_NEW_JOIN_ROOM, (data) => {
-      console.log("socket.on ON_NEW_JOIN_ROOM", data);
-      joinedRoomState.addState({ roomData: data });
+    // join !!!!
+    socket?.on(ON_ME_JOINING_ROOMS, (data) => {
+      console.log("socket.on ON_ME_JOINING_ROOMS", data);
+      const roomList: SimpRoomI[] = data;
+      joinedRoomState.setListState({ roomList });
     });
     return () => {
       socket?.off(ON_ROOMS);
-      socket?.off(ON_NEW_JOIN_ROOM);
+      socket?.off(ON_ME_JOINING_ROOMS);
     };
   }, []);
 

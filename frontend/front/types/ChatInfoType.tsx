@@ -3,7 +3,7 @@
 // USER DTO
 // - SimpUserI : SimpleUserDTO
 export interface SimpUserI {
-  id: number;
+  id?: number;
   nickname: string;
 }
 export interface UserI {

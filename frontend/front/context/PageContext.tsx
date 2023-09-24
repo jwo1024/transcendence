@@ -56,6 +56,16 @@ export const PageContext = ({ ...props }) => {
         return [...state, action.task];
       }
       case "REMOVE": {
+        // const indexToRemove = state.findIndex(
+        //   (item) => item.title !== action.title
+        // );
+        // const indexToRemove = state.indexOf({
+        //   title: action.title,
+        //   active: true,
+        // });
+
+        // if (indexToRemove !== -1) return state.splice(indexToRemove, 1);
+        // else return state;
         return state.filter((item) => item.title !== action.title);
       }
       case "ADD_LIST": {
