@@ -19,7 +19,7 @@ export class UserMapper {
 	  
 		return dto;
 	}
-	
+
 	async Create_simpleDTOArrays(entityArray :UserI[]){
 		const dtoArray : SimpleUserDto[] = [];
 		if (entityArray.length === 0)
