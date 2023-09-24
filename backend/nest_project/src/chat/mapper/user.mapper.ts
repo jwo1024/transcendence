@@ -34,6 +34,7 @@ export class UserMapper {
 
 	  Create_simpleProfileEntityToDto(entity :UserProfile)
 	  {
+		console.log(`entity ${entity}`);
 		const dto = new SimpleProfileDto;
 		dto.id = entity.id;
 		dto.nickname = entity.nickname;

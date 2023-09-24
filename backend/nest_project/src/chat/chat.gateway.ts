@@ -221,6 +221,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         // room:RoomCreateDTO) 
   {
     const room = data.room;
+    this.logger.log(`room : ${room}`);
+    this.logger.log(`type : ${room.roomType}`);
     const userNickname = data.userNickname;
     if (room.roomType != 'dm')
     {
@@ -379,19 +381,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitErrorEvent(socket.id, "Response-Room-enter", "you are banned by that room.");
       return ; //ban 처리된 유저이면 요청 무시
     }
-    const roomFromDB = this.roomService.getRoom(roomId);
-   
+    const roomFromDB = await this.roomService.getRoomEntityWithMessages(roomId);
+    this.logger.log(roomFromDB.messages);
+    this.logger.log(roomFromDB.messages[0]);
+    this.logger.log("lenght", roomFromDB.messages.length);
     const currentRoomId = (await roomFromDB).roomId;
     //DB에서 messages 불러와서 사용자에게 보내주기.
     const messages = 
-      this.messageMapper.Create_simpleDTOArrays(
-        await this.messageService.findMessagesForRoom(await roomFromDB), currentRoomId);
+      this.messageMapper.Create_simpleDTOArrays(roomFromDB.messages, currentRoomId);
 
     // await this.server.to(socket.id).emit('messages', messages);
 
     //이벤트명 동적생성
     // Send last messages from Room to User
-    await this.server.to(socket.id).emit(`messages_${currentRoomId}`, messages);
+    await this.server.to(socket.id).emit(`messages_${currentRoomId}`, await messages);
     
     this.emitOneRoomToOneUser(roomId, socket.id,"Response-Room-enter");
     this.emitUserJoingingRooms(socket.id, await this.userService.getOne(socket.data.userId));
@@ -584,12 +587,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private async emitOneRoomToOneUser(roomId : number, socketId: string, responseEvent: string)
   {
     const room: RoomI 
-      = await this.roomService.getRoom(roomId);
+      = await this.roomService.getRoomEntityWithUsers(roomId);
     if (!room)
       return;
     const simpleRoom = await this.roomMapper.Create_specificInterfaceToDto(room);
     this.emitResponseEvent(socketId, responseEvent);
-    await this.server.to(socketId).emit('current-room_${roomId}', simpleRoom);
+    await this.server.to(socketId).emit(`current-room_${roomId}`, simpleRoom);
   }
 
   //현재방(roomId)에 속한 모든 유저들에게, 각 유저가 속한 모든 방 목록 보내기
@@ -798,10 +801,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @SubscribeMessage('get-user-profile')
     async onGetUserProfile(
       @ConnectedSocket() socket: Socket,
-      @MessageBody() targetId: number
-    )
+      @MessageBody() targetId: number)
     {
-      const profile_info = await this.profileService.getUserProfileById(targetId);
+      this.logger.log(`target : ${targetId}`);
+
+      const profile_info = await this.profileService.getUserProfileById(97993);
+      if (!profile_info)
+      this.logger.log(`profile_info ${profile_info}`);
+      this.logger.log(`profile_info ${profile_info.id}`);
       await socket.emit( "user-profile-info",
            (await this.userMaaper.Create_simpleProfileEntityToDto(profile_info)));
     }

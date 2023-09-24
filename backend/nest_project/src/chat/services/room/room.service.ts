@@ -193,7 +193,15 @@ export class RoomService {
   async getRoomEntityWithUsers(roomId: number): Promise<RoomEntity> {
     const temp = await this.roomRepository.findOne({
       where: { roomId },
-      relations: ['users'] //관련 엔터티도 함께 가져오겠다.
+      relations: ['users'] 
+    });
+    return temp;
+  }
+
+  async getRoomEntityWithMessages(roomId: number): Promise<RoomEntity> {
+    const temp = await this.roomRepository.findOne({
+      where: { roomId },
+      relations: ['messages'] 
     });
     return temp;
   }
@@ -201,7 +209,7 @@ export class RoomService {
   async getRoomEntityWithConnections(roomId: number): Promise<RoomEntity> {
     const temp = await this.roomRepository.findOne({
       where: { roomId },
-      relations: ['connections'] //관련 엔터티도 함께 가져오겠다.
+      relations: ['connections']
     });
     return temp;
   }
@@ -288,6 +296,8 @@ export class RoomService {
       joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
     if (roomFromDB.roomPass === null)
       return true;
+    if (joinDTO.roomPass === undefined || joinDTO.roomPass === null)
+      return false;
     else if ( this.comparePasswords(joinDTO.roomPass, roomFromDB.roomPass))
       return true;
     return false;

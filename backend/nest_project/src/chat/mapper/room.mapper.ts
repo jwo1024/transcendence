@@ -150,11 +150,7 @@ export class RoomMapper{
       if (entityArray === undefined)
         return dtoArray;
       for (const roomEntity of entityArray)
-      {
-        this.logger.log(`roomEnttity : ${roomEntity}`);
-        this.logger.log(`roomEnttity : ${dtoArray.length}`);
         dtoArray.push(await this.Create_simpleEntityToDto(roomEntity));
-      }
       return dtoArray;
     }
 }

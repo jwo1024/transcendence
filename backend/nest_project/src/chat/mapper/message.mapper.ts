@@ -32,14 +32,19 @@ export class MessageMapper{
     
     const roomtemp = this.roomMapper.Create_InterfcaeToEntity(await this.roomService.getRoom(dto.roomId));
     entity.room = roomtemp;
-    
-    const writerUser = await this.userService.getOne(userId);
-    entity.user = writerUser;
+    if (userId === undefined)
+    {
+      entity.user = null;
+    }
+    else
+    {
+      const writerUser = await this.userService.getOne(userId);
+      entity.user = writerUser;
+    }
 
     entity.text = dto.text;
 
     return entity;
-
   }
 
   async Create_entityToSimpleDto(entity :MessageI, roomId : number)
@@ -48,7 +53,12 @@ export class MessageMapper{
 
     dto.id = entity.id
     dto.text = entity.text;
-    dto.user = this.userMapper.Create_EntityToDto(entity.user, (await this.profileService.getUserProfileById(entity.user.id)).nickname);
+    if (entity.user === null || entity.user === undefined)
+    {
+      dto.user = { id: undefined, nickname: "server"};
+    }
+    else
+      dto.user = this.userMapper.Create_EntityToDto(entity.user, (await this.profileService.getUserProfileById(entity.user.id)).nickname);
     dto.created_at = entity.created_at;
     dto.roomId = roomId;
     
