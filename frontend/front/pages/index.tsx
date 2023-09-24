@@ -1,17 +1,13 @@
 import { Button } from "@react95/core";
-import { useState, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Window from "@/components/common/Window";
 import Icon from "@/components/common/Icon";
 import Router from "next/router";
-import { CurrentPageContext } from "@/context/PageContext";
 
 const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
-  const { setCurrentPage } = useContext(CurrentPageContext);
-
   useEffect(() => {
     localStorage.clear();
     sessionStorage.clear();
-    setCurrentPage("Desktop-Page");
   });
 
   return (
@@ -25,12 +21,6 @@ const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
 };
 
 const LoginPage = () => {
-  const { setCurrentPage } = useContext(CurrentPageContext);
-
-  useEffect(() => {
-    setCurrentPage("Login-Page");
-  });
-
   const onClick = () => {
     fetch("http://localhost:4000/auth/getUrl")
       .then((res) => {
