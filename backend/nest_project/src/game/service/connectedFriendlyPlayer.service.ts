@@ -17,10 +17,10 @@ export class ConnectedFriendlyPlayerService {
 	constructor(
 		@InjectRepository(ConnectedFriendlyPlayerEntity) private connectedFriendlyPlayerRepository: Repository<ConnectedFriendlyPlayerEntity>,
 		@InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
-		@InjectRepository(MatchEntity) private matchRepository: Repository<MatchEntity>,
+		// @InjectRepository(MatchEntity) private matchRepository: Repository<MatchEntity>,
 		private dataSource: DataSource,
 		private profileService: ProfileService,
-		private matchService: MatchService,
+		// private matchService: MatchService,
 	) {}
 
 	async createPlayer(id:number, socketId : string): Promise<ConnectedFriendlyPlayerEntity>

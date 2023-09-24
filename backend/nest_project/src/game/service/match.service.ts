@@ -53,7 +53,7 @@ export class MatchService {
 		const host = await this.connectedFriendlyPlayerService.getPlayer(host_id);
 		if (host.guestId !== guest_id)
 			return null;
-		return this.matchRepository.save({playerLeft: host_id, playerRight: guest_id, game_type: game_type, scoreLeft: 0, scoreRight: 0});
+		return await this.matchRepository.save({playerLeft: host_id, playerRight: guest_id, game_type: game_type, scoreLeft: 0, scoreRight: 0});
 	}
 
 	async getByMatchId(match_id: number): Promise<MatchEntity>
