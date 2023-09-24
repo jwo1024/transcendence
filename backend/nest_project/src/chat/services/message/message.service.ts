@@ -22,37 +22,38 @@ export class MessageService {
     private messageMapper : MessageMapper,
     ) { }
     
-    async create(messageDto: MessageDTO, user: UserI): Promise<MessageI> 
+    async create(messageDto: MessageDTO, userId: number): Promise<MessageI> 
     {
       const newMessage 
-        = await this.messageMapper.Create_dtoToEntity(messageDto); 
+        = await this.messageMapper.Create_dtoToEntity(messageDto, userId); 
       return this.messageRepository.save(this.messageRepository.create(newMessage));
     }
     
-    async findMessagesForRoom(room: RoomI): Promise<MessageI[]> {
-      this.logger.log(`findMessages Start!`);
-    
+    async findMessagesForRoom(room: RoomI): Promise<MessageI[]> 
+    {
       const messages = await this.messageRepository
         .createQueryBuilder('message')
         .leftJoin('message.room', 'room')
         .where('room.roomId = :roomId', { roomId: room.roomId })
         .leftJoinAndSelect('message.user', 'user')
-        .orderBy('message.created_at', 'DESC')
+        .orderBy('message.created_at', 'ASC')
         .getMany();
-    
+      
       return messages;
     }
 
-    // async findMessagesForRoom(room: RoomI, options: IPaginationOptions): Promise<Pagination<MessageI>> {
-    //   this.logger.log(`findMessages Start!`);
-    //   const query = this.messageRepository
-    //   .createQueryBuilder('message')
-    //   .leftJoin('message.room', 'room')
-    //   .where('room.roomId = :roomId', { roomId: room.roomId })
-    //   .leftJoinAndSelect('message.user', 'user')
-    //   .orderBy('message.created_at', 'DESC');
-      
-    //   return paginate(query, options);
-      
+    async deleteByRoomId(roomId : number) 
+    {
+      const messagesToDelete = await this.messageRepository.find({
+        where: { room: { roomId: roomId } },
+      });
+  
+      if (!messagesToDelete) {
+        return ;
+      }
+  
+      // ConnectedUserEntity를 삭제합니다.
+      await this.messageRepository.remove(messagesToDelete);
     }
+  }
     
