@@ -48,7 +48,7 @@ export class ProfileService {
             const createdProfile = await this.userProfileRepository.save(userProfile);    
             // UserEntity 생성 && profile에 엔터티 추가 - for chat
             const userEntity = await this.userService.create({ userProfile: createdProfile, id,
-                rooms: [], connections: [], joinedRooms: [], messages: []});
+                 rooms: [], connections: [], messages: []});
             await this.userProfileRepository.update({id: id}, {userEntity: userEntity});
             console.log('wow signup is done! : ', userProfile);
         } catch (error) {

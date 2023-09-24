@@ -12,10 +12,13 @@ export class MessageDTO {
 
 export class SimpleMessageDTO 
 {
+  id : number;
 
   text: string;
 
   user: SimpleUserDto;
+
+  roomId: number;
 
   created_at: Date;
 }
