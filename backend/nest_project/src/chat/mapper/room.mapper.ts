@@ -16,7 +16,7 @@ export class RoomMapper{
     // private readonly roomService : RoomService,
     ){}
   
-  private logger = new Logger('Chat');
+  private logger = new Logger('roomMapper');
 
  Create_entityToDto(entity :RoomEntity){
     const dto = new RoomCreateDTO;
@@ -70,8 +70,10 @@ export class RoomMapper{
      dto.hasPass = false;
     else
       dto.hasPass = true;
-    // dto.hasPass = (interfaceI.roomPass !== undefined);
-    dto.joinUsersNum = interfaceI.users.length;
+    if(interfaceI.users === undefined || interfaceI.users === null)
+      dto.joinUsersNum = 0;
+    else
+      dto.joinUsersNum = interfaceI.users.length;
   
     return dto;
   }
@@ -128,19 +130,24 @@ export class RoomMapper{
       dto.roomName = entity.roomName;
       dto.roomType = entity.roomType;
       if (entity.roomPass === null) 
-      dto.hasPass = false;
+        dto.hasPass = false;
       else
         dto.hasPass = true;
       // dto.hasPass = (entity.roomPass !== undefined);
-      if (entity.users === undefined)
+      if (entity.users === undefined || entity.users === null)
       {
         const roomWithUsers = await this.getRoomEntityWithUsers(entity.roomId);
-        if (roomWithUsers.users === undefined)
+        if (roomWithUsers.users === undefined || roomWithUsers.users === null)
+        {
           dto.joinUsersNum = 0;
+        }
+        else
+          dto.joinUsersNum = roomWithUsers.users.length;
       }
       else
         dto.joinUsersNum = entity.users.length; 
 
+      // this.logger.log("User Nums : " , dto.joinUsersNum);
       return dto;
     }
 

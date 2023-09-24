@@ -123,7 +123,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             await this.connectedUserService.createfastWithRoomId(socket.id, userForChat, room.roomId);
         }
 
-        return this.server.to(socket.id).emit('rooms', rooms);
+        return this.server.to(socket.id).emit('rooms', await this.roomMapper.Create_simpleDTOArrays(rooms));
 
       } catch {
        this.logger.log(`error occur`); 
@@ -190,16 +190,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // this.roomService.addUserToRoom(socket.data.userId, socket.id, theroom);
     // return ;
 
+    const createdRoomWithUsers = await this.roomService.getRoomEntityWithUsers(createdRoom.roomId);
+    this.emitResponseEvent(socket.id, "Response-Room-create");
     // 방을 만든 사용자에게 현재 방의 정보 제공 
     await this.server.to(socket.id).emit('new_join_room',
-       await this.roomMapper.Create_specificInterfaceToDto(createdRoom));
+       await this.roomMapper.Create_specificInterfaceToDto(createdRoomWithUsers));
        // const currentRoomId = createdRoom.roomId;
        // await this.server.to(socket.id).emit(`messages_${currentRoomId}`, createdRoom);
        
     const newRoom = await this.roomService.getRoomEntityWithConnections(createdRoom.roomId);
-    this.emitResponseEvent(socket.id, "Response-Room-create");
     this.emitNotice(newRoom, `[${newRoom.roomName}]방이 만들어졌습니다.`);
     
+    this.emitUserJoingingRooms(socket.id, userEntity);
     const currentConnections = await this.connectedUserService.getByRoomId(null);
     this.logger.log(`cC : ${currentConnections}`);
     this.logger.log(`cC : ${(currentConnections).length}`);
@@ -210,7 +212,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         const rooms = await this.roomService.getRoomsByType(['open']); //roomType이 DM, private 이 아닌 애들만.
         this.logger.log(`connection_socketId : ${connection.socketId}`);
         this.server.to(connection.socketId).emit('rooms', rooms);
-      }
+    }
   }
   
   //For DM(개인 채팅용 방 만들기 메서드)
@@ -324,18 +326,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @MessageBody() room: RoomJoinDTO) 
   {
     // this.server.to(socket.id).emit("hihi");
-    if ( !(this.roomService.isRoomExist(room.roomId)))
-      {
-        this.emitErrorEvent(socket.id, "Response-Room-join", "the room is not exist now.")
-        return ; //방이 존재하지 않음
-      }
+    const roomFromDB = await this.roomService.getRoomEntityWithUsers(room.roomId);
+    if ( roomFromDB === undefined || roomFromDB === null)
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-join", "the room is not exist now.")
+      return ; //방이 존재하지 않음
+    }
     if ( await this.roomService.isBannedUser(socket.data.userId, room.roomId))
     {
       this.emitErrorEvent(socket.id, "Response-Room-join", "this user is banned from the room.")
       return ; //ban 처리된 유저
     }
-    const roomFromDB = await this.roomService.getRoomEntityWithUsers(room.roomId);
-    // if(roomFromDB
+
       if (!( await this.roomService.isValidForJoin( roomFromDB, room)))
     {
       this.emitErrorEvent(socket.id, "Response-Room-join", "not valid password")
