@@ -47,7 +47,7 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="m-2 max-w-screen ">
+    <div className="m-2 max-w-screen">
       {userInfo === null ? (
         <div className=" text-2xl text-center pt-60">Loading...</div>
       ) : (
@@ -64,27 +64,27 @@ const ChatPage = () => {
             </HandleChatOpenWindowContext.Provider>
 
             {/* Chat Rooms */}
-            {openWindow.state?.map((roomData) => (
+            {openWindow.state?.map((simpRoomData) => (
               <div
-                key={roomData.roomId}
+                key={simpRoomData.roomId}
                 className="flex flex-col w-full h-full p-0.5 m-1 shrink min-h-100 min-w-100"
               >
-                {roomData.roomType === "dm" ? (
+                {simpRoomData.roomType === "dm" ? (
                   <ChatDmWindow
                     userInfo={userInfo}
-                    roomInfo={roomData}
-                    key={roomData.roomId}
+                    simpRoomInfo={simpRoomData}
+                    key={simpRoomData.roomId}
                     customOnClickXOption={() =>
-                      removeOpenWindow({ roomId: roomData.roomId })
+                      removeOpenWindow({ roomId: simpRoomData.roomId })
                     }
                   />
                 ) : (
                   <ChatGroupWindow
                     userInfo={userInfo}
-                    roomInfo={roomData}
-                    key={roomData.roomId}
+                    simpRoomInfo={simpRoomData}
+                    key={simpRoomData.roomId}
                     customOnClickXOption={() =>
-                      removeOpenWindow({ roomId: roomData.roomId })
+                      removeOpenWindow({ roomId: simpRoomData.roomId })
                     }
                   />
                 )}

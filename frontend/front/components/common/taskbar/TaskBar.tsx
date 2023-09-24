@@ -9,7 +9,7 @@ import TaskButton from "@/components/common/taskbar/TaskButton";
 const TaskBar = () => {
   const { currentPage } = useContext(CurrentPageContext);
   const { taskList } = useContext(TaskListContext);
-  const [TaskLists, setTaskLists] = useState<ITask[]>(taskList); // reducer ?
+  const [taskLists, setTaskLists] = useState<ITask[]>(taskList); // reducer ?
   const [activeTaskButton, setActiveTaskButton] = useState<number>(-1);
   const [startButtonClicked, setStartButtonClicked] = useState<boolean>(false);
   const [nickName, setNickName] = useState<string>("loading...");
@@ -31,7 +31,7 @@ const TaskBar = () => {
   };
 
   const handleActiveTaskButton = (key: number) => () => {
-    const updatedTaskLists = TaskLists.map((task) => ({
+    const updatedTaskLists = taskLists.map((task) => ({
       ...task,
       active: false,
     }));
@@ -71,7 +71,7 @@ const TaskBar = () => {
           </Frame>
           {/* Current Tasks */}
           <div className="flex flex-row mx-1 overflow-clip">
-            {TaskLists.map((task, index) => (
+            {taskLists.map((task, index) => (
               <TaskButton
                 key={index}
                 index={index}

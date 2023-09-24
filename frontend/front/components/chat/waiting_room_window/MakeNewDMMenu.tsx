@@ -37,14 +37,13 @@ const MakeNewDMMenu = ({ userInfo }: MakeNewChatMenuBoxProps) => {
       return;
     }
     const friendNick = friendNickRef.current?.value;
-    const title = `DM / [${userInfo.nickname} & ${friendNick}]`;
+    const title = `[${userInfo.nickname} & ${friendNick}]`;
     const newRoom: RoomCreateDTO = {
       roomName: title,
       roomType: "dm",
       roomPass: undefined,
     };
     console.log("socket.emit EMIT_DM_CREATE", newRoom, friendNick || "");
-    socket?.emit(EMIT_DM_CREATE, { room: newRoom, userNickname: friendNick });
     socket?.once(ON_RESPONSE_DM_CREATE, (data) => {
       const res: ResponseDTO = data;
       console.log("socket.on ON_RESPONSE_DM_CREATE", data);
@@ -52,6 +51,8 @@ const MakeNewDMMenu = ({ userInfo }: MakeNewChatMenuBoxProps) => {
         setErrorMsg(`DM방 만들기에 실패했습니다 : ${res.message}`);
       else setErrorMsg(null);
     });
+    socket?.emit(EMIT_DM_CREATE, { room: newRoom, userNickname: friendNick });
+   
   };
 
   return (

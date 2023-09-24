@@ -2,8 +2,9 @@
 import { Fieldset, Frame, Button, Input } from "@react95/core";
 import { useRef, useState, useContext, useEffect } from "react";
 // Components
-import NameTag from "../common/NameTag";
-import MenuBoxLayout from "../common/MenuBoxLayout";
+import NameTag from "@/components/chat/common/NameTag";
+import MenuBoxLayout from "@/components/chat/common/MenuBoxLayout";
+import MiniProfileBlock from "@/components/chat/chat_window/MiniProfileBlock";
 // Types & Hooks & Contexts
 import type {
   SimpUserI,
@@ -20,15 +21,19 @@ import {
   EMIT_ADMIN_KICK,
   EMIT_ADMIN_MUTE,
   EMIT_GET_USER_PROFILE,
-  ON_RESPONSE_ADMIN_KICK,
+  EMIT_ROOM_INVITE,
+  ON_RESPONSE_ADMIN_ADD,
   ON_RESPONSE_ADMIN_BAN,
+  ON_RESPONSE_ADMIN_KICK,
   ON_RESPONSE_ADMIN_MUTE,
+  ON_RESPONSE_GET_USER_PROFILE,
   ON_USER_PROFILE_INFO,
+  ON_RESPONSE_ROOM_INVITE,
 } from "@/types/ChatSocketEventName";
 
 interface UserListMenuBoxProps {
   // userInfo: SimpUserI;
-  roomInfo?: RoomI;
+  roomInfo: RoomI;
   isAdmin: boolean;
 }
 const UserListMenuBox = ({
@@ -40,24 +45,24 @@ const UserListMenuBox = ({
   const socket = useRef(useContext(SocketContext)); // TODO : check 렌더링 소켓... !
   const inviteNickRef = useRef<HTMLInputElement>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [friendProfile, setFriendProfile] = useState<UserI | null>(null);
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedId(Number(e.target.value));
     console.log("e.target.value", e.target.value);
     console.log("selectedId", selectedId);
   };
-  const [friendProfile, setFriendProfile] = useState<UserI | null>(null);
 
   useEffect(() => {
     return () => {
       socket.current?.off(ON_RESPONSE_ADMIN_KICK);
       socket.current?.off(ON_RESPONSE_ADMIN_BAN);
       socket.current?.off(ON_RESPONSE_ADMIN_MUTE);
+      socket.current?.off(ON_RESPONSE_ADMIN_ADD);
       socket.current?.off(ON_USER_PROFILE_INFO);
     };
   }, []);
 
   const handleClickKick = () => {
-    console.log("kick");
     emitAdminEvent(EMIT_ADMIN_KICK, ON_RESPONSE_ADMIN_KICK, "Kick");
   };
   const handleClickBan = () => {
@@ -65,6 +70,9 @@ const UserListMenuBox = ({
   };
   const handleClickMute = () => {
     emitAdminEvent(EMIT_ADMIN_MUTE, ON_RESPONSE_ADMIN_MUTE, "Mute");
+  };
+  const handleClickMakeAdmin = () => {
+    emitAdminEvent(EMIT_ADMIN_ADD, ON_RESPONSE_ADMIN_ADD, "Make-Admin");
   };
 
   const emitAdminEvent = (
@@ -81,8 +89,10 @@ const UserListMenuBox = ({
         roomId: roomInfo?.roomId,
         targetUserId: selectedId,
       };
+      console.log("socket.emit emitEvent", emitEvent, emitData);
       socket.current?.emit(emitEvent, emitData);
       socket.current?.once(onEvent, (res) => {
+        console.log("socket.on onEvent", onEvent, res);
         const resDTO: ResponseDTO = res;
         if (resDTO.success) return;
         if (resDTO.message) alert(resDTO.message);
@@ -97,31 +107,39 @@ const UserListMenuBox = ({
 
   const handleClickViewProfile = () => {
     if (selectedId === null) return;
-    console.log("targetUserId", selectedId);
+    console.log("socket.emit EMIT_GET_USER_PROFILE", selectedId);
     // TODO get-user-profile
-    // socket.current?.emit(EMIT_GET_USER_PROFILE, selectedId);
-    // socket.current?.once(ON_USER_PROFILE_INFO, (res) => {
-    //   const friendProfile: UserI = res;
-    //   setFriendProfile(friendProfile);
-    // });
-    setFriendProfile({
-      nickname: findNickById(selectedId),
-      state: "online",
-      avatarSrc: "/images/avatars/1.png",
-      ladder: 1,
-      wins: 1,
-      loses: 1,
+    socket.current?.emit(EMIT_GET_USER_PROFILE, selectedId);
+    socket.current?.once(ON_RESPONSE_GET_USER_PROFILE, (res) => {
+      console.log("Response-get-user-profile", res);
+      if (res.success) return;
+      setFriendProfile(null);
+      alert("친구 프로필을 불러오는데 실패하였습니다.");
     });
-    console.log("view-profile");
+    socket.current?.once(ON_USER_PROFILE_INFO, (res) => {
+      const friendProfile: UserI = res;
+      console.log("socket.on ON_USER_PROFILE_INFO", friendProfile);
+      setFriendProfile(friendProfile);
+    });
   };
 
   const onSubmitInviteFriend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const inviteFriendData: RoomInviteDTO = {
-      targetUserNick: "jiwolee",
-      roomId: 1,
+      targetUserNick: inviteNickRef.current?.value || "",
+      roomId: roomInfo.roomId,
     };
+    if (inviteFriendData.targetUserNick === "")
+      return alert("닉네임을 입력해주세요.");
     console.log("invite-friend", inviteFriendData);
+    socket.current?.emit(EMIT_ROOM_INVITE, inviteFriendData);
+    socket.current?.once(ON_RESPONSE_ROOM_INVITE, (res) => {
+      console.log("Response-Room-invite", res);
+      const resDTO: ResponseDTO = res;
+      if (resDTO.success) return;
+      if (resDTO.message) alert(resDTO.message);
+      else alert("친구 초대에 실패하였습니다.");
+    });
   };
 
   return (
@@ -138,22 +156,42 @@ const UserListMenuBox = ({
           boxShadow="in"
           bg=""
         >
-          {userList?.map((user, index) => {
-            return (
+          <label>
+            <UserBlock
+              user={userList.find((user) => user.id === roomInfo?.roomOwner)}
+              role="owner"
+              handleRadioChange={handleRadioChange}
+            />
+          </label>
+          {userList
+            .filter(
+              (user) =>
+                user.id &&
+                roomInfo?.roomAdmins.includes(user.id) &&
+                user.id !== roomInfo.roomOwner
+            )
+            .map((user, index) => (
               <label key={index}>
-                <div className="m-1 my-4 text-lg">
-                  <input
-                    type="radio"
-                    name="useList"
-                    value={user.id}
-                    onChange={handleRadioChange}
-                  />
-                  <NameTag>{user.nickname}</NameTag>
-                  <NameTag>{user.id} "role"</NameTag>
-                </div>
+                <UserBlock
+                  user={user}
+                  role="admin"
+                  handleRadioChange={handleRadioChange}
+                />
               </label>
-            );
-          })}
+            ))}
+          {userList
+            .filter(
+              (user) => user.id && !roomInfo?.roomAdmins.includes(user.id)
+            )
+            .map((user, index) => (
+              <label key={index}>
+                <UserBlock
+                  user={user}
+                  role="admin"
+                  handleRadioChange={handleRadioChange}
+                />
+              </label>
+            ))}
           <span>{}</span>
         </Frame>
         {/* Buttons */}
@@ -182,10 +220,13 @@ const UserListMenuBox = ({
             </Button>
           </div>
           <br />
-          <Button onClick={handleClickViewProfile}>view-profile</Button>
+          <Button onClick={handleClickMakeAdmin} disabled={!isAdmin}>
+            Make-Admin
+          </Button>
+          <Button onClick={handleClickViewProfile}>View-Profile</Button>
           <br />
           <form onSubmit={onSubmitInviteFriend}>
-            <Input ref={inviteNickRef} />
+            <Input ref={inviteNickRef} placeholder="닉네임 입력" />
             <Button>invite-freind</Button>
           </form>
         </div>
@@ -195,36 +236,36 @@ const UserListMenuBox = ({
 
       {/* Mini Profile */}
       {friendProfile ? (
-        <Fieldset
-          className="flex flex-col p-2 h-min gap-2 min-w-max w-full"
-          legend="Profile"
-        >
-          <div className=" flex flex-col items-center justify-between p-4 pb-1 w-full">
-            <div className="flex items-center space-x-8">
-              <img
-                src={friendProfile.avatarSrc}
-                alt="Avatar"
-                className=" w-16 h-16"
-              />
-              <div className="flex flex-col items-center space-y-3 w-28">
-                <span className=" text-xl">{friendProfile.nickname}</span>
-                <Button className=" text-base">게임초대</Button>
-              </div>
-            </div>
-          </div>
-          <div className="p-4 w-full">
-            <Fieldset legend="Information">
-              <div className="flex flex-col p-2">
-                <div>Ladder: {friendProfile.ladder}</div>
-                <div>Win: {friendProfile.wins}</div>
-                <div>Lose: {friendProfile.loses}</div>
-              </div>
-            </Fieldset>
-          </div>
-        </Fieldset>
+        <MiniProfileBlock friendProfile={friendProfile} />
       ) : null}
     </MenuBoxLayout>
   );
 };
 
 export default UserListMenuBox;
+
+// Utils
+// UserBlockProps
+interface UserBlockProps {
+  user?: SimpUserI;
+  role: string;
+  handleRadioChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+const UserBlock = ({ user, role, handleRadioChange }: UserBlockProps) => {
+  return (
+    <div className="m-1 my-4 text-lg">
+      {user ? (
+        <>
+          <input
+            type="radio"
+            name="useList"
+            value={user.id}
+            onChange={handleRadioChange}
+          />
+          <NameTag>{user.nickname}</NameTag>
+          <NameTag>{role}</NameTag>{" "}
+        </>
+      ) : null}
+    </div>
+  );
+};

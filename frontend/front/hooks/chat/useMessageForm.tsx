@@ -27,7 +27,7 @@ const reducer = (sentMsgList: SendMessageDTO[], action: Action) => {
       // 왜 안됨 ?
       console.log("! sentMsgList", sentMsgList.length);
       console.log("! indexToRemove", indexToRemove);
-      console.log ("! seentMsgList[indexToRemove]", sentMsgList.splice(0, 1));
+      console.log("! seentMsgList[indexToRemove]", sentMsgList.splice(0, 1));
       if (indexToRemove !== -1) return sentMsgList.splice(indexToRemove, 1);
       return sentMsgList;
     }
@@ -38,12 +38,12 @@ const reducer = (sentMsgList: SendMessageDTO[], action: Action) => {
 
 // useMessageReducer ... !
 interface useMessageFormProps {
-  roomInfo: SimpRoomI;
+  simpRoomInfo: SimpRoomI;
   userInfo: SimpUserI;
   socket: Socket | undefined;
 }
 const useMessageForm = ({
-  roomInfo,
+  simpRoomInfo,
   userInfo,
   socket,
 }: useMessageFormProps) => {
@@ -57,14 +57,14 @@ const useMessageForm = ({
 
   const handleSendMessage = () => {
     const messageData: SendMessageDTO = {
-      roomId: roomInfo.roomId,
+      roomId: simpRoomInfo.roomId,
       userId: userInfo?.id || -1,
       text: inputRef.current?.value || "",
     };
     if (messageData.text === "") return;
     dispatch({ type: "ADD", message: messageData });
     // console.log("messageData", messageData);
-    console.log ("socket?.emit(EMIT_MESSAGE_ADD, messageData)", messageData);
+    console.log("socket?.emit(EMIT_MESSAGE_ADD, messageData)", messageData);
     socket?.emit(EMIT_MESSAGE_ADD, messageData); // 보낼때
     resetInputMessage();
   };

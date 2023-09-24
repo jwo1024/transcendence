@@ -8,19 +8,28 @@ import SelectButton from "../../common/SelectButton";
 import type { FrameButtonProps } from "../../common/SelectButton";
 import MenuBoxLayout from "../common/MenuBoxLayout";
 import { SocketContext } from "@/context/ChatSocketContext";
-import { RoomCreateDTO, SimpRoomI, roomType } from "@/types/ChatInfoType";
+import {
+  RoomCreateDTO,
+  RoomI,
+  roomType,
+  ResponseDTO,
+} from "@/types/ChatInfoType";
+import {
+  EMIT_OWNER_ROOM_EDIT,
+  ON_RESPONSE_OWNER_ROOM_EDIT,
+} from "@/types/ChatSocketEventName";
 
 interface SettingMenuBoxProps {
   confirmButtonName?: string;
-  roomInfo: SimpRoomI;
-  isAdmin: boolean;
+  roomInfo: RoomI;
+  isOwner: boolean;
 }
 
 // SettingMenuBox
 const SettingMenuBox = ({
   confirmButtonName,
   roomInfo,
-  isAdmin,
+  isOwner,
 }: SettingMenuBoxProps) => {
   const socket = useContext(SocketContext);
   const [checkedPassword, setCheckedPassword] = useState<boolean>(false);
@@ -43,9 +52,18 @@ const SettingMenuBox = ({
       roomType: roomType,
       roomPass: checkedPassword ? passInputRef.current?.value : undefined,
     };
-    // TODO
-    // socket?.emit(EMIT_OWNER_ROOM_EDIT, roomData, roomInfo.roomId); // 이렇게 보내는게 맞나
-    // console.log("Room-create : ", roomData, roomInfo.roomId);
+    // TODO : check
+    console.log("socket?.emit EMIT_OWNER_ROOM_EDIT : ", roomData, roomInfo.roomId);
+    socket?.emit(EMIT_OWNER_ROOM_EDIT, {
+      editData: roomData,
+      roomId: roomInfo.roomId,
+    });
+    socket?.once(ON_RESPONSE_OWNER_ROOM_EDIT, (data) => {
+      console.log("socket?.once ON_RESPONSE_OWNER_ROOM_EDIT : ", data);
+      const res: ResponseDTO = data;
+      if (res.success) alert("방 정보가 수정되었습니다.");
+      else alert("방 정보 수정에 실패했습니다.");
+    });
   };
 
   return (
@@ -66,7 +84,6 @@ const SettingMenuBox = ({
               checked={checkedPassword}
               onChange={handleCheckedPassword}
             />
-            {/* <input type="checkbox" id="scales" name="scales" checked /> */}
             {checkedPassword ? (
               <Input
                 type="password"
@@ -77,7 +94,7 @@ const SettingMenuBox = ({
             ) : null}
           </div>
           <br />
-          <Button className=" font-semibold w-full" disabled={!isAdmin}>
+          <Button className=" font-semibold w-full" disabled={!isOwner}>
             적용하기
           </Button>
         </form>

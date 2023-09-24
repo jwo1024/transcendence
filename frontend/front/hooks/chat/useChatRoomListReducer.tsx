@@ -24,6 +24,10 @@ const reducer = (state: SimpRoomI[], action: Action) => {
   console.log(state);
   switch (action.type) {
     case "ADD": {
+      if (state.length >= 5) {
+        alert("창은 5개까지만@!");
+        return state;
+      }
       if (state.some((item) => item.roomId === action.room.roomId))
         return state;
       return [...state, action.room];

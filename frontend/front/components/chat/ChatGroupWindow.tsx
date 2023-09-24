@@ -6,22 +6,25 @@ import Window from "../common/Window";
 import MenuBar from "../common/MenuBar";
 import MessageBox from "./chat_window/MessageBox";
 import StatusBlock from "./chat_window/StatusBlock";
-import SettingMenuBox from "./chat_window/SettingMenu";
+import SettingMenuBox from "./chat_window/SettingMenuBox";
 import UserListMenuBox from "./chat_window/UserListMenuBox";
 import LeaveRoomMenuBox from "./chat_window/LeaveRoomMenuBox";
+import NotifyBlock from "../common/NotifyBlock";
 // Types & Hooks & Contexts
 import {
   RecvMessageDTO,
   SimpUserI,
   SimpRoomI,
   RoomI,
+  ResponseDTO,
 } from "@/types/ChatInfoType";
 import {
   ON_MESSAGES_ROOMID,
   ON_CURRENT_ROOM_ROOMID,
   ON_MESSAGE_ADDED_ROOMID,
+  ON_CURRENT_USERS_ROOMID, // ?
   EMIT_ROOM_ENTER,
-  EMIT_MESSAGE_ADD,
+  ON_RESPONSE_ROOM_ENTER_ROOMID,
 } from "@/types/ChatSocketEventName";
 import useMessageForm from "@/hooks/chat/useMessageForm";
 import useMenuBox from "@/hooks/useMenuBox";
@@ -31,82 +34,77 @@ import { SocketContext } from "@/context/ChatSocketContext";
 interface ChatGroupWindowProps {
   className?: string;
   userInfo: SimpUserI;
-  roomInfo: SimpRoomI;
+  simpRoomInfo: SimpRoomI;
   customOnClickXOption?: () => void;
 }
 const ChatGroupWindow = ({
   className,
   userInfo,
-  roomInfo,
+  simpRoomInfo,
   customOnClickXOption,
 }: ChatGroupWindowProps) => {
   const socket = useContext(SocketContext);
+  const [roomInfo, setRoomInfo] = useState<RoomI | undefined>(undefined);
   const [messageList, setMessageList] = useState<RecvMessageDTO[]>([]);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [notifyStr, setNotifyStr] = useState<string>("Loading");
   const { inputRef, sentMsgList, deleteSentMessage, handleFormSubmit } =
     useMessageForm({
-      roomInfo,
+      simpRoomInfo,
       userInfo,
       socket,
-    });
-  const [roomInfoState, setRoomInfoState] = useState<RoomI | undefined>(
-    undefined
-  ); // TODO : roomInfo
-  const [isAdmin, setIsAdmin] = useState<boolean>(false); // TODO : check
+    }); // EMIT_MESSAGE_ADD occur inside of useMessageForm
 
   useEffect(() => {
-    // 초기데이터 받기 messages & user data
-    // setRoomInfoState({
-    //   ...roomInfo,
-    //   users: [
-    //     { nickname: "user1", id: 98069 },
-    //     { nickname: "user2", id: 99833 },
-    //     { nickname: "user3", id: 98989 },
-    //     { nickname: "user4", id: 11111 },
-    //   ],
-    //   roomOwner: 99800,
-    //   roomAdmins: [99800],
-    //   roomBanned: [11111],
-    //   created_at: new Date(),
-    // }); // tmp
-    // room 초기 정보 가져오기
-    // console.log("Check :ChatGroupWindow : Mount");
-    socket?.once(`${ON_MESSAGES_ROOMID}${roomInfo.roomId}`, (data) => {
+    socket?.on(`${ON_CURRENT_ROOM_ROOMID}${simpRoomInfo.roomId}`, (data) => {
+      console.log("socket.on ON_CURRENT_ROOM_ROOMID: ", data);
+      const roomData: RoomI = data;
+      setRoomInfo(() => {
+        checkAdmin(roomData);
+        return roomData;
+      });
+    });
+    socket?.once(`${ON_MESSAGES_ROOMID}${simpRoomInfo.roomId}`, (data) => {
       console.log("socket.on ON_MESSAGES_ROOMID: ", data);
       const msgList: RecvMessageDTO[] = Array.from(data);
       if (msgList.length === 0) setMessageList([]);
       else setMessageList([...msgList]);
     });
-    socket?.once(`${ON_CURRENT_ROOM_ROOMID}${roomInfo.roomId}`, (data) => {
-      console.log("socket.on ON_CURRENT_ROOM_ROOMID: ", data);
-      const roomData: RoomI = data;
-      setRoomInfoState(roomData);
-      checkAdmin();
-    });
+    socket?.once(
+      `${ON_RESPONSE_ROOM_ENTER_ROOMID}${simpRoomInfo.roomId}`,
+      (data) => {
+        console.log("socket.on ON_RESPONSE_ROOM_ENTER_ROOMID: ", data);
+        const roomData: ResponseDTO = data;
+        if (!roomData.success)
+          setNotifyStr(
+            ` 채팅방[${simpRoomInfo.roomName}] 입장에 실패하였습니다.`
+          );
+        else setNotifyStr("");
+      }
+    );
+    console.log("socket?.emit EMIT_ROOM_ENTER ", simpRoomInfo.roomId);
+    socket?.emit(EMIT_ROOM_ENTER, simpRoomInfo.roomId);
 
-    socket?.emit(EMIT_ROOM_ENTER, roomInfo.roomId);
-
-    // socket?.emit(EMIT_ROOM_ENTER, { roomId: roomInfo.roomId });
-    // 오는 메시지 듣기
-    socket?.on(`${ON_MESSAGE_ADDED_ROOMID}${roomInfo.roomId}`, (data) => {
+    socket?.on(`${ON_MESSAGE_ADDED_ROOMID}${simpRoomInfo.roomId}`, (data) => {
       console.log("socket.on ON_MESSAGE_ADDED_ROOMID: ", data);
       const msg: RecvMessageDTO = data;
       if (msg.user.id === userInfo.id) deleteSentMessage(msg);
       adddMsgToList(msg);
     });
-
     return () => {
-      socket?.off(`${ON_MESSAGE_ADDED_ROOMID}${roomInfo.roomId}`);
+      socket?.off(`${ON_MESSAGES_ROOMID}${simpRoomInfo.roomId}`);
+      socket?.off(`${ON_CURRENT_ROOM_ROOMID}${simpRoomInfo.roomId}`);
+      socket?.off(`${ON_RESPONSE_ROOM_ENTER_ROOMID}${simpRoomInfo.roomId}`);
+      socket?.off(`${ON_MESSAGE_ADDED_ROOMID}${simpRoomInfo.roomId}`);
     };
   }, []);
 
-  // utils
-  const checkAdmin = () => {
-    // TODO
-    if (roomInfoState?.roomOwner === userInfo.id) setIsAdmin(true);
-    else if (roomInfoState?.roomAdmins.find((admin) => admin === userInfo.id))
+  // Utils
+  const checkAdmin = (roomData: RoomI) => {
+    if (roomData?.roomOwner === userInfo.id) setIsAdmin(true);
+    else if (roomData?.roomAdmins.find((admin) => admin === userInfo.id))
       setIsAdmin(true);
     else setIsAdmin(false);
-    // setIsAdmin(true); // tmp
   };
 
   const adddMsgToList = (msg: RecvMessageDTO) => {
@@ -121,35 +119,41 @@ const ChatGroupWindow = ({
   const menuItmes: MenuItemInfo[] = [
     { name: "Settings" },
     { name: "User-List" },
-    { name: "Leave-Room" },
+    { name: "Leave-Channel" },
   ];
   const { menuItemsWithHandlers, showMenuBox } = useMenuBox(menuItmes);
 
   return (
     <Window
-      title={`Chatting Room / ${roomInfo.roomName}`}
+      title={simpRoomInfo.roomName}
       className={className}
       customOnClickXOption={customOnClickXOption}
     >
       {/* menu bar */}
       <MenuBar menu={menuItemsWithHandlers} />
       {/* main */}
-      <div className="flex flex-row flex-1 overflow-auto ">
+      <div className="flex flex-row flex-1 ">
         {/* chat box */}
-        <div className="flex flex-col flex-1 overflow-auto ">
+        <div className="flex flex-col flex-1 overflow-scroll ">
           <Frame
-            className="flex flex-col flex-1 overflow-auto p-1"
+            className="flex flex-col flex-1 overflow-scroll p-1"
             boxShadow="in"
           >
             <Frame className="p-3" boxShadow="in" bg="white">
-              <StatusBlock>{roomInfo.roomName}</StatusBlock>
-              <StatusBlock>
-                {roomInfo.hasPass ? "비밀번호있음" : "비밀번호없음"}
-              </StatusBlock>
-              <StatusBlock>
-                {roomInfo.roomType === "open" ? "공개방" : "비공개방"}
-              </StatusBlock>
-              <StatusBlock>{`인원 [${roomInfo.joinUsersNum}명]`}</StatusBlock>
+              {roomInfo ? (
+                <>
+                  <StatusBlock>{roomInfo.roomName}</StatusBlock>
+                  <StatusBlock>
+                    {roomInfo.hasPass ? "비밀번호있음" : "비밀번호없음"}
+                  </StatusBlock>
+                  <StatusBlock>
+                    {roomInfo.roomType === "open" ? "공개방" : "비공개방"}
+                  </StatusBlock>
+                  <StatusBlock>{`인원 [${roomInfo.users.length}명]`}</StatusBlock>
+                </>
+              ) : (
+                <NotifyBlock>{notifyStr}</NotifyBlock>
+              )}
             </Frame>
             <MessageBox
               messageList={messageList}
@@ -167,13 +171,16 @@ const ChatGroupWindow = ({
           </form>
         </div>
         {/* menu box */}
-        {showMenuBox[0] ? (
-          <SettingMenuBox roomInfo={roomInfo} isAdmin={isAdmin} />
+        {showMenuBox[0] && roomInfo ? (
+          <SettingMenuBox
+            roomInfo={roomInfo}
+            isOwner={userInfo.id === roomInfo.roomOwner}
+          />
         ) : null}
-        {showMenuBox[1] ? (
-          <UserListMenuBox roomInfo={roomInfoState} isAdmin={isAdmin} />
+        {showMenuBox[1] && roomInfo ? (
+          <UserListMenuBox roomInfo={roomInfo} isAdmin={isAdmin} />
         ) : null}
-        {showMenuBox[2] ? (
+        {showMenuBox[2] && roomInfo ? (
           <LeaveRoomMenuBox
             roomInfo={roomInfo}
             triggerClose={customOnClickXOption}
