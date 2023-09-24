@@ -19,6 +19,7 @@ import { HistoryService } from './service/history.service';
 
 import { Player } from './dto/player.dto';
 import { match } from 'assert';
+import { dir } from 'console';
 // import { Player } from './interface/game.interface';
 
 
@@ -28,7 +29,7 @@ let currentQueueTime: number;
 let ladderRange: number;
 
 // let gameFieldArr: GameField[];
-const gameFieldMap = new Map();
+// const gameFieldMap = new Map();
 
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
@@ -42,7 +43,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 	private logger = new Logger('LadderGameGateway');
 
-	// private gameFieldArr: GameField[];
+	private gameFieldArr: GameField[];
 
 	constructor(
 		private connectedPlayerService: ConnectedPlayerService,
@@ -55,7 +56,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		resetQueueTime = Date.now();
 		currentQueueTime = Date.now();
 		ladderRange = 100;
-		// this.gameFieldArr = [];
+		this.gameFieldArr = [];
 		// gameFieldArr = [];
 
 		setInterval(() => this.queueProcess(), 1000);
@@ -268,16 +269,16 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			ballX: 800 / 2,
 			ballY: 600 / 2,
 			ballRadius: 10,
-			ballXvelocity: 3,
-			ballYvelocity: 3,
+			ballXvelocity: 6,
+			ballYvelocity: 6,
 			ballSpeed: 10,
 			matchId: match.match_id,
 			gameTimer: null,
 		}
 
 		this.logger.log(`ladder/startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
-		// gameFieldArr.push(gameField);
-		gameFieldMap.set(match.match_id, gameField);
+		this.gameFieldArr.push(gameField);
+		// gameFieldMap.set(match.match_id, gameField);
 		// gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
 		gameField.gameTimer = await setInterval(() => {this.playGame(this.server, match, player1, player2, gameField);}, 20);
 	} catch (error) {
@@ -285,17 +286,16 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	}
 	}
 
-	// private async getGameFieldByMatchId(match_id: number)
-	// {
-	// 	for (let i = 0; i < gameFieldArr.length; ++i)
-	// 	{
-	// 		if (gameFieldArr[i].matchId === match_id)
-	// 		{
-	// 			console.log(gameFieldArr[i]);
-	// 			return gameFieldArr[i];
-	// 		}
-	// 	}
-	// }
+	private async getGameFieldByMatchId(match_id: number)
+	{
+		for (let i = 0; i < this.gameFieldArr.length; ++i)
+		{
+			if (this.gameFieldArr[i].matchId === match_id)
+			{
+				return this.gameFieldArr[i];
+			}
+		}
+	}
 
 	@SubscribeMessage('mouseMove')
 	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
@@ -306,9 +306,9 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			return ;
 		const match = (await this.matchService.getByPlayerId(player.id));
 		const opponent = await this.matchService.getOpponentByPlayerId(match.match_id, player.id);
-		// const gameField = await this.getGameFieldByMatchId(match.match_id);
+		const gameField = await this.getGameFieldByMatchId(match.match_id);
 
-		let gameField = gameFieldMap.get(match.match_id);
+		// let gameField = gameFieldMap.get(match.match_id);
 
 		// console.log(`match_id is ${match.match_id}, MapSize ${gameFieldMap.size} ,movePlayer : ${gameField}`);
 
@@ -369,9 +369,9 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		try {
 		this.logger.log(`endGame : ${match_id} match finished.`);
 
-		// const gameField = await this.getGameFieldByMatchId(match_id);
-		let gameField = gameFieldMap.get(match_id);
-		clearInterval(gameField.gameTimer);
+		const gameField = await this.getGameFieldByMatchId(match_id);
+		// let gameField = gameFieldMap.get(match_id);
+		await clearInterval(gameField.gameTimer);
 		const match = await this.matchService.getByMatchId(match_id);
 		let winner_id = 0;
 
@@ -483,7 +483,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		{
 			this.endGame(match.match_id, null);
 		}
-		resetBall(gameField);
+		resetBall(gameField, -1);
 	}
 	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
 	{
@@ -494,7 +494,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		{
 			this.endGame(match.match_id, null);
 		}
-		resetBall(gameField);
+		resetBall(gameField, 1);
 	}
 
 	
@@ -548,13 +548,13 @@ async function collision(b: Ball, p: Paddle)
 	);
   }
 
-async function resetBall(gameField: GameField)
+async function resetBall(gameField: GameField, direction: number)
 {
 	gameField.ballX = gameField.canvasWidth / 2;
 	gameField.ballY = gameField.canvasHeight / 2;
-	gameField.ballXvelocity = -3;
-	gameField.ballYvelocity = 3;
-	gameField.ballSpeed = 3;
+	gameField.ballXvelocity = 6 * direction;
+	gameField.ballYvelocity = 6;
+	gameField.ballSpeed = 10;
 }
 
 
