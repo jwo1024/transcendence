@@ -32,9 +32,6 @@ export class RoomEntity {
   @JoinTable()
   users: UserEntity[];
 
-  // @Column({array : true, default: []})
-  // users: UserEntity[];
-
   @OneToMany(() => ConnectedUserEntity, (conncetion) => conncetion.room)
   connections: ConnectedUserEntity[];
 
