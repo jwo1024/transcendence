@@ -1,5 +1,5 @@
 import { Body, Controller, HttpException, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { TfaService } from './tfa.service';
+import { TfaData, TfaService } from './tfa.service';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('tfa')
@@ -13,21 +13,16 @@ export class TfaController {
 
     @Post('send')
     async send(@Req() req, @Res() res, @Body() body) {
-        //  else if (this.tfaService.is2FAConfirmed(req.user.userId))
-        //    return res.status(409).send('already verified');
-        let issuedAt: Date = null;
-        try { 
-            issuedAt = await this.tfaService.generate2FA(req.user.userId, body.email); }
-        catch (err) {
-            if (err instanceof HttpException) return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('failed to send email');
-            else if (err instanceof Error) return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('failed to generate token')
+        const id = req.user.userId;
+        const otp = await this.tfaService.generateSecret();
+        if (!otp) return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('failed to generate token');
+        const issuedAt = await this.tfaService.sendVerificationEmail(id, body.email, otp);
+        if (!issuedAt)
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('failed to send email');
+        else {
+            this.tfaService.register2FA(id, body.email, otp, issuedAt);
+            return res.status(HttpStatus.OK).json({ issuedAt: issuedAt });
         }
-        // try { await this.tfaService.sendVerificationEmail(req.user.userId); }
-        // catch (err) {
-        //     console.log('Error Occured in make2FA[2FA] : ', err);
-        //     return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('failed to send email');
-        // }
-        return res.status(HttpStatus.OK).json({ issuedAt: '2fa-make success' });
     }
 
     @Post('verify')
