@@ -103,10 +103,6 @@ export class MatchService {
 
 	async deleteByMatchId(match_id: number)
 	{
-		// setTimeout(() => {
-		// 	this.matchRepository.delete({ match_id });
-		// }, 1000);
-
 		await this.matchRepository.delete({ match_id });
 	}
 

@@ -24,10 +24,13 @@ extraHeaders: {
 export default function GamePage() {
 
   const router = useRouter();
+  // const [token, setToken] = useState<string | null>(null);
+  // const [socket, setSocket] = useState<Socket | null>(null);
 
   socket.on("disconnect", (reason) => {
     // todo: remove
     console.log("disconnect!");
+    // socket.disconnect();
     setTimeout(() => {router.push("/menu");}, 3000);
   });
 
@@ -57,13 +60,13 @@ export default function GamePage() {
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
     setLeft({
       nickname: profile1.nickname,
-      ladder: profile1.level,
+      ladder: profile1.ladder,
       win: profile1.wins,
       lose: profile1.loses,
     });
     setRight({
       nickname: profile2.nickname,
-      ladder: profile2.level,
+      ladder: profile2.ladder,
       win: profile2.wins,
       lose: profile2.loses,
     });
