@@ -25,9 +25,9 @@ const reducer = (sentMsgList: SendMessageDTO[], action: Action) => {
         );
       });
       // 왜 안됨 ?
-      // console.log("sentMsgList", sentMsgList.length);
-      // console.log("indexToRemove", indexToRemove);
-      // console.log ("seentMsgList[indexToRemove]", sentMsgList.splice(0, 1));
+      console.log("! sentMsgList", sentMsgList.length);
+      console.log("! indexToRemove", indexToRemove);
+      console.log ("! seentMsgList[indexToRemove]", sentMsgList.splice(0, 1));
       if (indexToRemove !== -1) return sentMsgList.splice(indexToRemove, 1);
       return sentMsgList;
     }
@@ -63,6 +63,8 @@ const useMessageForm = ({
     };
     if (messageData.text === "") return;
     dispatch({ type: "ADD", message: messageData });
+    // console.log("messageData", messageData);
+    console.log ("socket?.emit(EMIT_MESSAGE_ADD, messageData)", messageData);
     socket?.emit(EMIT_MESSAGE_ADD, messageData); // 보낼때
     resetInputMessage();
   };

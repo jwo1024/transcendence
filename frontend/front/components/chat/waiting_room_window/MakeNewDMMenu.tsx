@@ -41,15 +41,10 @@ const MakeNewDMMenu = ({ userInfo }: MakeNewChatMenuBoxProps) => {
     const newRoom: RoomCreateDTO = {
       roomName: title,
       roomType: "dm",
-      // roomPass: undefined,
+      roomPass: undefined,
     };
-    console.log("socket.emit EMIT_DM_CREATE", newRoom, friendNick);
-    // socket?.emit(EMIT_DM_CREATE, { room: newRoom, userNickname: friendNick });
-    socket?.emit(EMIT_DM_CREATE, newRoom, friendNick);
-    // socket?.emit(EMIT_DM_CREATE, newRoom, "John");
-    // socket?.emit(
-    //   EMIT_DM_CREATE,
-    //   { room: { roomName: 'DM / [배고픈되야지 & a]', roomType: 'dm' }, userNickname: 'a' });
+    console.log("socket.emit EMIT_DM_CREATE", newRoom, friendNick || "");
+    socket?.emit(EMIT_DM_CREATE, { room: newRoom, userNickname: friendNick });
     socket?.once(ON_RESPONSE_DM_CREATE, (data) => {
       const res: ResponseDTO = data;
       console.log("socket.on ON_RESPONSE_DM_CREATE", data);

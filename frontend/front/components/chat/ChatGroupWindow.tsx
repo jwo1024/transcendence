@@ -70,18 +70,22 @@ const ChatGroupWindow = ({
     // }); // tmp
     // room 초기 정보 가져오기
     // console.log("Check :ChatGroupWindow : Mount");
-    inputRef.current?.focus();
     socket?.once(`${ON_MESSAGES_ROOMID}${roomInfo.roomId}`, (data) => {
       console.log("socket.on ON_MESSAGES_ROOMID: ", data);
-      setMessageList((messageList) => [...messageList, data]);
+      const msgList: RecvMessageDTO[] = Array.from(data);
+      if (msgList.length === 0) setMessageList([]);
+      else setMessageList([...msgList]);
     });
     socket?.once(`${ON_CURRENT_ROOM_ROOMID}${roomInfo.roomId}`, (data) => {
-      console.log("socket.on ON_CURRENT_ROOM_ROOMID: ", data.users);
+      console.log("socket.on ON_CURRENT_ROOM_ROOMID: ", data);
       const roomData: RoomI = data;
       setRoomInfoState(roomData);
       checkAdmin();
     });
-    socket?.emit(EMIT_ROOM_ENTER, { roomId: roomInfo.roomId });
+
+    socket?.emit(EMIT_ROOM_ENTER, roomInfo.roomId);
+
+    // socket?.emit(EMIT_ROOM_ENTER, { roomId: roomInfo.roomId });
     // 오는 메시지 듣기
     socket?.on(`${ON_MESSAGE_ADDED_ROOMID}${roomInfo.roomId}`, (data) => {
       console.log("socket.on ON_MESSAGE_ADDED_ROOMID: ", data);
@@ -106,12 +110,11 @@ const ChatGroupWindow = ({
   };
 
   const adddMsgToList = (msg: RecvMessageDTO) => {
-    if (
-      messageList.length !== 0 &&
-      messageList[messageList.length - 1].id >= msg.id
-    )
-      return;
-    setMessageList((messageList) => [...messageList, msg]);
+    setMessageList((messageList) => {
+      const lastElement = messageList.slice(-1)[0];
+      if (lastElement && lastElement?.id >= msg.id) return messageList;
+      return [...messageList, msg];
+    });
   };
 
   // Menu Items

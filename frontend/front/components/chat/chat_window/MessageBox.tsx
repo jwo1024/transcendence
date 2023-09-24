@@ -11,7 +11,7 @@ import type {
 } from "@/types/ChatInfoType";
 
 interface MessageBoxProps {
-  messageList?: RecvMessageDTO[];
+  messageList: RecvMessageDTO[];
   // sentMessage?: MessageDTO;
   userInfo: SimpUserI;
   sentMsgList: SendMessageDTO[];
@@ -28,6 +28,7 @@ const MessageBox = ({
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messageList, sentMsgList]);
 
+  console.log("messageList", messageList);
   return (
     <Frame
       className="flex flex-col flex-1 overflow-y-scroll p-2 "
@@ -35,17 +36,17 @@ const MessageBox = ({
       boxShadow="in"
       bg="white"
     >
-      {messageList?.map((messageInfo, index) => {
+      {messageList.map((messageInfo, index) => {
         return (
           // message overflow 처리하기
           <div
             className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "
             key={index}
           >
-            <NameTag>{messageInfo.user.nickname}</NameTag>
+            <NameTag>{messageInfo.user?.nickname}</NameTag>
             <span className="text-ellipsis break-all ">{messageInfo.text}</span>
             <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
-              {messageInfo.created_at.toLocaleString()}
+              {messageInfo.created_at?.toLocaleString()}
             </span>
           </div>
         );
