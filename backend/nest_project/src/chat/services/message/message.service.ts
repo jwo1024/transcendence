@@ -22,38 +22,37 @@ export class MessageService {
     private messageMapper : MessageMapper,
     ) { }
     
-    async create(messageDto: MessageDTO, userId: number): Promise<MessageI> 
+    async create(messageDto: MessageDTO, user: UserI): Promise<MessageI> 
     {
       const newMessage 
-        = await this.messageMapper.Create_dtoToEntity(messageDto, userId); 
+        = await this.messageMapper.Create_dtoToEntity(messageDto); 
       return this.messageRepository.save(this.messageRepository.create(newMessage));
     }
     
-    async findMessagesForRoom(room: RoomI): Promise<MessageI[]> 
-    {
+    async findMessagesForRoom(room: RoomI): Promise<MessageI[]> {
+      this.logger.log(`findMessages Start!`);
+    
       const messages = await this.messageRepository
         .createQueryBuilder('message')
         .leftJoin('message.room', 'room')
         .where('room.roomId = :roomId', { roomId: room.roomId })
         .leftJoinAndSelect('message.user', 'user')
-        .orderBy('message.created_at', 'ASC')
+        .orderBy('message.created_at', 'DESC')
         .getMany();
-      
+    
       return messages;
     }
 
-    async deleteByRoomId(roomId : number) 
-    {
-      const messagesToDelete = await this.messageRepository.find({
-        where: { room: { roomId: roomId } },
-      });
-  
-      if (!messagesToDelete) {
-        return ;
-      }
-  
-      // ConnectedUserEntity를 삭제합니다.
-      await this.messageRepository.remove(messagesToDelete);
+    // async findMessagesForRoom(room: RoomI, options: IPaginationOptions): Promise<Pagination<MessageI>> {
+    //   this.logger.log(`findMessages Start!`);
+    //   const query = this.messageRepository
+    //   .createQueryBuilder('message')
+    //   .leftJoin('message.room', 'room')
+    //   .where('room.roomId = :roomId', { roomId: room.roomId })
+    //   .leftJoinAndSelect('message.user', 'user')
+    //   .orderBy('message.created_at', 'DESC');
+      
+    //   return paginate(query, options);
+      
     }
-  }
     
