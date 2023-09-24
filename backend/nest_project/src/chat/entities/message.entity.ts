@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { RoomEntity } from "./room.entity";
 import { UserEntity } from "./user.entity";
 
@@ -15,8 +15,8 @@ export class MessageEntity {
   @JoinColumn()
   user: UserEntity;
 
-  @ManyToOne(() => RoomEntity, room => room.messages)
-  @JoinTable()
+  @ManyToOne(() => RoomEntity, room => room.messages, {onDelete: 'CASCADE',})
+  @JoinColumn()
   room: RoomEntity;
 
   @CreateDateColumn()
