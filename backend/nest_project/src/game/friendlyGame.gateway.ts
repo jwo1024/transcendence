@@ -3,9 +3,9 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { GameField, Ball, Paddle } from './interface/game.interface';
 import { ConnectedPlayerService } from './service/connectedPlayer.service';
 
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
+// import { from, Observable } from 'rxjs';
+// import { map } from 'rxjs/operators';
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
 import * as jwt from 'jsonwebtoken';
@@ -14,120 +14,212 @@ import { MatchEntity } from './entities/match.entity';
 
 
 import {MatchService} from './service/match.service';
-import { HistoryService } from './service/history.service';
-import { HistoryEntity } from './entities/history.entity';
+// import { HistoryService } from './service/history.service';
+// import { HistoryEntity } from './entities/history.entity';
 
 import { Player } from './dto/player.dto';
-
+import { ConnectedFriendlyPlayerService } from './service/connectedFriendlyPlayer.service';
+// import { ConnectedFriendlyPlayerEntity } from './entities/connectedFriendlyPlayer.entity';
+import { FriendlyPlayer } from './dto/friendlyPlayer.dto';
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
-// todo: 게임 시작하기 전에 대기 화면 -> test
 
 @Injectable()
 @WebSocketGateway({ namespace: 'friendly_game' })
 export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
+
 	private logger = new Logger('FriendlyGameGateway');
 
 	private gameFieldArr: GameField[];
 
 	constructor(
-		private connectedPlayerService: ConnectedPlayerService,
+		private connectedFriendlyPlayerService: ConnectedFriendlyPlayerService,
 		private profileService: ProfileService,
 		private matchService: MatchService,
-		private historyService: HistoryService,
 	)
 	{
 		this.gameFieldArr = [];
 	}
 
 
+	@WebSocketServer()
+	server: Server;
+
 	async onModuleInit() 
 	{
-		this.connectedPlayerService.deleteAll();
+		this.connectedFriendlyPlayerService.deleteAll();
+		this.matchService.deleteAll();
 	}
 
 	async handleConnection(socket: Socket)
 	{
 		this.logger.log(`Friendly Game Server: socketId [ ${socket.id} ] connected.`);
-		// 토큰, User 데이터와 소켓 아이디 결합하여 Player 객체에 저장
-		// user의 소켓 id 정보
-		// // //인증 관련 부분(토큰 및 user 정보 socket에 주입 )
-		// const token = socket.handshake.headers.authorization;
-		// jiwolee님이 알려주신 대로 프론트에 추가
-		
-		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
-		// const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
-		// if (!userId)
-		// 	return this.disconnect(socket);
-		// const userProfile = await this.profileService.getUserProfileById(userId);
-		// if (!userProfile)
-		// 	return this.disconnect(socket);
-		const userId = 99833;
-		const current  = await this.connectedPlayerService.createPlayer(userId, socket.id);
+		const token = socket.handshake.headers.authorization;
 
+		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
+		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
+		if (!userId)
+		{
+			return socket.disconnect();
+			// 클라이언트에서 이벤트 인지하면 menu로 리다이렉션
+		}
+		socket.data.userId = userId;
+		const userProfile = await this.profileService.getUserProfileById(userId);
+		if (!userProfile)
+		{
+			return socket.disconnect();
+			// 클라이언트에서 이벤트 인지하면 menu로 리다이렉션
+		}
+
+		const current = await this.connectedFriendlyPlayerService.createPlayer(userId, socket.id);
+		if(!current)
+		{
+			return socket.disconnect();
+		}
+		socket.emit('savePlayer', async (inviteData) => {
+			await this.connectedFriendlyPlayerService.updateInvitation(current, inviteData);
+		});
+		this.profileService.ingame(userId);
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 
-		// todo: 초대자 프로세스
-		//@chat 초대자는 초대 버튼 누르면 /game/frinedly로 자동 접속
-		// 초대자가 player 레포에 등록됨 -> 상대방 수락 시까지 대기
-		// 상대방이 수락 -> 상대방에 의해 setGame()으로 게임 시작
-		//@chat 상대방이 거절 -> ('거절 이벤트')를 감지해 endPlayer(초대자 id) 종료
-		// 기다리다 지쳐 취소 -> 그냥 페이지 나가면 됨(취소 버튼 만들어도 됨)
-		//@chat						: 근데 이 경우 상대방도 초대 취소를 인지해야 하는 문제
-		//							상대방 id로 뭔가를 보내려면 상대방 id 데이터 받아야 함
-		//							현재는 상대방이 들어오면 그냥 게임 취소되고 메인으로 돌아감
-		// this.waitGame();
-		// 그냥 기본 화면 보여주고 대기하면 waitGame()도 필요 없을 듯
-
-		// todo: 초대 받은 invited 프로세스
-		//@chat 수락 버튼 누르면 /game/friendly로 접속됨
-		//@chat 초대 받은 자임을 알아야 함 -> 그래야 커스텀 모드 선택지 화면 띄울 수 있음
-		// 커스텀 모드를 선택하면 game type 정보와 함께 this.acceptGame(); 실행
+		if (await this.connectedFriendlyPlayerService.isHostPlayer(current))
+		{
+			this.waitGame(current);
+		}
+		else if (await this.connectedFriendlyPlayerService.isGuestPlayer(current))
+		{
+			this.acceptGame(current);
+		}
+		else
+		{
+			this.profileService.logOn(socket.data.userId);
+			return socket.disconnect();
+		}
 	}
 
 	async handleDisconnect(socket: Socket)
 	{
 		// socket.emit('Error', new UnauthorizedException());
-		this.logger.log(`Friendly Game Server: socketId [ ${socket.id} ] disconnected.`);
 
-		const player_id = (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id;
-		const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
-		if (match_id)
+		if (await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id))
 		{
-			this.endGame(match_id, player_id);
+			const player_id = (await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id)).id;
+
+			if (await this.matchService.getByPlayerId(player_id) === null)
+			{
+				await this.connectedFriendlyPlayerService.deletePlayer(player_id);
+				this.profileService.logOn(socket.data.userId);
+				socket.disconnect();
+				return ;
+			}
+			else
+			{
+				const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
+				// this.logger.log(`handleDIsconnect : match id ${match_id}`);
+				if (match_id)
+				{
+					await this.endGame(match_id, player_id);
+				}
+				await this.connectedFriendlyPlayerService.deletePlayer(player_id);
+				this.profileService.logOn(socket.data.userId);
+				socket.disconnect();
+				return ;
+			}
 		}
 
-		this.connectedPlayerService.deletePlayer(player_id);
-		socket.disconnect();
-		// todo: 메인 화면으로? 새로고침 시 다시 게임 페이지로 돌아오는 것 방지
-	}
-
-	@WebSocketServer()
-	server: Server;
-
-	private async setGame(userId1: number, userId2: number)
-	{
-		// todo: game_type 선택 - > original, speedUp, smallBall 중에 하나
-		const currentMatch = await this.matchService.create(userId1, userId2, "original");
-		if (!currentMatch)
+		if ((await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id)) === null)
 		{
-			// todo: 매치가 성사되지 않음을 알리고 게임 메인 화면 등으로 나가는 프론트
+			this.profileService.logOn(socket.data.userId);
+			socket.disconnect();
 			return ;
 		}
+		const player = (await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id));
+		// const match_id = (await this.matchService.getByPlayerId(player.id)).match_id;
+		// if (match_id)
+		// {
+		// 	await this.endGame(match_id, player.id);
+		// }
+
+		if (player.id === player.hostId)
+		{
+			await clearInterval(player.checkTimer);
+		}
+
+		this.connectedFriendlyPlayerService.deletePlayer(player.id);
+		this.profileService.logOn(socket.data.userId);
+		socket.disconnect();
+		// this.endPlayer(socket.id, player.id);
+	}
+
+	private async endPlayer(socket_id: string, player_id: number)
+	{
+		// socket.emit('Error', new UnauthorizedException());
+		// this.connectedFriendlyPlayerService.deletePlayer(player_id);
+		this.server.in(socket_id).disconnectSockets(true);
+		this.logger.log(`Friendly Game Server: socketId [ ${socket_id} ] disconnected.`);
+	};
+
+	private async checkRefuse(host: FriendlyPlayer, waitTime: number)
+	{
+		if (host.refuseGame === true)
+		{
+			clearInterval(host.checkTimer);
+			this.endPlayer(host.socketId, host.id);
+		}
+		const nowTime = Date.now();
+		if (nowTime - waitTime > 35000) // 35 seconds
+		{
+			clearInterval(host.checkTimer);
+			this.endPlayer(host.socketId, host.id);
+		}
+	}
+
+	private async waitGame(host: FriendlyPlayer)
+	{
+		const currentTime = Date.now();
+		host.checkTimer = setInterval(() => this.checkRefuse(host, currentTime), 1000) as unknown as number;
+	}
+
+	private async acceptGame(guest: FriendlyPlayer)
+	{
+		this.server.to(guest.socketId).emit("guestArrive");
+	}
+
+	@SubscribeMessage('chooseGameType')
+	async setGame(@ConnectedSocket() socket: Socket, @MessageBody() gameType: string)
+	{
+		const host = await this.connectedFriendlyPlayerService.getHostbySocketId(socket.id);
+		const guest = await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id);
+		if (!host)
+		{
+			this.endPlayer(socket.id, guest.id);
+			return ;
+		}
+		const currentMatch = await this.matchService.createCustom(host.id, guest.id, gameType);
+		if (!currentMatch)
+		{
+			this.endPlayer(socket.id, guest.id);
+			return ;
+		}
+		clearInterval(host.checkTimer);
+		this.logger.log(`setGame : match ${currentMatch.match_id} will soon start!`);
 		this.startGame(currentMatch);
 	}
 
 	async startGame(match : MatchEntity)
 	{
-		const player1 = await this.connectedPlayerService.getPlayer(match.playerLeft);
-		const player2 = await this.connectedPlayerService.getPlayer(match.playerRight);
+		const player1 = await this.connectedFriendlyPlayerService.getPlayer(match.playerLeft);
+		const player2 = await this.connectedFriendlyPlayerService.getPlayer(match.playerRight);
 
 		const profile1 = await this.profileService.getUserProfileById(match.playerLeft);
 		const profile2 = await this.profileService.getUserProfileById(match.playerRight);
 		
 		this.server.to(player1.socketId).emit("setMiniProfile", profile1, profile2);
 		this.server.to(player2.socketId).emit("setMiniProfile", profile1, profile2);
+
+		this.server.to(player1.socketId).emit('startGame');
+		this.server.to(player2.socketId).emit('startGame');
 
 		const gameField: GameField = {
 			canvasWidth: 800,
@@ -141,23 +233,30 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			ballX: 800 / 2,
 			ballY: 600 / 2,
 			ballRadius: 10,
-			ballXvelocity: 3,
-			ballYvelocity: 3,
-			ballSpeed: 3,
+			ballXvelocity: 6,
+			ballYvelocity: 6,
+			ballSpeed: 10,
 			matchId: match.match_id,
 			gameTimer: null,
 		}
 
-		// todo: game_type에 따라 게임필드 값 변경
-		// if (match.game_type === ?)
-		// {
-		// 	gameField.ballSpeed = 6;
-		// 	// or
-		// 	gameField.ballRadius = 5;
-		// }
+		if (match.game_type === "speedUp")
+		{
+			gameField.ballSpeed = 14;
+		}
+		else if (match.game_type === "smallBall")
+		{
+			gameField.ballRadius = 5;
+		}
+		else if (match.game_type === "enjoyAll")
+		{
+			gameField.ballSpeed = 14;
+			gameField.ballRadius = 5;
+		}
 
+		this.logger.log(`friendly/startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
 		this.gameFieldArr.push(gameField);
-		gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
+		gameField.gameTimer = setInterval(() => { this.playGame(this.server, match, player1, player2, gameField); }, 20);
 	}
 
 	private async getGameFieldByMatchId(match_id: number)
@@ -165,14 +264,16 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		for (let i = 0; i < this.gameFieldArr.length; ++i)
 		{
 			if (this.gameFieldArr[i].matchId === match_id)
-			return this.gameFieldArr[i];
+				return this.gameFieldArr[i];
 		}
 	}
 
 	@SubscribeMessage('mouseMove')
 	async movePlayer(@ConnectedSocket() socket: Socket, @MessageBody() userY: number)
 	{
-		const player = await this.connectedPlayerService.getPlayerBySocketId(socket.id);
+		const player = await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id);
+		if (!player)
+			return ;
 		const match = (await this.matchService.getByPlayerId(player.id));
 		const opponent = await this.matchService.getOpponentByPlayerId(match.match_id, player.id);
 		const gameField = await this.getGameFieldByMatchId(match.match_id);
@@ -186,40 +287,42 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			userY = 500;
 		}
 
+		const data = {
+			leftY: gameField.paddleLeftY,
+			rightY: gameField.paddleRightY,
+		};
+
 		if (match.playerLeft === player.id)
 		{
 			gameField.paddleLeftY = userY;
-			this.server.to(player.socketId).emit('paddleMove', gameField);
-			this.server.to(opponent.socketId).emit('paddleMove', gameField);
+			this.server.to(player.socketId).emit('paddleMove', data);
+			this.server.to(opponent.socketId).emit('paddleMove', data);
 		}
 		else if (match.playerRight === player.id)
 		{
 			gameField.paddleRightY = userY;
-			this.server.to(player.socketId).emit('paddleMove', gameField);
-			this.server.to(opponent.socketId).emit('paddleMove', gameField);
+			this.server.to(player.socketId).emit('paddleMove', data);
+			this.server.to(opponent.socketId).emit('paddleMove', data);
 		}
 	}
 
-	@SubscribeMessage("waitGame")
-	async waitGame( @ConnectedSocket() socket: Socket, @MessageBody() proposedId : number)
+	private async sendMatchResult(winner_id: number, loser_id:number, normal_end: boolean)
 	{
-		// todo: 상대방이 수락하지 않고 거절한 경우
-		// todo: 시간이 너무 지나서 강제로 종료시키는 경우
-
-		// accepter가 game_type에 대한 데이터 받고 setGame()에 인자 넘겨주며 실행
-		// @MessageBody() { proposedId: number, gameType: string }
-	}
-
-	@SubscribeMessage("acceptGame")
-	async acceptGame( @ConnectedSocket() socket: Socket, @MessageBody() proposingId : number)
-	{
-		this.setGame(proposingId, (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id);
+		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
+		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
+		this.server.to((await this.connectedFriendlyPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		if (normal_end == true)
+		{
+			this.server.to((await this.connectedFriendlyPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		}
 	}
 
 	async endGame(match_id: number, loser_id: number)
 	{
+		this.logger.log(`endGame : ${match_id} match finished.`);
+
 		const gameField = await this.getGameFieldByMatchId(match_id);
-		clearInterval(gameField.gameTimer);
+		await clearInterval(gameField.gameTimer);
 		const match = await this.matchService.getByMatchId(match_id);
 		let winner_id = 0;
 
@@ -234,12 +337,9 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 				winner_id = match.scoreLeft;
 			}
 
-			const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
-			const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-			this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
-
+			this.sendMatchResult(winner_id, loser_id, false);
 			this.matchService.deleteByMatchId(match.match_id);
-			// todo: 메인 화면으로 돌아가는 프론트
+			this.endPlayer((await this.connectedFriendlyPlayerService.getPlayer(winner_id)).socketId, winner_id);
 			return ;
 		}
 
@@ -248,63 +348,20 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			winner_id = match.playerLeft;
 			loser_id = match.scoreRight;
 		}
-		else if (match.scoreLeft < match.scoreRight)
+		else
 		{
 			winner_id = match.playerRight;
 			loser_id = match.playerLeft;
 		}
-		else
-		{
-			// todo?: throw error
-		}
-		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
-		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
-		this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
 
+		this.sendMatchResult(winner_id, loser_id, true);
 		this.matchService.deleteByMatchId(match.match_id);
-		// todo: 메인 화면으로 돌아가는 프론트
+		this.endPlayer((await this.connectedFriendlyPlayerService.getPlayer(winner_id)).socketId, winner_id);
+		this.endPlayer((await this.connectedFriendlyPlayerService.getPlayer(loser_id)).socketId, loser_id);
 	}
 
-}
 
-
-async function collision(b: Ball, p: Paddle)
-{
-	const paddleLocation =
-	{
-	  top: p.y,
-	  bottom: p.y + p.height,
-	  left: p.x,
-	  right: p.x + p.width,
-	};
-
-	const ballLocation =
-	{
-	  top: b.y - b.radius,
-	  bottom: b.y + b.radius,
-	  left: b.x - b.radius,
-	  right: b.x + b.radius,
-	};
-
-	return (
-	  ballLocation.right > paddleLocation.left &&
-	  ballLocation.left < paddleLocation.right &&
-	  ballLocation.top < paddleLocation.bottom &&
-	  ballLocation.bottom > paddleLocation.top
-	);
-  }
-
-async function resetBall(gameField: GameField)
-{
-	gameField.ballX = gameField.canvasWidth / 2;
-	gameField.ballY = gameField.canvasHeight / 2;
-	gameField.ballXvelocity = -3;
-	gameField.ballYvelocity = 3;
-	gameField.ballSpeed = 3;
-}
-
-async function playGame(server: Server, match: MatchEntity, player1: Player, player2: Player, gameField: GameField)
+	async playGame(server: Server, match: MatchEntity, player1: Player, player2: Player, gameField: GameField)
 {
 	// location of ball
 	gameField.ballX += gameField.ballXvelocity;
@@ -359,26 +416,81 @@ async function playGame(server: Server, match: MatchEntity, player1: Player, pla
 	if (gameField.ballX - gameField.ballRadius < 0)
 	{
 		++gameField.scoreRight;
-		this.MatchService.updateRightScore(match.match_id, gameField.scoreRight);
+		this.matchService.updateRightScore(match.match_id, gameField.scoreRight);
 
-		if (gameField.scoreRight === 7)
+		if (gameField.scoreRight > 2)
 		{
-			this.endGame(match, null);
+			this.endGame(match.match_id, null);
 		}
-		resetBall(gameField);
+		if (match.game_type === "speedUp" || match.game_type === "enjoyAll")
+			resetBall(gameField, 14, -1);
+		else
+			resetBall(gameField, 10, -1);
 	}
 	else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth)
 	{
 		++gameField.scoreLeft;
-		this.MatchService.updateLeftScore(match.match_id, gameField.scoreRight);
+		this.matchService.updateLeftScore(match.match_id, gameField.scoreRight);
 
-		if (gameField.scoreLeft === 7)
+		if (gameField.scoreLeft > 2)
 		{
-			this.endGame(match, null);
+			this.endGame(match.match_id, null);
 		}
-		resetBall(gameField);
+		if (match.game_type === "speedUp" || match.game_type === "enjoyAll")
+			resetBall(gameField, 14, 1);
+		else
+			resetBall(gameField, 10, 1);
 	}
 
-	server.to(player1.socketId).emit('updateCanvas', gameField);
-	server.to(player2.socketId).emit('updateCanvas', gameField);
+	const data = {
+		ballX: gameField.ballX,
+		ballY: gameField.ballY,
+		veloX: gameField.ballXvelocity,
+		veloY: gameField.ballYvelocity,
+		ballSpeed: gameField.ballSpeed,
+		leftScore: gameField.scoreLeft,
+		rightScore: gameField.scoreRight,
+	};
+
+	server.to(player1.socketId).emit('updateCanvas', data);
+	server.to(player2.socketId).emit('updateCanvas', data);
+	}
+
 }
+
+
+async function collision(b: Ball, p: Paddle)
+{
+	const paddleLocation =
+	{
+	  top: p.y,
+	  bottom: p.y + p.height,
+	  left: p.x,
+	  right: p.x + p.width,
+	};
+
+	const ballLocation =
+	{
+	  top: b.y - b.radius,
+	  bottom: b.y + b.radius,
+	  left: b.x - b.radius,
+	  right: b.x + b.radius,
+	};
+
+	return (
+	  ballLocation.right > paddleLocation.left &&
+	  ballLocation.left < paddleLocation.right &&
+	  ballLocation.top < paddleLocation.bottom &&
+	  ballLocation.bottom > paddleLocation.top
+	);
+  }
+
+async function resetBall(gameField: GameField, speed: number, direction: number)
+{
+	gameField.ballX = gameField.canvasWidth / 2;
+	gameField.ballY = gameField.canvasHeight / 2;
+	gameField.ballXvelocity = 6 * direction;
+	gameField.ballYvelocity = 6;
+	gameField.ballSpeed = speed;
+}
+

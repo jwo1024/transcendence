@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, ThemeProvider } from "@react95/core";
+import { Button } from "@react95/core";
 import { useRouter } from "next/router";
 
 import Window from "@/components/common/Window";
@@ -8,90 +8,132 @@ import PongGame from "@/components/game/PongGame";
 
 import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
+import { resultNickname } from "@/types/GameType";
+
 
 import io from 'socket.io-client';
-// todo: token 필요 시 socket과 함께 백에 넘겨야 함
-// const token = sessionStorage.getItem(“accessToken”);
-//   const socket = io('http://localhost:4000/ladder_game', {
-//     extraHeaders: {
-//         Authorization: `Bearer ${token}`
-//     }
-// });
-const socket = io('http://localhost:4000/friendly_game');
+
+  const token = sessionStorage.getItem("accessToken");
+  const socket = io('http://localhost:4000/friendly_game', {
+    extraHeaders: {
+        Authorization: `Bearer ${token}`
+    }
+});
+// const socket = io('http://localhost:4000/friendly_game');
+
+interface SimpUserI
+{
+  id: number;
+  nickname: string;
+}
+
+interface gameInvitationI{
+	fromUser: SimpUserI;
+	toUser: SimpUserI;
+}
+
+// todo:
+// const invitation = sessionStorage.getItem("gameInvitation");
+// const invitationObj = JSON.parse(invitation);
+const user1: SimpUserI =
+{
+  id: 12345,
+  nickname: "mango"
+}
+const user2: SimpUserI =
+{
+  id: 67890,
+  nickname: "watermelon"
+}
+const invite: gameInvitationI =
+{
+  fromUser: user1,
+  toUser: user2
+}
 
 export default function GamePage() {
 
-  // todo: 게임 종료 후 router 작동
   const router = useRouter();
-  //router.push("http://localhost:3001/~");
+
+  socket.on("disconnect", (reason) => {
+    // todo: remove
+    console.log("disconnect!");
+    socket.disconnect();
+    setTimeout(() => {router.push("/menu");}, 3000);
+  });
 
   const [left, setLeft] = useState({
-    nickname: "left player",
-    ladder: 1000,
+    nickname: "searching...",
+    ladder: 0,
     win: 0,
     lose: 0,
   });
   const [right, setRight] = useState({
-    nickname: "right player",
-    ladder: 1000,
+    nickname: "searching...",
+    ladder: 0,
     win: 0,
     lose: 0,
   });
 
-  const [gameStart, setGameStart] = useState(false);
-  const [gameEnd, setGameEnd] = useState(false);
-  const [winNickName, setWinNickName] = useState("");
-  const [loseNickName, setLoseNickName] = useState("");
+  const [resultOfGame, setResultOfGame] = useState<resultNickname>({winPlayer:"",losePlayer:""})
 
-  // setIsInvited(true);
+  const [gamePhase, setGamePhase] = useState<"wait" | "start" | "end">("wait");
+
   const [isInvited, setIsInvited] = useState(false);
-  
-  // 이 형태로 쓸것, 그리고 이 중괄호 블럭에 코드를 쓰면 그것이 실행됨. 
-  useEffect(()=>{setIsInvited(true)},[]);
-
-  const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const clickedButton = event.nativeEvent.submitter.name;
-    console.log(clickedButton);
-    // clieckedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
-    }
-        
-
-  // socket.on('invite', (invitedId: Number) => {});
-  // socket.on('accept', (hostId: Number) => {
-  //   socket.emit('acceptGame', hostId, gameType);
-  // });
 
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
     setLeft({
       nickname: profile1.nickname,
-      ladder: profile1.level,
+      ladder: profile1.ladder,
       win: profile1.wins,
       lose: profile1.loses,
     });
     setRight({
       nickname: profile2.nickname,
-      ladder: profile2.level,
+      ladder: profile2.ladder,
       win: profile2.wins,
       lose: profile2.loses,
     });
   });
 
-  socket.on('startGame', () => {
-    setGameStart(true);
-  });
+  const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const clickedButton = event.nativeEvent.submitter.name;
+    console.log(clickedButton);
+    socket.emit("chooseGameType", clickedButton);
+    // clickedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
+    }
 
-  socket.on('endGame', (winner_nickname, loser_nickname) => {
-      setWinNickName(winner_nickname);
-      setLoseNickName(loser_nickname);
-      setGameEnd(true);
+
+    socket.on("savePlayer", (callback) => {
+      callback(invite);
+    });
+
+    socket.on("guestArrive", () => {
+      useEffect(() => {setIsInvited(true)}, []);
+    });
+
+  socket.on('startGame', () => {
+    setGamePhase("start");
   });
-  return (
-    <div className="flex items-center justify-center h-screen">
+  
+  socket.on('endGame', (winner_nickname, loser_nickname) => {
+      // setWinNickName(winner_nickname);
+      // setLoseNickName(loser_nickname);
+      setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
+      setGamePhase("end");
+    });
+
+  // socket.on('refuseGame', () => {
+  //   router.push("/menu");
+  // });
+
+    return (
+      <div className="flex items-center justify-center h-screen">
       <Window title="pong game" w="900" h="850">
         <div className="h-screen flex flex-col justify-center items-center">
-          {!gameStart && !gameEnd && isInvited ? (<form
+          {gamePhase === "wait" && isInvited ? (<form
           onSubmit={modeSelect}
           className="flex flex-col items-center w-[800px] h-[600px] bg-gray-500 justify-center space-y-6 "
         >
@@ -99,15 +141,14 @@ export default function GamePage() {
           <Button className="w-60 h-16" name="speedUp"><span className="text-5xl">Speed Up</span></Button>
           <Button className="w-60 h-16" name="smallBall"><span className="text-5xl">Small Ball</span></Button>
           <Button className="w-60 h-16" name="enjoyAll"><span className="text-5xl">Enjoy all</span></Button>
-        </form>) : !gameStart && !gameEnd ? (
+        </form>) : gamePhase === "wait" && !isInvited ? (
             <GameLoading />
-          ) : gameStart && !gameEnd ? (
+          ) : gamePhase === "start" ? (
             <PongGame socket={socket} />
           ) : (
             /* 승자와 패자 닉네임을 string으로 전달 */ <GameResult
-              win={winNickName}
-              lose={loseNickName}
-            />
+              result={resultOfGame}
+              />
           )}
           <div className="flex mt-10 w-[800px] items-center justify-between">
             <MiniProfile
