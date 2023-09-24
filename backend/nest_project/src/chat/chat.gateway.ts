@@ -833,10 +833,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
       const profile_info = await this.profileService.getUserProfileById(97993);
       if (!profile_info)
-      this.logger.log(`profile_info ${profile_info}`);
-      this.logger.log(`profile_info ${profile_info.id}`);
-      await socket.emit( "user-profile-info",
+      {
+        this.emitErrorEvent(socket.data.userId, "Response-get-user-profile", "the user not found");
+        return ;
+      }
+      // this.logger.log(`profile_info ${profile_info}`);
+      // this.logger.log(`profile_info ${profile_info.id}`);
+      this.emitResponseEvent(socket.data.userId, "Response-get-user-profile");
+      socket.emit( "user-profile-info",
            (await this.userMaaper.Create_simpleProfileEntityToDto(profile_info)));
+      
     }
 
     @SubscribeMessage('get-users')
