@@ -11,12 +11,12 @@ export class JoinedRoomEntity {
   @Column()
   socketId: string;
 
-  // @ManyToOne(() => UserEntity, user => user.joinedRooms)
-  // @JoinColumn()
-  // user: UserEntity;
+  @ManyToOne(() => UserEntity, user => user.joinedRooms)
+  @JoinColumn()
+  user: UserEntity;
 
-  // @ManyToOne(() => RoomEntity, room => room.joinedUsers)
-  // @JoinColumn()
-  // room: RoomEntity;
+  @ManyToOne(() => RoomEntity, room => room.joinedUsers)
+  @JoinColumn()
+  room: RoomEntity;
 
 }

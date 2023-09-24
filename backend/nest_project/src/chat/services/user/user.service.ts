@@ -4,7 +4,6 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { ConnectedUserI } from 'src/chat/interfaces/connected-user.interface';
 
 
 @Injectable()
@@ -46,30 +45,6 @@ export class UserService {
 		where: {id},
 	});
 	}
-// public getOneWithAllRelations(id: number): Promise<UserEntity[] | undefined> {
-	public getfull() : Promise<UserEntity[]>{
-		return  this.userRepository.find(
-			{
-				relations: {connections : true, rooms : true}
-			});
-	}
-
-	async getUserWithrooms(userId: number): Promise<UserEntity | undefined> 
-	{
-		return this.userRepository.findOne({
-			where : { id : userId}, relations: ['rooms'] 
-		});
-	}
-
-	async getAllUsersWithConnections(): Promise<UserEntity[] | undefined> {
-		return this.userRepository.find(
-		  { relations: {connections : true} });
-	  }
-
-	// async getOneUserWithConnections(): Promise<UserEntity[] | undefined> {
-	// 	return this.userRepository.find(
-	// 	  { relations: {connections : true} });
-	// }
 
 	// public async addBlockList(myId: number, targetId:number) : Promise<UserI>
 	// {

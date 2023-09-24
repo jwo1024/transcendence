@@ -8,8 +8,12 @@ import { UserProfile } from "../../user/profile/user-profile.entity";
 export interface UserI {
 	userProfile: UserProfile;
 	id: number;
+	// nickname: string;
+	// block_list : number[];
+	// friend_list : number[];
 	rooms: RoomEntity[]
 	connections: ConnectedUserEntity[];
+	joinedRooms: JoinedRoomEntity[];
 	messages: MessageEntity[];
-	// joinedRooms: JoinedRoomEntity[];
+
 }

@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+EXPOSE 3001
+
+COPY ./front/package.json .
+
+# COPY ./npm_init.sh .
+
+# CMD [ "/bin/sh", "./init.sh" ]
+# RUN 
+
+# RUN /bin/sh ./npm_init.sh
+
+# CMD ["ash", "-c", "while true; do sleep 1; done"]
+
+ENTRYPOINT npm i && npm run dev

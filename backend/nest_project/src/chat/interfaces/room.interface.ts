@@ -3,7 +3,6 @@ import { roomType } from "../types/roomTypes";
 import { JoinedRoomEntity } from "../entities/joined-room.entity";
 import { MessageEntity } from "../entities/message.entity";
 import { UserEntity } from "../entities/user.entity";
-import { ConnectedUserEntity } from "../entities/connected-user.entity";
 
 export interface RoomI {
   roomId: number;
@@ -14,7 +13,7 @@ export interface RoomI {
   roomAdmins: number[]; //ids
   roomBanned: number[]; //ids
   users: UserEntity[];
-  connections: ConnectedUserEntity[];
+  joinedUsers: JoinedRoomEntity[];
   messages: MessageEntity[];
   created_at?: Date;
   // updated_at?: Date;

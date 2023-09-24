@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "W95FA";
+  src: url("../public/fonts/W95FA/w95fa.woff2") format("woff2"),
+    url("../public/fonts/W95FA/w95fa.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "IBMPlexSansKR-Regular";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/IBMPlexSansKR-Regular.woff")
+    format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  background: #56a69e;
+  font-family: "W95FA", "IBMPlexSansKR-Regular", sans-serif;
+  font-size: 80%;
+}

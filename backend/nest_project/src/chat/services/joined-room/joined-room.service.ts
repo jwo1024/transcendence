@@ -18,16 +18,16 @@ export class JoinedRoomService {
     return this.joinedRoomRepository.save(joinedRoom);
   }
 
-  // async findByUser(user: UserI): Promise<JoinedRoomI[]> {
-  //   return this.joinedRoomRepository.find({
-  //     where: user,
-  //    });
-  // }
+  async findByUser(user: UserI): Promise<JoinedRoomI[]> {
+    return this.joinedRoomRepository.find({
+      where: user,
+     });
+  }
 
-  // async findByRoom(room: RoomI): Promise<JoinedRoomI[]> {
-  //   return this.joinedRoomRepository.find({
-  //     where: { room: { roomId: room.roomId } },
-  //   });
+  async findByRoom(room: RoomI): Promise<JoinedRoomI[]> {
+    return this.joinedRoomRepository.find({
+      where: { room: { roomId: room.roomId } },
+    });
   }
   
   // async findByRoom(room: RoomI): Promise<JoinedRoomI[]> {
@@ -37,15 +37,15 @@ export class JoinedRoomService {
   //   });
   // }
   
-  // async deleteBySocketId(socketId: string) {
-  //   return this.joinedRoomRepository.delete({ socketId });
-  // }
+  async deleteBySocketId(socketId: string) {
+    return this.joinedRoomRepository.delete({ socketId });
+  }
 
-  // async deleteAll() {
-  //   await this.joinedRoomRepository
-  //     .createQueryBuilder()
-  //     .delete()
-  //     .execute();
-  // }
+  async deleteAll() {
+    await this.joinedRoomRepository
+      .createQueryBuilder()
+      .delete()
+      .execute();
+  }
 
-// }
+}
