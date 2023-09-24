@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import Window from "@/components/common/Window";
@@ -7,16 +7,19 @@ import PongGame from "@/components/game/PongGame";
 
 import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
+import { resultNickname } from "@/types/GameType";
 
 import io from "socket.io-client";
 
-    const token = sessionStorage.getItem("accessToken");
-    const socket = io('http://localhost:4000/ladder_game', {
-    extraHeaders: {
-        Authorization: `Bearer ${token}`
-    }
+const token = sessionStorage.getItem("accessToken");
+const socket = io('http://localhost:4000/ladder_game', {
+extraHeaders: {
+    Authorization: `Bearer ${token}`
+}
 });
+
 // const socket = io("http://localhost:4000/ladder_game");
+
 
 export default function GamePage() {
 
@@ -25,26 +28,30 @@ export default function GamePage() {
   socket.on("disconnect", (reason) => {
     // todo: remove
     console.log("disconnect!");
-    setTimeout(() => {router.push("/menu");}, 5000);
+    setTimeout(() => {router.push("/menu");}, 3000);
   });
 
   const [left, setLeft] = useState({
-    nickname: "left player",
-    ladder: 1000,
+    nickname: "searching...",
+    ladder: 0,
     win: 0,
     lose: 0,
   });
   const [right, setRight] = useState({
-    nickname: "right player",
-    ladder: 1000,
+    nickname: "searching...",
+    ladder: 0,
     win: 0,
     lose: 0,
   });
 
-  const [gameStart, setGameStart] = useState(false);
-  const [gameEnd, setGameEnd] = useState(false);
-  const [winNickName, setWinNickName] = useState("");
-  const [loseNickName, setLoseNickName] = useState("");
+  // const [gameStart, setGameStart] = useState(false);
+  // const [gameEnd, setGameEnd] = useState(false);
+  // const [winNickName, setWinNickName] = useState("");
+  // const [loseNickName, setLoseNickName] = useState("");
+  const [resultOfGame, setResultOfGame] = useState<resultNickname>({winPlayer:"",losePlayer:""})
+
+
+  const [gamePhase, setGamePhase] = useState<"wait" | "start" | "end">("wait");
 
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
@@ -63,27 +70,27 @@ export default function GamePage() {
   });
 
   socket.on('startGame', () => {
-    setGameStart(true);
+    setGamePhase("start");
   });
 
   socket.on('endGame', (winner_nickname, loser_nickname) => {
-      setWinNickName(winner_nickname);
-      setLoseNickName(loser_nickname);
-      setGameEnd(true);
+      // setWinNickName(winner_nickname);
+      // setLoseNickName(loser_nickname);
+      setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
+      setGamePhase("end");
   });
 
   return (
     <div className="flex items-center justify-center h-screen">
       <Window title="pong game" w="900" h="850">
         <div className="h-screen flex flex-col justify-center items-center">
-          {!gameStart && !gameEnd ? (
+          {gamePhase === "wait" ? (
             <GameLoading />
-          ) : gameStart && !gameEnd ? (
+          ) : gamePhase === "start" ? (
             <PongGame socket={socket} />
           ) : (
             /* 승자와 패자 닉네임을 string으로 전달 */ <GameResult
-              win={winNickName}
-              lose={loseNickName}
+              result={resultOfGame}
             />
           )}
           <div className="flex mt-10 w-[800px] items-center justify-between">

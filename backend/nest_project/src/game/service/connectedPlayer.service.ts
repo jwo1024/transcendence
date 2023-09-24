@@ -93,7 +93,11 @@ export class ConnectedPlayerService {
 
 	async deletePlayer(id: number)
 	{
-		await this.connectedPlayerRepository.softDelete({id: id});
+		// setTimeout(() => {
+		// 	this.connectedPlayerRepository.delete({id: id});
+		// }, 1000);
+
+		await this.connectedPlayerRepository.delete({id: id});
 	}
 
 	async deleteAll() {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, UpdateResult } from 'typeorm';
 import { Player } from '../interface/game.interface';
 
 import { MatchEntity } from '../entities/match.entity';
@@ -91,27 +91,31 @@ export class MatchService {
 		}
 	}
 
-	async updateRightScore(id: number, score : number) : Promise<void>
+	async updateRightScore(id: number, score: number) : Promise<void>
 	{
 		await this.matchRepository.update({match_id: id}, {scoreRight : score});
 	}
 
-	async updateLeftScore(id: number, score : number) : Promise<void>
+	async updateLeftScore(id: number, score: number) : Promise<void>
 	{
 		await this.matchRepository.update({match_id: id}, {scoreLeft : score});
 	}
 
 	async deleteByMatchId(match_id: number)
 	{
+		// setTimeout(() => {
+		// 	this.matchRepository.delete({ match_id });
+		// }, 1000);
+
 		await this.matchRepository.delete({ match_id });
 	}
 
 	//
-	// async deleteAll() {
-	// 	await this.connectedPlayerRepository
-	// 	  .createQueryBuilder()
-	// 	  .delete()
-	// 	  .execute();
-	//   }
+	async deleteAll() {
+		await this.matchRepository
+		  .createQueryBuilder()
+		  .delete()
+		  .execute();
+	  }
 
 }
