@@ -1,6 +1,8 @@
 import { Fieldset, Button, Input } from "@react95/core";
 import { useRouter } from "next/router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+
 
 interface NickNameBlockProps {
   email: string;
@@ -18,6 +20,41 @@ const TwoFactorAuthentication = ({
   const [notifyStr, setNotifyStr] = useState<string>("");
   const [twoFAEmailValid, setTwoFAEmailValid] = useState<boolean>(false);
 
+  const [issuedAt, setIssuedAt] = useState<Date | null>(null); // at
+  const [intervalState, setIntervalState] = useState<NodeJS.Timeout | null>(null);
+  const [timeStr, setTimeStr] = useState<string>("");
+
+  useEffect(() => {
+    return () => {
+      if (intervalState) clearInterval(intervalState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (issuedAt) {
+      if (intervalState) clearInterval(intervalState);
+      const intervalId = setInterval(() => {
+        setTimeStr(timer());
+      }, 500);
+      setIntervalState(intervalId);
+    }
+  }, [issuedAt]);
+
+  const timer = (): string => {
+    if (issuedAt) {
+      const time = new Date(issuedAt);
+      const now = new Date();
+      const diff = now.getTime() - time.getTime();
+      const remainingTime = 5 * 60 * 1000 - diff;
+      if (remainingTime <= 0) return "expired";
+      const min = Math.floor(remainingTime / 60000);
+      const sec = Math.floor((remainingTime - min * 60000) / 1000);
+      return `${min} : ${sec}`;
+    }
+    return "";
+  };
+
+
   const sendingMailSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const token = sessionStorage.getItem("accessToken");
@@ -29,19 +66,21 @@ const TwoFactorAuthentication = ({
       },
       body: JSON.stringify({ email: email }),
     }).then((res) => {
-      if (res.ok) {
-        setNotifyStr("");
-        res.text().then((issuedAt) => {
-          console.log(JSON.parse(issuedAt));
-          // setElapsedTime(JSON.parse(issuedAt));
-        });
-      } else {
+      setNotifyStr("");
+      if (res.status === 500) {
         setSuccess(1);
         setTwoFAEmailValid(false);
-        setNotifyStr(
-          "메일 전송에 실패했습니다. 다시 시도하거나 다른 이메일을 입력해 주세요"
-        );
+        setNotifyStr("메일 전송에 실패했습니다. 다시 시도하거나 다른 이메일을 입력해 주세요");
       }
+      else if (res.ok) {
+        res.text().then((otp) => {
+        const otpIssuedAt: Date = JSON.parse(otp).issuedAt;
+        setIssuedAt(otpIssuedAt);
+        });
+        return "";
+      }
+      else
+        return "unknown error";
     });
   };
   const validationSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -79,6 +118,7 @@ const TwoFactorAuthentication = ({
             <span className="text-xl">{email}</span>
           </Fieldset>
           <Button className="w-full">인증 메일 발송</Button>
+          <div className="text-center text-xl ">{(timeStr ? "[validity duration] " : " ")  + timeStr}</div>{" "}
         </form>
         <form
           onSubmit={validationSubmit}
@@ -89,7 +129,7 @@ const TwoFactorAuthentication = ({
             ref={textFromEmail}
             className="flex-1 w-full"
           />
-          <Button className="w-full">제출하기</Button>
+          <Button className="w-full">제출</Button>
         </form>
         {success === 1 ? (
           <span className=" text-red-600 text-lg">{notifyStr}</span>

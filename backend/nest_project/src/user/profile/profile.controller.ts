@@ -73,6 +73,8 @@ export class ProfileController {
         const user = await this.profileService.getUserProfileById(req.user.userId);
         if (!user)
             throw new BadRequestException('user not found');
+        if (user.avatar === null)
+            return res.status(HttpStatus.NOT_FOUND).send('image not found');
         const imageBase64 = user.avatar.toString('base64');
         const imageBuffer = Buffer.from(imageBase64, 'base64');
         res.set('Content-Type', 'image/jpeg');

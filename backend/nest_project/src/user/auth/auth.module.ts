@@ -15,10 +15,7 @@ import { UserService } from '../../chat/services/user/user.service';
 import { TfaService } from '../tfa/tfa.service';
 
 @Module({
-  imports: [ ServeStaticModule.forRoot({
-    rootPath: join(__dirname, '..', 'profile', 'images'),
-  }),
-    TypeOrmModule.forFeature([UserProfile, UserEntity]),
+  imports: [TypeOrmModule.forFeature([UserProfile, UserEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: 'plzsaveus',
