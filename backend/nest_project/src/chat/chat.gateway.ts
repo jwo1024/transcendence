@@ -14,15 +14,8 @@ import {
           OnModuleInit,
           UnauthorizedException 
         } from '@nestjs/common';
-// import { OneToMany, Repository } from 'typeorm';
-
-//Types
-// import { roomType } from './types/roomTypes';
 
 //Entities
-import { UserEntity } from './entities/user.entity';
-// import { RoomEntity } from './entities/room.entity';
-import { RoomEntity } from './entities/room.entity';
 
 //Interfaces
 import { RoomI } from './interfaces/room.interface';
@@ -123,8 +116,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             await this.connectedUserService.createfastWithRoomId(socket.id, userForChat, room.roomId);
         }
 
-        return this.server.to(socket.id).emit('rooms', await this.roomMapper.Create_simpleDTOArrays(rooms));
-
+        const openRooms = await this.roomService.getRoomsByType(['open']);
+        this.server.to(socket.id).emit('rooms', openRooms);
+        this.server.to(socket.id).emit('me-joining-rooms', await this.roomMapper.Create_simpleDTOArrays(rooms));
+        return ;
       } catch {
        this.logger.log(`error occur`); 
       return this.disconnect(socket);
@@ -202,7 +197,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.emitNotice(newRoom, `[${newRoom.roomName}]방이 만들어졌습니다.`);
     
     this.emitUserJoingingRooms(socket.id, userEntity);
-    const currentConnections = await this.connectedUserService.getByRoomId(null);
+    // const currentConnections = await this.connectedUserService.getByRoomId(null);
+    const currentConnections = await this.connectedUserService.getAllConnectedUsersWithNull();
     this.logger.log(`cC : ${currentConnections}`);
     this.logger.log(`cC : ${(currentConnections).length}`);
     //  현 서버에 소켓 연결된 모든 채팅 사용자에게 room 정보를 보냄
@@ -256,8 +252,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitErrorEvent(socket.id, "Response-DM-create", "you've been blocked by that user");
       return ;
     }
-
-    const createdRoom: RoomI = await this.roomService.createRoom(room, socket.data.user);
+    const myUserEntity = await this.userService.getOne(socket.data.userId);
+    const createdRoom: RoomI = await this.roomService.createRoom(room, myUserEntity);
     if (!createdRoom)
     {
       this.emitErrorEvent(socket.id,"Response-DM-create", "failed to creat it. Please retry");
@@ -278,6 +274,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     //상대방 사용자를 초대
     this.roomService.addUserToRoom(userTheOther.id, createdRoom.roomId, socketTheOther.socketId);
     
+    this.emitResponseEvent(socket.id,"Response-DM-create");
     //상대방과 나에게 현재 만들어진 room 정보를 포함해 전체 Joinedroom 보냄
     this.emitOneRoomToUsersInRoom(createdRoom.roomId);
     this.emitAllRoomsToUsersInRoom(createdRoom.roomId);
@@ -325,7 +322,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() room: RoomJoinDTO) 
   {
-    // this.server.to(socket.id).emit("hihi");
     const roomFromDB = await this.roomService.getRoomEntityWithUsers(room.roomId);
     if ( roomFromDB === undefined || roomFromDB === null)
     {
@@ -338,7 +334,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return ; //ban 처리된 유저
     }
 
-      if (!( await this.roomService.isValidForJoin( roomFromDB, room)))
+    if (!( await this.roomService.isValidForJoin( roomFromDB, room)))
     {
       this.emitErrorEvent(socket.id, "Response-Room-join", "not valid password")
       return ; //참여할 자격이 안됨.
@@ -378,6 +374,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.emitErrorEvent(socket.id, "Response-Room-enter", "the room is not exist now.");
         return ;
       }
+    const connectionsInTheRoom  = await this.connectedUserService.getByRoomId(roomId);
+    const isExistUser = connectionsInTheRoom.find(finding => finding === socket.data.userId);
+    if (isExistUser === null || isExistUser === undefined)
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-enter", "You are not envolved here right now. Join first!");
+      return ;
+    }
     if ( await this.roomService.isBannedUser(socket.data.userId, roomId))
     {
       this.emitErrorEvent(socket.id, "Response-Room-enter", "you are banned by that room.");
@@ -547,7 +550,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private async emitRoomsToAllConnectedUser()
   {
     //현 서버에 소켓 연결된 모든 유저들에게 현재 만들어져 있는 방 보여주기.
-    const connectedUsers : ConnectedUserI[] = await this.connectedUserService.getByRoomId(null);
+    // const connectedUsers : ConnectedUserI[] = await this.connectedUserService.getByRoomId(null);
+    const connectedUsers : ConnectedUserI[] = await this.connectedUserService.getAllConnectedUsersWithNull();
+    // const currentConnections = await this.connectedUserService.getAllConnectedUsersWithNull();
+
+
     for (const connetedUser of connectedUsers) 
     {
       const rooms = await this.roomService.getRoomsByType(['open']); //roomType이 DM, private 이 아닌 애들만.
@@ -559,13 +566,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private async emitOneRoomToUsersInRoom(roomId : number)
   {
     const room: RoomI 
-      = await this.roomService.getRoom(roomId);
+      = await this.roomService.getRoomEntityWithConnections(roomId);
     if (!room)
       return;
     const connectedUsers = room.connections;
-    // const joinedUsers: JoinedRoomI[] 
-    //   =  await this.joinedRoomService.findByRoom(room);
-    const simpleRoom = await this.roomMapper.Create_specificInterfaceToDto(room)
+    if (connectedUsers === null || connectedUsers === undefined)
+      return ;//현재 접속중인 유저가 없어서 당장 전송하진 않음.
+      const roomWithUsers 
+      = await this.roomService.getRoomEntityWithUsers(roomId); 
+      this.logger.log(`room.users : ${roomWithUsers.users}`);
+    this.logger.log(`room.users : ${roomWithUsers.users.length}`);
+    const simpleRoom = await this.roomMapper.Create_specificInterfaceToDto(roomWithUsers);
     const currentRoomId = room.roomId; 
     for (const user of connectedUsers) 
       await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, simpleRoom);
@@ -606,11 +617,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return;
     // const joinedUsers: JoinedRoomI[] 
       // =  await this.joinedRoomService.findByRoom(room);
-    const conncetedUsers  = room.connections;
-      for (const connection of conncetedUsers) 
+    const conncetedUsers  = await this.connectedUserService.getByRoomIdWithUser(roomId);
+    if(conncetedUsers === null || conncetedUsers === undefined)
+      return ; //현재 접속한 유저가 없어, 당장 전송하진 않음.
+    for (const connection of conncetedUsers) 
     {
+      // this.connectedUserService.
       const joiningrooms = await this.roomService.getRoomsForUser(connection.user.id);
-      this.emitResponseEvent(connection.socketId, "Response-DM-create");
+      // this.emitResponseEvent(connection.socketId, "Response-DM-create");
       this.logger.log(`joining : ${joiningrooms}`);
       this.logger.log(`joining : ${joiningrooms.length}`);
       await this.server.to(connection.socketId).emit(
@@ -628,15 +642,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   // }
  //----------------------------------
 
+
   @SubscribeMessage('Owner-Room-edit')
   async onEditRoomByOwner(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() editData: RoomCreateDTO, @MessageBody() roomId: number ) 
+    @MessageBody() data : {editData: RoomCreateDTO, roomId: number }) 
   {
-      if ( await this.roomService.isRoomOwner(socket.data.user.userId, roomId) === false)
+    const editData = data.editData;
+    const roomId = data.roomId;
+      if ( await this.roomService.isRoomOwner(socket.data.userId, roomId) === false)
+      {
+        this.emitErrorEvent(socket.id, "Response-Owner-Room-edit","you're not the owner");
         return ; //주인장이 아닌 사람이 한 요청일때 무시
+      }
       const editedRoom = await this.roomService.editRoom(roomId, editData);
-
+      if (editedRoom === null)
+      {
+        this.emitErrorEvent(socket.id, "Response-Owner-Room-edit", "you can't edit dm rooms");
+      }
+      this.emitResponseEvent(socket.id, "Response-Owner-Room-edit");
       this.emitRoomsToAllConnectedUser();
   }
   

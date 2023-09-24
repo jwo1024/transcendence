@@ -45,10 +45,28 @@ export class ConnectedUserService {
       // relations : ['']
     });
   }
-  // const temp = await this.roomRepository.findOne({
-  //   where: { roomId },
-  //   relations: ['connections'] //관련 엔터티도 함께 가져오겠다.
-  // });
+
+  async getAllConnectedUsersWithNull(): Promise<ConnectedUserI[]> {
+    return await this.connectedUserRepository.find({
+      where: { room: null},
+    });
+  }
+
+  // async getOneWithUser(socketId: string): Promise<ConnectedUserI> {
+  //   const temp = await this.connectedUserRepository.findOne({
+  //     where: { socketId : socketId},
+  //     relations: ['user'] //관련 엔터티도 함께 가져오겠다.
+  //   });
+  //   return temp;
+  // }
+
+  async getByRoomIdWithUser(roomId: number): Promise<ConnectedUserI[]> {
+    const temp = await this.connectedUserRepository.find({
+      where: { room: {roomId : roomId}},
+      relations: ['user'] //관련 엔터티도 함께 가져오겠다.
+    });
+    return temp;
+  }
 
   async findByUser(user: UserI): Promise<ConnectedUserI> {
     return this.connectedUserRepository.findOne({ 
