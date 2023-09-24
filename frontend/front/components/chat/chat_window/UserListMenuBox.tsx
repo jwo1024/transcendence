@@ -84,7 +84,7 @@ const UserListMenuBox = ({
       socket.current?.emit(emitEvent, emitData);
       socket.current?.once(onEvent, (res) => {
         const resDTO: ResponseDTO = res;
-        if (resDTO.status) return;
+        if (resDTO.success) return;
         if (resDTO.message) alert(resDTO.message);
         else alert(`${eventName}에 실패하였습니다.`);
       });

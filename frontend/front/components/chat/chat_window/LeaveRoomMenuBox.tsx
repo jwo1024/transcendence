@@ -5,7 +5,7 @@ import React, { useContext } from "react";
 import MenuBoxLayout from "@/components/chat/common/MenuBoxLayout";
 import { SocketContext } from "@/context/ChatSocketContext";
 // Types & Hooks & Contexts
-import { SimpRoomI } from "@/types/ChatInfoType";
+import { SimpRoomI, ResponseDTO } from "@/types/ChatInfoType";
 import {
   EMIT_ROOM_LEAVE,
   ON_RESPONSE_ROOM_LEAVE,
@@ -26,12 +26,14 @@ const LeaveRoomMenuBox = ({
   const onSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!confirm("정말, 정말로 채팅방을 떠나시겠습니까?")) return;
-    // TODO
     socket?.emit(EMIT_ROOM_LEAVE, roomInfo.roomId);
-    socket?.on(ON_RESPONSE_ROOM_LEAVE, (data) => {
+    socket?.once(ON_RESPONSE_ROOM_LEAVE, (data) => {
+      const res: ResponseDTO = data;
       console.log("socket.on leave-room", data);
+      if (!res.success)
+        alert(`채팅방을 떠나는데 실패했습니다. : ${res.message}`);
+      else triggerClose && triggerClose();
     });
-    triggerClose && triggerClose();
   };
 
   return (

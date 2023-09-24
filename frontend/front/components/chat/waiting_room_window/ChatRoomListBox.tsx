@@ -106,22 +106,24 @@ const ChatRoomListBox = ({
   // const [alertJoinRoom, setAlertJoinRoom] = useState<RoomJoinDTO | null>(null);
 
   return (
-    <Frame className="p-4" boxShadow="in" bg={"white"}>
-      <div className="flex flex-row bg-stone-500 rounded-md text-white">
+    <Frame className="p-4 overflow-auto" boxShadow="in" bg={"white"}>
+      <div className="flex flex-row bg-stone-500 rounded-md text-white overflow-auto">
         <span className="flex-1  p-2">방제</span>
         <span className="w-16 p-2">[인원]</span>
         <span className="w-28 p-2">비밀번호 유무</span>
         <span className=" w-28">{""} </span>
       </div>
-      {/* chat room list */}
-      {state?.map((chatRoom) => (
-        <ChatRoomBlock
-          key={chatRoom.roomId}
-          chatRoom={chatRoom}
-          handleOpenWindow={handleOpenWindow}
-          isJoinedList={isJoinedList}
-        />
-      ))}
+      <div className="overflow-auto">
+        {/* chat room list */}
+        {state?.map((chatRoom) => (
+          <ChatRoomBlock
+            key={chatRoom.roomId}
+            chatRoom={chatRoom}
+            handleOpenWindow={handleOpenWindow}
+            isJoinedList={isJoinedList}
+          />
+        ))}
+      </div>
     </Frame>
   );
 };
