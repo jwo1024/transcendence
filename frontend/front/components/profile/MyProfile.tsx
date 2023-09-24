@@ -8,7 +8,7 @@ import {
   Input,
 } from "@react95/core";
 import Window from "../common/Window";
-import { UserLocalStorage } from "@/types/SignUpType";
+import { UserSessionStorage } from "@/types/SignUpType";
 import sendAvatar from "../func/sendAvatar";
 import type { SignupDto, User42Dto } from "@/types/SignUpType";
 import imageCompression from "browser-image-compression";
@@ -31,7 +31,7 @@ const actionImgCompress = async (fileSrc: File) => {
 };
 
 const MyProfile: React.FC = () => {
-  const [myData, setMydata] = useState<UserLocalStorage>({
+  const [myData, setMydata] = useState<UserSessionStorage>({
     id: 0,
     nickname: "",
     status: 0,
@@ -52,8 +52,8 @@ const MyProfile: React.FC = () => {
   const newNickNameInputRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+    const user = sessionStorage.getItem("user");
+    const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
     setMydata(user_obj);
 
     const token = sessionStorage.getItem("accessToken");
@@ -135,13 +135,13 @@ const MyProfile: React.FC = () => {
       if (res.status == 409)
         return alert("이미 존재하는 닉네임입니다. 다른 닉네임을 입력해주세요.");
       else if (res.ok) {
-        const user = localStorage.getItem("user");
-        const user_obj = JSON.parse(localStorage.getItem("user") || "{}");
+        const user = sessionStorage.getItem("user");
+        const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
         // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
         setMydata({ ...user_obj, nickname: nickname });
         // 로컬스토리지를 비우고 새로 업데이트
-        localStorage.clear();
-        localStorage.setItem("user", JSON.stringify(myData)); 
+        sessionStorage.clear();
+        sessionStorage.setItem("user", JSON.stringify(myData)); 
         return alert("닉네임이 변경되었습니다.");
       }
       else

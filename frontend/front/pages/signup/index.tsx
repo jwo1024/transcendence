@@ -116,7 +116,7 @@ const SignUpPage = () => {
         else throw new Error("Unkwon Error : ");
       })
       .then((data) => {
-        localStorage.setItem("user", JSON.stringify(data));
+        sessionStorage.setItem("user", JSON.stringify(data));
       })
       .catch((err) => {
         console.log(err);

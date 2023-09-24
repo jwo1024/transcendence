@@ -7,7 +7,7 @@ import MyProfile from "@/components/profile/MyProfile";
 import UserProfile from "@/components/profile/UserProfile";
 import { UserInfo } from "@/types/UserInfo";
 import sendAvatar from "@/components/common/sendAvatar";
-import { UserLocalStorage } from "@/types/SignUpType";
+import { UserSessionStorage } from "@/types/SignUpType";
 // 임시 백엔드 타입용.
 type user = {
   nickname: string;

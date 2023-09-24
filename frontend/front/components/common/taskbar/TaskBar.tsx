@@ -1,26 +1,27 @@
 import React, { useEffect, useContext, useState } from "react";
 import { Frame } from "@react95/core";
-import { CurrentPageContext } from "@/context/PageContext";
 import { TaskListContext, ITask } from "@/context/PageContext";
 import MenuList from "@/components/common/taskbar/MenuList";
 import TaskButton from "@/components/common/taskbar/TaskButton";
+import { UserInfo } from "@/types/UserInfo";
 
 // TaskBar
-const TaskBar = () => {
-  const { currentPage } = useContext(CurrentPageContext);
+const TaskBar = ({ currentPage }: { currentPage: string }) => {
   const { taskList } = useContext(TaskListContext);
   const [taskLists, setTaskLists] = useState<ITask[]>(taskList); // reducer ?
   const [activeTaskButton, setActiveTaskButton] = useState<number>(-1);
   const [startButtonClicked, setStartButtonClicked] = useState<boolean>(false);
-  const [nickName, setNickName] = useState<string>("loading...");
+  const [nickName, setNickName] = useState<string>("Loading...");
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      const nickName = JSON.parse(user).nickName;
-      setNickName(nickName);
-    } else setNickName("log-out");
-  }, []);
+    setNickName(() => {
+      const user = sessionStorage.getItem("user");
+      if (user) {
+        const userData: UserInfo = JSON.parse(user);
+        return userData.nickname;
+      } else return "Log-out";
+    });
+  }, [currentPage]);
 
   useEffect(() => {
     setTaskLists(taskList);

@@ -15,7 +15,7 @@ export interface User42Dto {
   //   image_url: string;
 }
 
-export interface UserLocalStorage {
+export interface UserSessionStorage {
   id: number;
   nickname: string;
   status: number;
