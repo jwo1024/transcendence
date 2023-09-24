@@ -28,6 +28,10 @@ export class ConnectedUserService {
     this.logger.log(`user : ${user.id}`);
     return this.connectedUserRepository.save({socketId, user, room });
   }
+  // async createfast(socketId : string, user: UserI, room : RoomEntity): Promise<ConnectedUserI> {
+  //   this.logger.log(`user : ${user.id}`);
+  //   return this.connectedUserRepository.save({socketId, user, room });
+  // }
 
   async createfastWithRoomId(socketId : string, user: UserI, roomId : number): Promise<ConnectedUserI> {
     // const room = await this.roomService.getRoomEntity(roomId);
@@ -46,19 +50,14 @@ export class ConnectedUserService {
     });
   }
 
-  async getAllConnectedUsersWithNull(): Promise<ConnectedUserI[]> {
-    return await this.connectedUserRepository.find({
-      where: { room: null},
-    });
-  }
+  async getAllConnectedSocketIds(): Promise<string[]> {
+    const connectedUsers = await this.connectedUserRepository.find();
 
-  // async getOneWithUser(socketId: string): Promise<ConnectedUserI> {
-  //   const temp = await this.connectedUserRepository.findOne({
-  //     where: { socketId : socketId},
-  //     relations: ['user'] //관련 엔터티도 함께 가져오겠다.
-  //   });
-  //   return temp;
-  // }
+    // 중복 없는 socketId를 추출합니다.
+    const uniqueSocketIds = [...new Set(connectedUsers.map(user => user.socketId))];
+
+    return uniqueSocketIds;
+  }
 
   async getByRoomIdWithUser(roomId: number): Promise<ConnectedUserI[]> {
     const temp = await this.connectedUserRepository.find({
@@ -84,6 +83,11 @@ export class ConnectedUserService {
 
   async deleteBySocketId(socketId: string) {
     return this.connectedUserRepository.delete({ socketId });
+  }
+
+  async deleteByUserIdAndRoomId(userId: number, roomId: number): Promise<void> 
+  {
+    await this.connectedUserRepository.delete({ user: { id: userId }, room: { roomId } });
   }
 
   async removeByUserIdAndRoomId(userId: number, roomId: number,
