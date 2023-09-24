@@ -34,6 +34,7 @@ let ladderRange: number;
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 
+// todo: 삭제
 const logger2 = new Logger('LadderGameGateway');
 
 @Injectable()
@@ -57,7 +58,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		currentQueueTime = Date.now();
 		ladderRange = 100;
 		this.gameFieldArr = [];
-		// gameFieldArr = [];
 
 		setInterval(() => this.queueProcess(), 1000);
 	}
@@ -107,7 +107,6 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	async handleDisconnect(socket: Socket)
 	{
 		// socket.emit('Error', new UnauthorizedException());
-		// setTimeout(() => {console.log(`handleDisconnect start.`);}, 1000);
 
 		if (await this.connectedPlayerService.getPlayerBySocketId(socket.id))
 		{
@@ -203,7 +202,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 				// const a = await ladderQueue[i].id;
 				// const player1Ladder = await this.connectedPlayerService.getLadderById(a);
 				const player1Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[i].id);
-				console.log(player1Ladder);
+				// console.log(player1Ladder);
 				const player1less = player1Ladder - ladderRange;
 				const player1greater = player1Ladder + ladderRange;
 				const player2Ladder = await this.connectedPlayerService.getLadderById(ladderQueue[j].id);
@@ -280,7 +279,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.gameFieldArr.push(gameField);
 		// gameFieldMap.set(match.match_id, gameField);
 		// gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
-		gameField.gameTimer = await setInterval(() => {this.playGame(this.server, match, player1, player2, gameField);}, 20);
+		gameField.gameTimer = setInterval(() => {this.playGame(this.server, match, player1, player2, gameField);}, 20);
 	} catch (error) {
 		logger2.error(`startGame : ${error.message}`);
 	}
