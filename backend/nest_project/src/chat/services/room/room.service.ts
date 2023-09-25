@@ -16,6 +16,7 @@ import { ConnectedUserService } from '../connected-user/connected-user.service';
 import { UserEntity } from '../../entities/user.entity';
 import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
 import { UserService } from '../user/user.service';
+import { join } from 'path';
 
 const bcrypt = require('bcrypt');
 
@@ -245,10 +246,11 @@ export class RoomService {
     return false;
   }
 
-  async isRoomOwner(userId: number, roomId: number) : Promise<boolean> {
+  async isRoomOwner(userId: number, roomId: number) : Promise<boolean> 
+  {
     const room = await this.getRoom(roomId);
-    // this.logger.log(`roomOwner : ${room.roomOwner}`);
-    // this.logger.log(`userId : ${userId}`);
+    this.logger.log(`roomOwner : ${room.roomOwner}`);
+    this.logger.log(`userId : ${userId}`);
     if (room.roomOwner === userId)
       return true;
     return false;
@@ -306,14 +308,17 @@ export class RoomService {
 
 
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
-  async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
+  async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> 
+  {
+    //db내 비밀번호가 없는 방인 경우
     if (roomFromDB.roomPass === null)
       return true;
-    if (joinDTO.roomPass !== undefined)
-      joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
+    
+   // 방은 비밀번호가 있는데 사용자는 안 보낸 경우
     if (joinDTO.roomPass === undefined || joinDTO.roomPass === null)
-      return false;
-    else if ( this.comparePasswords(joinDTO.roomPass, roomFromDB.roomPass))
+    return false;
+
+    if ((await this.comparePasswords(joinDTO.roomPass, roomFromDB.roomPass)) === true)
       return true;
     return false;
   }
