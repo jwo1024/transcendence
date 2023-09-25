@@ -12,9 +12,13 @@ const MenuList = () => {
         headers: {
           authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
         },
-      }).then((res) => {
-        res.ok && router.push("/");
-      });
+      })
+        .then((res) => {
+          res.ok && router.push("/");
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   };
 

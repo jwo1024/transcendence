@@ -47,9 +47,17 @@ export class UserService {
 	});
 	}
 // public getOneWithAllRelations(id: number): Promise<UserEntity[] | undefined> {
-	public getfull() : Promise<UserEntity[]>{
+	public getAllUSerWithRoomsAndConnections() : Promise<UserEntity[]>{
 		return  this.userRepository.find(
 			{
+				relations: {connections : true, rooms : true}
+			});
+	}
+
+	public getOneUSerWithRoomsAndConnections(userId : number) : Promise<UserEntity>{
+		return  this.userRepository.findOne(
+			{
+				where: {id : userId},
 				relations: {connections : true, rooms : true}
 			});
 	}

@@ -21,7 +21,7 @@ export class ProfileService {
         @InjectRepository(UserProfile)
         private userProfileRepository: Repository<UserProfile>,
         private userService: UserService,
-    ) {}
+    ) { this.userProfileRepository.update({}, {status: userStatus.offline}); }
 
     async initUsers() : Promise<void> {
         const result = await this.userProfileRepository.update({}, { status : userStatus.offline} );

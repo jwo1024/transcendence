@@ -1,36 +1,58 @@
 // Libraries
-import { useContext, useRef, useState } from "react";
-import { Fieldset, Input, Button, Checkbox } from "@react95/core";
+import { use, useContext, useRef, useState, useEffect } from "react";
+import { Fieldset, Input, Button } from "@react95/core";
 // Components
 import MenuBoxLayout from "../common/MenuBoxLayout";
 // Types & Hooks & Contexts
 import { SocketContext } from "@/context/ChatSocketContext";
-import type { RoomCreateDTO, SimpUserI } from "@/types/ChatInfoType";
+import type {
+  RoomCreateDTO,
+  SimpUserI,
+  ResponseDTO,
+} from "@/types/ChatInfoType";
+import {
+  EMIT_DM_CREATE,
+  ON_RESPONSE_DM_CREATE,
+} from "@/types/ChatSocketEventName";
 
 interface MakeNewChatMenuBoxProps {
   userInfo: SimpUserI;
 }
-
-const MakeNewDMBOX = ({ userInfo }: MakeNewChatMenuBoxProps) => {
+const MakeNewDMMenu = ({ userInfo }: MakeNewChatMenuBoxProps) => {
   const socket = useContext(SocketContext);
   const friendNickRef = useRef<HTMLInputElement>();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (friendNickRef.current) friendNickRef.current.focus();
+    return () => {
+      socket?.off(ON_RESPONSE_DM_CREATE);
+    };
+  }, []);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // reload 방지
+    event.preventDefault();
     if (!friendNickRef || friendNickRef.current?.value === "") {
       setErrorMsg("친구 닉네임을 입력해주세요");
       return;
     }
     const friendNick = friendNickRef.current?.value;
-    const title = `DM / ${userInfo.nickname} & ${friendNick}]`;
+    const title = `[${userInfo.nickname} & ${friendNick}]`;
     const newRoom: RoomCreateDTO = {
       roomName: title,
       roomType: "dm",
       roomPass: undefined,
     };
-    if (socket) socket?.emit("Room-create", newRoom, friendNick);
-    // 만약 없는 친구 이름이라면은...? // 방만들기에 실패했다면은 ?
+    console.log("socket.emit EMIT_DM_CREATE", newRoom, friendNick || "");
+    socket?.once(ON_RESPONSE_DM_CREATE, (data) => {
+      const res: ResponseDTO = data;
+      console.log("socket.on ON_RESPONSE_DM_CREATE", data);
+      if (!res.success)
+        setErrorMsg(`DM방 만들기에 실패했습니다 : ${res.message}`);
+      else setErrorMsg(null);
+    });
+    socket?.emit(EMIT_DM_CREATE, { room: newRoom, userNickname: friendNick });
+   
   };
 
   return (
@@ -48,4 +70,4 @@ const MakeNewDMBOX = ({ userInfo }: MakeNewChatMenuBoxProps) => {
   );
 };
 
-export default MakeNewDMBOX;
+export default MakeNewDMMenu;

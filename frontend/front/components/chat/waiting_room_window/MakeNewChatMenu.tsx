@@ -1,11 +1,18 @@
-import { useContext, useRef, useState } from "react";
-import { Fieldset, Input, Button, Checkbox } from "@react95/core";
+// Libraries
+import { useContext, useRef, useState, useEffect } from "react";
+import { Fieldset, Input, Button } from "@react95/core";
+// Components
 import SelectButton from "@/components/common/SelectButton";
 import type { FrameButtonProps } from "@/components/common/SelectButton";
 import MenuBoxLayout from "../common/MenuBoxLayout";
 import { SocketContext } from "@/context/ChatSocketContext";
 import CheckBox from "@/components/common/CheckBox";
-import type { RoomCreateDTO } from "@/types/ChatInfoType";
+// Types & Hooks & Contexts
+import type { RoomCreateDTO, ResponseDTO } from "@/types/ChatInfoType";
+import {
+  EMIT_ROOM_CREATE,
+  ON_RESPONSE_ROOM_CREATE,
+} from "@/types/ChatSocketEventName";
 
 const MakeNewChatMenu = () => {
   const socket = useContext(SocketContext);
@@ -20,9 +27,23 @@ const MakeNewChatMenu = () => {
     { children: "초대방", handleClickCustom: () => setIsPublicRoom(false) },
   ];
 
-  // TODO : with : surlee : open, private, protected, dm 방 구분하기 => 비밀번호 & protected 있을 수 있음
+  useEffect(() => {
+    if (titleRef.current) titleRef.current.focus();
+    return () => {
+      socket?.off(ON_RESPONSE_ROOM_CREATE);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isPublicRoom) setPasswordChecked(false);
+  }, [isPublicRoom]);
+
+  useEffect(() => {
+    if (passwordChecked) passwordRef.current?.focus();
+  }, [passwordChecked]);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // reload 방지
+    event.preventDefault();
     const title = titleRef.current?.value;
     const password = passwordRef.current?.value;
     if (!title || title === "") setErrorMsg("방제를 입력해주세요");
@@ -35,7 +56,15 @@ const MakeNewChatMenu = () => {
         roomType: isPublicRoom ? "open" : "private",
         roomPass: passwordChecked ? password : undefined,
       };
-      if (socket) socket?.emit("Room-create", newRoom);
+      console.log("socket.emit EMIT_ROOM_CREATE", newRoom);
+      socket?.emit(EMIT_ROOM_CREATE, newRoom);
+      socket?.once(ON_RESPONSE_ROOM_CREATE, (data) => {
+        const res: ResponseDTO = data;
+        console.log("socket.on ON_RESPONSE_ROOM_CREATE", data);
+        if (!res.success)
+          setErrorMsg(`채팅방 만들기에 실패했습니다 : ${res.message}`);
+        else setErrorMsg(null);
+      });
     }
   };
 
@@ -48,7 +77,6 @@ const MakeNewChatMenu = () => {
         {/*  방제목 입력 */}
         <form className="flex flex-col" onSubmit={handleSubmit}>
           <Input placeholder="방제 입력" ref={titleRef} />
-          {/* <Checkbox label="비밀번호 설정" checked={true} /> */}
           <CheckBox
             label="비밀번호"
             checked={passwordChecked}

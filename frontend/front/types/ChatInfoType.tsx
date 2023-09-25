@@ -3,7 +3,7 @@
 // USER DTO
 // - SimpUserI : SimpleUserDTO
 export interface SimpUserI {
-  id: number;
+  id?: number;
   nickname: string;
 }
 export interface UserI {
@@ -57,6 +57,7 @@ export interface RoomInviteDTO {
 // MessageDTO
 // - RecvMessageDTO : MessageI
 export interface RecvMessageDTO {
+  id: number;
   text: string;
   user: SimpUserI; // just id
   room: SimpRoomI; //roomId TODO : id만으로 .. !
@@ -77,6 +78,7 @@ export interface AdminRelatedDTO {
 
 // Response DTO
 export interface ResponseDTO {
-  status: boolean; // true : success(no msg), false : fail
+  success: boolean; // true : success(no msg), false : fail
   message?: string;
+  roomId?: number;
 }

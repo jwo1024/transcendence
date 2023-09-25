@@ -15,6 +15,8 @@ import { RoomMapper } from '../../mapper/room.mapper';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import { UserEntity } from '../../entities/user.entity';
 import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
+import { UserService } from '../user/user.service';
+import { join } from 'path';
 
 const bcrypt = require('bcrypt');
 
@@ -27,6 +29,7 @@ export class RoomService {
     @InjectRepository(RoomEntity)
     private readonly roomRepository: Repository<RoomEntity>,
     private readonly connectedService : ConnectedUserService,
+    private readonly userService : UserService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(ConnectedUserEntity)
@@ -71,16 +74,23 @@ export class RoomService {
   //   return await this.roomRepository.save(theroom);
   // }
 
-  async addUserToRoom(userId: number, roomId: number, socketId : string): Promise<RoomEntity> {
-    // UserEntity 가져오기
-    const user = await this.userRepository.findOne({where : {id : userId}});
-    if (!user) {
-      throw new Error('User not found');
-    }
-    // RoomEntity 가져오기
-    const room = await this.roomRepository.findOne({where : {roomId}});
-    if (!room) {
-      throw new Error('Room not found');
+  async addUserToRoom(userId: number, roomId: number, socketId : string)
+    : Promise<RoomEntity> 
+  {
+    const user = await this.userService.getOneUSerWithRoomsAndConnections(userId);
+    if (!user) 
+      return null;
+    // const room = await this.roomRepository.({where : {roomId}});
+    const room = await this.getRoomEntityWithBoth(roomId);
+    if (!room) 
+      return null;
+    
+      this.logger.log(`room users : ${room.users}`);
+    if(room.users !== undefined && room.users !== null)
+    {
+      this.logger.log(`users in room : ${room.users.length}`);
+      if(room.users.length > 0)
+        this.logger.log(`users in room : ${room.users[0].id}`);
     }
 
     // ConnectedUserEntity 생성
@@ -88,14 +98,31 @@ export class RoomService {
     connectedUser.user = user;
     connectedUser.room = room;
     connectedUser.socketId = socketId;
-    await this.connectedUserRepository.save(connectedUser);
-
-    // RoomEntity에 UserEntity 추가
+    const newConnection = await this.connectedUserRepository.save(connectedUser);
+    // if (w !== undefined && w != null)
+    // {
+    //   this.logger.log(`w ${w}`);
+    //   this.logger.log(`user ${w.user.id}`);
+    //   this.logger.log(`room ${w.room.roomId}`);
+    // }
+    // RoomEntity에 UserEntity 추가 -> 관계성 테이블에 자동 생성
     if (!room.users) {
       room.users = [user];
     } else {
       room.users.push(user);
     }
+    if (!room.connections)
+      room.connections = [newConnection];
+    else
+      room.connections.push(newConnection);
+
+    this.logger.log(`users: ${room.users}`);
+    if(room.users)
+      this.logger.log(`users: ${room.users.length}`);
+
+    this.logger.log(`users: ${room.connections}`);
+    if(room.connections)
+      this.logger.log(`connections: ${room.connections.length}`);
     // RoomEntity 저장
     return this.roomRepository.save(room);
   }
@@ -219,10 +246,11 @@ export class RoomService {
     return false;
   }
 
-  async isRoomOwner(userId: number, roomId: number) : Promise<boolean> {
+  async isRoomOwner(userId: number, roomId: number) : Promise<boolean> 
+  {
     const room = await this.getRoom(roomId);
-    // this.logger.log(`roomOwner : ${room.roomOwner}`);
-    // this.logger.log(`userId : ${userId}`);
+    this.logger.log(`roomOwner : ${room.roomOwner}`);
+    this.logger.log(`userId : ${userId}`);
     if (room.roomOwner === userId)
       return true;
     return false;
@@ -280,14 +308,17 @@ export class RoomService {
 
 
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
-  async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
-    if (joinDTO.roomPass !== undefined)
-      joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
+  async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> 
+  {
+    //db내 비밀번호가 없는 방인 경우
     if (roomFromDB.roomPass === null)
       return true;
+    
+   // 방은 비밀번호가 있는데 사용자는 안 보낸 경우
     if (joinDTO.roomPass === undefined || joinDTO.roomPass === null)
-      return false;
-    else if ( this.comparePasswords(joinDTO.roomPass, roomFromDB.roomPass))
+    return false;
+
+    if ((await this.comparePasswords(joinDTO.roomPass, roomFromDB.roomPass)) === true)
       return true;
     return false;
   }
