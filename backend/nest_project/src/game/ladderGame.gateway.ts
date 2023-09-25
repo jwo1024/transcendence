@@ -35,7 +35,7 @@ let ladderRange: number;
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 
 // todo: 삭제
-const logger2 = new Logger('LadderGameGateway');
+const tryCatchLogger = new Logger('LadderGameGateway');
 
 @Injectable()
 @WebSocketGateway({ namespace: 'ladder_game', cors: { origin: "*"} })
@@ -80,6 +80,10 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 		
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결 끊음
+		if (!jwt.decode(token.split('Bearer ')[1]))
+		{
+			return socket.disconnect();
+		}
 		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
 		if (!userId)
 		{
@@ -121,7 +125,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 					break ;
 				}
 			}
-			this.logger.log(`소켓 끊긴 플레이어 삭제 후 래더 큐 : ${ladderQueue}`);
+			// this.logger.log(`소켓 끊긴 플레이어 삭제 후 래더 큐 : ${ladderQueue}`);
 
 			if (!await this.matchService.getByPlayerId(player_id))
 			{
@@ -224,7 +228,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			}
 		}
 	} catch (error) {
-		logger2.error(`queueProcess : ${error.message}`);
+		tryCatchLogger.error(`queueProcess : ${error.message}`);
 	}
 	}
 
@@ -241,7 +245,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.logger.log(`setGame : match ${currentMatch.match_id} will soon start!`);
 		this.startGame(currentMatch);
 	} catch (error) {
-		logger2.error(`setGame: ${error.message}`);
+		tryCatchLogger.error(`setGame: ${error.message}`);
 	}
 	}
 
@@ -285,7 +289,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		// gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
 		gameField.gameTimer = setInterval(() => {this.playGame(this.server, match, player1, player2, gameField);}, 20);
 	} catch (error) {
-		logger2.error(`startGame : ${error.message}`);
+		tryCatchLogger.error(`startGame : ${error.message}`);
 	}
 	}
 
@@ -342,7 +346,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			this.server.to(opponent.socketId).emit('paddleMove', data);
 		}
 	} catch (error) {
-		logger2.error(`movePlayer : ${error.message}`);
+		tryCatchLogger.error(`movePlayer : ${error.message}`);
 	}
 	}
 
@@ -423,7 +427,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.endPlayer((await this.connectedPlayerService.getPlayer(winner_id)).socketId, winner_id);
 		this.endPlayer((await this.connectedPlayerService.getPlayer(loser_id)).socketId, loser_id);
 	} catch (error) {
-			logger2.error(`endGame : ${error.message}`);
+			tryCatchLogger.error(`endGame : ${error.message}`);
 		}
 	}
 
@@ -522,7 +526,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	server.to(player2.socketId).emit('updateCanvas', data);
 
 } catch (error) {
-	logger2.error(`playGame : ${error.message}`);
+	tryCatchLogger.error(`playGame : ${error.message}`);
 }
 }
 

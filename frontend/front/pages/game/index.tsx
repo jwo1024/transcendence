@@ -15,6 +15,7 @@ import {
   ON_ERROR,
   ON_CONNECT,
   ON_DISCONNECT,
+  ON_RECONNECT,
 } from "@/types/ChatSocketEventName";
 
 
@@ -45,12 +46,8 @@ export default function GamePage() {
         extraHeaders: {
           Authorization: `Bearer ${token}`,
         },
-        // autoConnect: false, ////////////////////
       })
     );
-    // game debug
-    console.log(socket?.active);
-    console.log(socket?.active);
 
     console.log("gameSocket : Mount");
     return () => {
