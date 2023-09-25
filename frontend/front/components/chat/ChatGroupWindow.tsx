@@ -23,6 +23,7 @@ import {
   ON_CURRENT_ROOM_ROOMID,
   ON_MESSAGE_ADDED_ROOMID,
   ON_CURRENT_USERS_ROOMID, // ?
+  ON_GOT_MUTED_ROOMID,
   EMIT_ROOM_ENTER,
   ON_RESPONSE_ROOM_ENTER_ROOMID,
 } from "@/types/ChatSocketEventName";
@@ -35,12 +36,14 @@ interface ChatGroupWindowProps {
   className?: string;
   userInfo: SimpUserI;
   simpRoomInfo: SimpRoomI;
+  blockIdList: number[];
   customOnClickXOption?: () => void;
 }
 const ChatGroupWindow = ({
   className,
   userInfo,
   simpRoomInfo,
+  blockIdList,
   customOnClickXOption,
 }: ChatGroupWindowProps) => {
   const socket = useContext(SocketContext);
@@ -50,6 +53,7 @@ const ChatGroupWindow = ({
   const [notifyStr, setNotifyStr] = useState<string>("Loading");
   const { inputRef, sentMsgList, deleteSentMessage, handleFormSubmit } =
     useMessageForm({
+      blockIdList,
       simpRoomInfo,
       userInfo,
       socket,
@@ -91,11 +95,18 @@ const ChatGroupWindow = ({
       if (msg.user.id === userInfo.id) deleteSentMessage(msg);
       adddMsgToList(msg);
     });
+    // on mute ! ! ! ! !
+    socket?.on(`${ON_GOT_MUTED_ROOMID}${simpRoomInfo.roomId}`, (data) => {
+      console.log("socket.on ON_GOT_MUTED_ROOMID: ", data);
+      const msg: Date = data;
+      // mute timer start ..... !
+    });
+      
+
     return () => {
       socket?.off(`${ON_MESSAGES_ROOMID}${simpRoomInfo.roomId}`);
       socket?.off(`${ON_CURRENT_ROOM_ROOMID}${simpRoomInfo.roomId}`);
       socket?.off(`${ON_RESPONSE_ROOM_ENTER_ROOMID}${simpRoomInfo.roomId}`);
-      socket?.off(`${ON_MESSAGE_ADDED_ROOMID}${simpRoomInfo.roomId}`);
     };
   }, []);
 
@@ -113,6 +124,11 @@ const ChatGroupWindow = ({
       if (lastElement && lastElement?.id >= msg.id) return messageList;
       return [...messageList, msg];
     });
+  };
+
+  const triggerClose = () => {
+    customOnClickXOption && customOnClickXOption();
+    socket?.off(`${ON_MESSAGE_ADDED_ROOMID}${simpRoomInfo.roomId}`);
   };
 
   // Menu Items
@@ -156,6 +172,7 @@ const ChatGroupWindow = ({
               )}
             </Frame>
             <MessageBox
+              blockIdList={blockIdList}
               messageList={messageList}
               sentMsgList={sentMsgList}
               userInfo={userInfo}
@@ -183,7 +200,7 @@ const ChatGroupWindow = ({
         {showMenuBox[2] && roomInfo ? (
           <LeaveRoomMenuBox
             roomInfo={roomInfo}
-            triggerClose={customOnClickXOption}
+            triggerClose={triggerClose}
           />
         ) : null}
       </div>
