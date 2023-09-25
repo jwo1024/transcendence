@@ -15,6 +15,7 @@ import { RoomMapper } from '../../mapper/room.mapper';
 import { ConnectedUserService } from '../connected-user/connected-user.service';
 import { UserEntity } from '../../entities/user.entity';
 import { ConnectedUserEntity } from 'src/chat/entities/connected-user.entity';
+import { UserService } from '../user/user.service';
 
 const bcrypt = require('bcrypt');
 
@@ -27,6 +28,7 @@ export class RoomService {
     @InjectRepository(RoomEntity)
     private readonly roomRepository: Repository<RoomEntity>,
     private readonly connectedService : ConnectedUserService,
+    private readonly userService : UserService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(ConnectedUserEntity)
@@ -71,17 +73,16 @@ export class RoomService {
   //   return await this.roomRepository.save(theroom);
   // }
 
-  async addUserToRoom(userId: number, roomId: number, socketId : string): Promise<RoomEntity> {
-    // UserEntity 가져오기
-    const user = await this.userRepository.findOne({where : {id : userId}});
-    if (!user) {
-      throw new Error('User not found');
-    }
-    // RoomEntity 가져오기
-    const room = await this.roomRepository.findOne({where : {roomId}});
-    if (!room) {
-      throw new Error('Room not found');
-    }
+  async addUserToRoom(userId: number, roomId: number, socketId : string)
+    : Promise<RoomEntity> 
+  {
+    const user = await this.userService.getOneUSerWithRoomsAndConnections(userId);
+    if (!user) 
+      return null;
+    // const room = await this.roomRepository.({where : {roomId}});
+    const room = await this.getRoomEntityWithBoth(roomId);
+    if (!room) 
+      return null;
 
     // ConnectedUserEntity 생성
     const connectedUser = new ConnectedUserEntity();
@@ -90,7 +91,7 @@ export class RoomService {
     connectedUser.socketId = socketId;
     await this.connectedUserRepository.save(connectedUser);
 
-    // RoomEntity에 UserEntity 추가
+    // RoomEntity에 UserEntity 추가 -> 관계성 테이블에 자동 생성
     if (!room.users) {
       room.users = [user];
     } else {
@@ -281,10 +282,10 @@ export class RoomService {
 
   //데이터베이스에 저장된 비밀번호가 undefined가 아닌 경우, 비밀번호가 맞지 않으면 못들어감(무시)
   async isValidForJoin(roomFromDB : RoomI, joinDTO : RoomJoinDTO ) : Promise<boolean> {
-    if (joinDTO.roomPass !== undefined)
-      joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
     if (roomFromDB.roomPass === null)
       return true;
+    if (joinDTO.roomPass !== undefined)
+      joinDTO.roomPass = await this.hashPassword(joinDTO.roomPass);
     if (joinDTO.roomPass === undefined || joinDTO.roomPass === null)
       return false;
     else if ( this.comparePasswords(joinDTO.roomPass, roomFromDB.roomPass))
