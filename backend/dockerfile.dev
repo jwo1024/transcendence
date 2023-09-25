@@ -17,4 +17,4 @@ COPY ./nest_project/package.json .
 
 # CMD ["ash", "-c", "while true; do sleep 1; done"]
 
-ENTRYPOINT npm i && npm run start:dev
+ENTRYPOINT npm i && npm rebuild &&npm run start:dev

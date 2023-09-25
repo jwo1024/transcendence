@@ -81,7 +81,7 @@ const TwoFABlock = ({
     });
   };
 
-  const sendEmailCheck = (emailRef : string) => {
+  const sendEmailCheck = (emailRef: string) => {
     const token = sessionStorage.getItem("accessToken");
     fetch("http://localhost:4000/tfa/send", {
       method: "POST",
@@ -90,22 +90,24 @@ const TwoFABlock = ({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email: emailRef }),
-    }).then((res) => {
-      setNotifyStr(() => {
-        if (res.status === 500)
-          return "메일 전송에 실패했습니다. 다시 시도하거나 다른 이메일을 입력해 주세요";
-        else if (res.ok) {
-          setTwoFAtextChecked(true);
-          res.text().then((otp) => {
-            const otpIssuedAt: Date = JSON.parse(otp).issuedAt;
-            setIssuedAt(otpIssuedAt);
-          });
-          return "";
-        }
-        else
-            return "unknown error";
+    })
+      .then((res) => {
+        setNotifyStr(() => {
+          if (res.status === 500)
+            return "메일 전송에 실패했습니다. 다시 시도하거나 다른 이메일을 입력해 주세요";
+          else if (res.ok) {
+            setTwoFAtextChecked(true);
+            res.text().then((otp) => {
+              const otpIssuedAt: Date = JSON.parse(otp).issuedAt;
+              setIssuedAt(otpIssuedAt);
+            });
+            return "";
+          } else return "unknown error";
+        });
+      })
+      .catch((err) => {
+        console.log(err);
       });
-    });
   };
 
   const onSubmitTwoFAValidate = (event: React.FormEvent<HTMLFormElement>) => {
@@ -118,15 +120,19 @@ const TwoFABlock = ({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ code: twoFATextRef.current?.value }),
-    }).then((res) => {
-      if (res.ok) {
-        setNotifyStr("");
-        setTwoFAEmailValid(true); // 등록 성공을 알려야 함
-        setNotifyStr("등록 완료!");
-      } else {
-        setNotifyStr("인증에 실패했습니다. 다시 시도해 주세요");
-      }
-    });
+    })
+      .then((res) => {
+        if (res.ok) {
+          setNotifyStr("");
+          setTwoFAEmailValid(true); // 등록 성공을 알려야 함
+          setNotifyStr("등록 완료!");
+        } else {
+          setNotifyStr("인증에 실패했습니다. 다시 시도해 주세요");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
@@ -157,7 +163,6 @@ const TwoFABlock = ({
                 <Button>제출</Button>
               </form>
               <div className="text-right text-xl ">{timeStr}</div>{" "}
-              {/* 남은 시간 표시 */}
             </div>
           ) : null}
           {twoFAEmailValid ? (

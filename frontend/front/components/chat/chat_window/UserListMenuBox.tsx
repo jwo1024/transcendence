@@ -30,6 +30,7 @@ import {
   ON_USER_PROFILE_INFO,
   ON_RESPONSE_ROOM_INVITE,
 } from "@/types/ChatSocketEventName";
+import InviteGameButton from "./InviteGameButton";
 
 interface UserListMenuBoxProps {
   userInfo: SimpUserI;
@@ -95,7 +96,7 @@ const UserListMenuBox = ({
         console.log("socket.on onEvent", onEvent, res);
         const resDTO: ResponseDTO = res;
         if (resDTO.success) return;
-        if (resDTO.message) alert(resDTO.message);
+        // if (resDTO.message) alert(resDTO.message);
         else alert(`${eventName}에 실패하였습니다.`);
       });
     }
@@ -131,10 +132,10 @@ const UserListMenuBox = ({
     };
     if (inviteFriendData.targetUserNick === "")
       return alert("닉네임을 입력해주세요.");
-    console.log("invite-friend", inviteFriendData);
+    console.log("socket.emit EMIT_ROOM_INVITE", inviteFriendData);
     socket.current?.emit(EMIT_ROOM_INVITE, inviteFriendData);
     socket.current?.once(ON_RESPONSE_ROOM_INVITE, (res) => {
-      console.log("Response-Room-invite", res);
+      console.log("socket.on Response-Room-invite", res);
       const resDTO: ResponseDTO = res;
       if (resDTO.success) return;
       if (resDTO.message) alert(resDTO.message);
@@ -150,7 +151,7 @@ const UserListMenuBox = ({
       >
         {/* User List */}
         <Frame
-          className=" text-white p-3 overflow-y-scroll bg-zinc-800 "
+          className=" text-white p-3 overflow-auto bg-zinc-800 "
           h="240"
           w="100%"
           boxShadow="in"
@@ -224,6 +225,10 @@ const UserListMenuBox = ({
             Make-Admin
           </Button>
           <Button onClick={handleClickViewProfile}>View-Profile</Button>
+          <InviteGameButton
+            friendInfo={roomInfo.users.find((user) => selectedId === user.id)}
+            userInfo={userInfo}
+          />
           <br />
           <form onSubmit={onSubmitInviteFriend}>
             <Input ref={inviteNickRef} placeholder="닉네임 입력" />

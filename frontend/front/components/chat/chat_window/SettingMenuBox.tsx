@@ -53,7 +53,11 @@ const SettingMenuBox = ({
       roomPass: checkedPassword ? passInputRef.current?.value : undefined,
     };
     // TODO : check
-    console.log("socket?.emit EMIT_OWNER_ROOM_EDIT : ", roomData, roomInfo.roomId);
+    console.log(
+      "socket?.emit EMIT_OWNER_ROOM_EDIT : ",
+      roomData,
+      roomInfo.roomId
+    );
     socket?.emit(EMIT_OWNER_ROOM_EDIT, {
       editData: roomData,
       roomId: roomInfo.roomId,
@@ -86,6 +90,7 @@ const SettingMenuBox = ({
             />
             {checkedPassword ? (
               <Input
+                name="passwordInput"
                 type="password"
                 placeholder="비밀번호 입력"
                 disabled={!checkedPassword}

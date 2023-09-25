@@ -4,6 +4,7 @@ import { useRef, useState, useContext, useEffect } from "react";
 import MenuBoxLayout from "../common/MenuBoxLayout";
 import NotifyBlock from "@/components/common/NotifyBlock";
 import MiniProfileBlock from "@/components/chat/chat_window/MiniProfileBlock";
+import InviteGameButton from "./InviteGameButton";
 // Types & Hooks & Contexts
 import type { SimpUserI, UserI } from "@/types/ChatInfoType";
 import { SocketContext } from "@/context/ChatSocketContext";
@@ -17,7 +18,10 @@ interface MiniProfileMenuBoxProps {
   freindInfo: SimpUserI;
   userInfo: SimpUserI;
 }
-const MiniProfileMenuBox = ({ freindInfo, userInfo }: MiniProfileMenuBoxProps) => {
+const MiniProfileMenuBox = ({
+  freindInfo,
+  userInfo,
+}: MiniProfileMenuBoxProps) => {
   const socket = useRef(useContext(SocketContext)); // TODO : check 렌더링 소켓... !
   const [friendProfile, setFriendProfile] = useState<UserI | null>(null);
   const [notifyStr, setNotifyStr] = useState<string>("");
@@ -48,7 +52,15 @@ const MiniProfileMenuBox = ({ freindInfo, userInfo }: MiniProfileMenuBoxProps) =
     <MenuBoxLayout>
       {/* Mini Profile */}
       {friendProfile ? (
-        <MiniProfileBlock friendProfile={friendProfile} userInfo={userInfo} />
+        <div className="flex flex-col text-center ">
+          <MiniProfileBlock friendProfile={friendProfile} userInfo={userInfo} />
+          <br />
+          <InviteGameButton
+            friendInfo={friendProfile}
+            userInfo={userInfo}
+            className="text-base flex-1"
+          />
+        </div>
       ) : null}
       <NotifyBlock>{notifyStr}</NotifyBlock>
     </MenuBoxLayout>
