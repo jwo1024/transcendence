@@ -101,6 +101,12 @@ export class ConnectedFriendlyPlayerService {
 
 	async deletePlayer(id: number)
 	{
+		const player = await this.getPlayer(id);
+		if (id === player.hostId)
+		{
+		if (player.checkTimer)
+			clearInterval(player.checkTimer);
+		}
 		await this.connectedFriendlyPlayerRepository.delete({id: id});
 	}
 

@@ -11,9 +11,9 @@ export class MatchEntity
 	@PrimaryGeneratedColumn({type: 'integer'}) 
 	match_id: number;
 
-	// [ ladder, original, speedUp, smallBall ]
-	// < ladder game >: only original
-	// < friendly game >: 3 modes (original, speedUp, smallBall)
+	// [ ladder, normal, speedUp, smallBall ]
+	// < ladder game >: only normal
+	// < friendly game >: 3 modes (normal, speedUp, smallBall, enjoyAll)
 	@Column({ type: 'varchar', nullable: false })
 	game_type: string;
 

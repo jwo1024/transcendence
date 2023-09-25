@@ -24,6 +24,7 @@ import { FriendlyPlayer } from './dto/friendlyPlayer.dto';
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 
+// todo : cors 처리
 @Injectable()
 @WebSocketGateway({ namespace: 'friendly_game' })
 export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
@@ -58,6 +59,10 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		const token = socket.handshake.headers.authorization;
 
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결끊음
+		if (!jwt.decode(token.split('Bearer ')[1]))
+		{
+			return socket.disconnect();
+		}
 		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
 		if (!userId)
 		{
@@ -81,11 +86,11 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			await this.connectedFriendlyPlayerService.updateInvitation(current, inviteData);
 		});
 		this.profileService.ingame(userId);
-		this.logger.log(`current Player :`);
+		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
+		this.logger.log(`data taken :`);
 		// todo:
 		const data = JSON.stringify(current);
 		this.logger.log(`${data}`);
-		// this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 
 		if (await this.connectedFriendlyPlayerService.isHostPlayer(current))
 		{
@@ -109,60 +114,47 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 
 		if (await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id))
 		{
-			const player_id = (await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id)).id;
+			const player = (await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id));
+			this.logger.log(`[ ${socket.id} ]로 찾은 플레이어 [ ${player.id} ]`);
 
-			if (await this.matchService.getByPlayerId(player_id) === null)
+			if (!await this.matchService.getByPlayerId(player.id))
 			{
-				await this.connectedFriendlyPlayerService.deletePlayer(player_id);
+				this.logger.log(`[ ${player.id} ] 플레이어는 게임을 하고 있진 않아..`);
+				await this.connectedFriendlyPlayerService.deletePlayer(player.id);
 				this.profileService.logOn(socket.data.userId);
 				socket.disconnect();
 				return ;
 			}
 			else
 			{
-				const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
-				// this.logger.log(`handleDIsconnect : match id ${match_id}`);
+				const match_id = (await this.matchService.getByPlayerId(player.id)).match_id;
+				this.logger.log(`${player.id}는 ${match_id} 매치를 하다가 튕겼나봄 끝내주자`);
 				if (match_id)
 				{
-					await this.endGame(match_id, player_id);
+					await this.endGame(match_id, player.id);
 				}
-				await this.connectedFriendlyPlayerService.deletePlayer(player_id);
+				await this.connectedFriendlyPlayerService.deletePlayer(player.id);
 				this.profileService.logOn(socket.data.userId);
 				socket.disconnect();
 				return ;
 			}
 		}
 
-		if ((await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id)) === null)
+		if (!(await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id)))
 		{
+			this.logger.log(`[ ${socket.id} ]로 찾아도 플레이어 없음`);
 			this.profileService.logOn(socket.data.userId);
 			socket.disconnect();
 			return ;
 		}
-		const player = (await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id));
-		// const match_id = (await this.matchService.getByPlayerId(player.id)).match_id;
-		// if (match_id)
-		// {
-		// 	await this.endGame(match_id, player.id);
-		// }
 
-		if (player.id === player.hostId)
-		{
-			await clearInterval(player.checkTimer);
-		}
-
-		this.connectedFriendlyPlayerService.deletePlayer(player.id);
-		this.profileService.logOn(socket.data.userId);
-		socket.disconnect();
-		// this.endPlayer(socket.id, player.id);
 	}
 
 	private async endPlayer(socket_id: string, player_id: number)
 	{
 		// socket.emit('Error', new UnauthorizedException());
-		// this.connectedFriendlyPlayerService.deletePlayer(player_id);
 		this.server.in(socket_id).disconnectSockets(true);
-		this.logger.log(`Friendly Game Server: socketId [ ${socket_id} ] disconnected.`);
+		this.logger.log(`Friendly Game Server: socketId [ ${player_id} -> ${socket_id} ] disconnected.`);
 	};
 
 	private async checkRefuse(host: FriendlyPlayer, waitTime: number)
@@ -315,24 +307,25 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	{
 		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
 		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-		this.server.to((await this.connectedFriendlyPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+		this.server.to((await this.connectedFriendlyPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname, () => {});
 		if (normal_end == true)
 		{
-			this.server.to((await this.connectedFriendlyPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+			this.server.to((await this.connectedFriendlyPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname, () => {});
 		}
 	}
 
 	async endGame(match_id: number, loser_id: number)
 	{
-		this.logger.log(`endGame : ${match_id} match finished.`);
-
 		const gameField = await this.getGameFieldByMatchId(match_id);
 		await clearInterval(gameField.gameTimer);
 		const match = await this.matchService.getByMatchId(match_id);
 		let winner_id = 0;
 
+		this.logger.log(`endGame : ${match_id} match finished by [ ${loser_id} ].`);
+
 		if (loser_id)
 		{
+			this.logger.log(`[ ${loser_id} ]가 비정상적으로 게임을 종료했구나`);
 			if (match.playerLeft === loser_id)
 			{
 				winner_id = match.playerRight;
@@ -342,7 +335,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 				winner_id = match.scoreLeft;
 			}
 
-			this.sendMatchResult(winner_id, loser_id, false);
+			await this.sendMatchResult(winner_id, loser_id, false);
 			this.matchService.deleteByMatchId(match.match_id);
 			this.endPlayer((await this.connectedFriendlyPlayerService.getPlayer(winner_id)).socketId, winner_id);
 			return ;
@@ -359,8 +352,8 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			loser_id = match.playerLeft;
 		}
 
-		this.sendMatchResult(winner_id, loser_id, true);
-		this.matchService.deleteByMatchId(match.match_id);
+		await this.sendMatchResult(winner_id, loser_id, true);
+		await this.matchService.deleteByMatchId(match.match_id);
 		this.endPlayer((await this.connectedFriendlyPlayerService.getPlayer(winner_id)).socketId, winner_id);
 		this.endPlayer((await this.connectedFriendlyPlayerService.getPlayer(loser_id)).socketId, loser_id);
 	}

@@ -35,10 +35,11 @@ let ladderRange: number;
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 
 // todo: 삭제
-const logger2 = new Logger('LadderGameGateway');
+const tryCatchLogger = new Logger('LadderGameGateway');
 
+// todo : cors 처리
 @Injectable()
-@WebSocketGateway({ namespace: 'ladder_game' })
+@WebSocketGateway({ namespace: 'ladder_game', cors: { origin: "*"} })
 export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
 
@@ -78,8 +79,11 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.logger.log(`Ladder Game Server: socketId [ ${socket.id} ] connected.`);
 		const token = socket.handshake.headers.authorization;
 
-		
 		// //userId가 없는 경우 or userProfile이나 userEntity가 없는 경우 소켓 연결 끊음
+		if (!jwt.decode(token.split('Bearer ')[1]))
+		{
+			return socket.disconnect();
+		}
 		const userId = jwt.decode(token.split('Bearer ')[1])['userId'];
 		if (!userId)
 		{
@@ -111,6 +115,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		if (await this.connectedPlayerService.getPlayerBySocketId(socket.id))
 		{
 			const player_id = (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id;
+			this.logger.log(`[ ${socket.id} ]로 찾은 플레이어 [ ${player_id} ]`);
 			// 큐 잡는 도중 끊긴 연결이면, 래더 큐 배열에서도 삭제
 			for (let i = 0; i < ladderQueue.length; ++i)
 			{
@@ -120,9 +125,11 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 					break ;
 				}
 			}
+			// this.logger.log(`소켓 끊긴 플레이어 삭제 후 래더 큐 : ${ladderQueue}`);
 
-			if (await this.matchService.getByPlayerId(player_id) === null)
+			if (!await this.matchService.getByPlayerId(player_id))
 			{
+				this.logger.log(`[ ${player_id} ] 플레이어는 게임을 하고 있진 않아..`);
 				await this.connectedPlayerService.deletePlayer(player_id);
 				this.profileService.logOn(socket.data.userId);
 				socket.disconnect();
@@ -131,7 +138,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			else
 			{
 				const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
-				// this.logger.log(`handleDIsconnect : match id ${match_id}`);
+				this.logger.log(`${player_id}는 ${match_id} 매치를 하다가 튕겼나봄 끝내주자`);
 				if (match_id)
 				{
 					await this.endGame(match_id, player_id);
@@ -143,27 +150,13 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			}
 		}
 
-		if ((await this.connectedPlayerService.getPlayerBySocketId(socket.id)) === null)
+		if (!(await this.connectedPlayerService.getPlayerBySocketId(socket.id)))
 		{
+			this.logger.log(`[ ${socket.id} ]로 찾아도 플레이어 없음`);
 			this.profileService.logOn(socket.data.userId);
 			socket.disconnect();
 			return ;
 		}
-
-		// const player_id = (await this.connectedPlayerService.getPlayerBySocketId(socket.id)).id;
-		// if (await this.matchService.getByPlayerId(player_id))
-		// {
-		// 	const match_id = (await this.matchService.getByPlayerId(player_id)).match_id;
-		// 	// this.logger.log(`handleDIsconnect : match id ${match_id}`);
-		// 	if (match_id)
-		// 	{
-		// 		await this.endGame(match_id, player_id);
-		// 	}
-		// }
-		// this.logger.log(`handleDIsconnect : socket id ${socket.id}, player id ${player_id}`);
-
-		// await this.connectedPlayerService.deletePlayer(player_id);
-		// this.profileService.logOn(socket.data.userId);
 
 	}
 
@@ -220,7 +213,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			}
 		}
 	} catch (error) {
-		logger2.error(`queueProcess : ${error.message}`);
+		tryCatchLogger.error(`queueProcess : ${error.message}`);
 	}
 	}
 
@@ -237,7 +230,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.logger.log(`setGame : match ${currentMatch.match_id} will soon start!`);
 		this.startGame(currentMatch);
 	} catch (error) {
-		logger2.error(`setGame: ${error.message}`);
+		tryCatchLogger.error(`setGame: ${error.message}`);
 	}
 	}
 
@@ -277,11 +270,9 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 
 		this.logger.log(`ladder/startGame : ${match.match_id} -> ${player1.id} vs ${player2.id}`);
 		this.gameFieldArr.push(gameField);
-		// gameFieldMap.set(match.match_id, gameField);
-		// gameField.gameTimer = setInterval(playGame, 30, this.server, match, player1, player2, gameField);
 		gameField.gameTimer = setInterval(() => {this.playGame(this.server, match, player1, player2, gameField);}, 20);
 	} catch (error) {
-		logger2.error(`startGame : ${error.message}`);
+		tryCatchLogger.error(`startGame : ${error.message}`);
 	}
 	}
 
@@ -290,9 +281,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		for (let i = 0; i < this.gameFieldArr.length; ++i)
 		{
 			if (this.gameFieldArr[i].matchId === match_id)
-			{
 				return this.gameFieldArr[i];
-			}
 		}
 	}
 
@@ -338,7 +327,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 			this.server.to(opponent.socketId).emit('paddleMove', data);
 		}
 	} catch (error) {
-		logger2.error(`movePlayer : ${error.message}`);
+		tryCatchLogger.error(`movePlayer : ${error.message}`);
 	}
 	}
 
@@ -356,40 +345,42 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	{
 		const winner_nickname = (await this.profileService.getUserProfileById(winner_id)).nickname;
 		const loser_nickname = (await this.profileService.getUserProfileById(loser_id)).nickname;
-		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
-		if (normal_end == true)
+		this.server.to((await this.connectedPlayerService.getPlayer(winner_id)).socketId).emit('endGame', winner_nickname, loser_nickname, () => {});
+		// this.logger.log(`${winner_id}에게 결과를 ${(await this.connectedPlayerService.getPlayer(winner_id)).socketId}`);
+		if (normal_end === true)
 		{
-			this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname);
+			this.server.to((await this.connectedPlayerService.getPlayer(loser_id)).socketId).emit('endGame', winner_nickname, loser_nickname, () => {});
+			// this.logger.log(`${loser_id}에게 결과를 ${(await this.connectedPlayerService.getPlayer(loser_id)).socketId}`);
 		}
 	}
 
 	async endGame(match_id: number, loser_id: number)
 	{
 		try {
-		this.logger.log(`endGame : ${match_id} match finished.`);
-
-		const gameField = await this.getGameFieldByMatchId(match_id);
-		// let gameField = gameFieldMap.get(match_id);
-		await clearInterval(gameField.gameTimer);
-		const match = await this.matchService.getByMatchId(match_id);
-		let winner_id = 0;
+			const gameField = await this.getGameFieldByMatchId(match_id);
+			await clearInterval(gameField.gameTimer);
+			const match = await this.matchService.getByMatchId(match_id);
+			let winner_id = 0;
+			
+			this.logger.log(`endGame : ${match_id} match finished by [ ${loser_id} ].`);
 
 		if (loser_id)
 		{
+			this.logger.log(`[ ${loser_id} ]가 비정상적으로 게임을 종료했구나`);
 			if (match.playerLeft === loser_id)
 			{
-				this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
-				winner_id = match.playerRight;
-				this.updateProfile(winner_id, loser_id, match_id);
+				await this.historyService.create(match.playerRight, match.playerLeft, match.scoreRight, match.scoreLeft);
+				winner_id = await match.playerRight;
+				await this.updateProfile(winner_id, loser_id, match_id);
 			}
 			else
 			{
-				this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
-				winner_id = match.playerLeft;
-				this.updateProfile(winner_id, loser_id, match_id);
+				await this.historyService.create(match.playerLeft, match.playerRight, match.scoreLeft, match.scoreRight);
+				winner_id = await match.playerLeft;
+				await this.updateProfile(winner_id, loser_id, match_id);
 			}
 
-			this.sendMatchResult(winner_id, loser_id, false);
+			await this.sendMatchResult(winner_id, loser_id, false);
 			this.matchService.deleteByMatchId(match.match_id);
 			this.endPlayer((await this.connectedPlayerService.getPlayer(winner_id)).socketId, winner_id);
 			return ;
@@ -415,7 +406,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 		this.endPlayer((await this.connectedPlayerService.getPlayer(winner_id)).socketId, winner_id);
 		this.endPlayer((await this.connectedPlayerService.getPlayer(loser_id)).socketId, loser_id);
 	} catch (error) {
-			logger2.error(`endGame : ${error.message}`);
+			tryCatchLogger.error(`endGame : ${error.message}`);
 		}
 	}
 
@@ -514,7 +505,7 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	server.to(player2.socketId).emit('updateCanvas', data);
 
 } catch (error) {
-	logger2.error(`playGame : ${error.message}`);
+	tryCatchLogger.error(`playGame : ${error.message}`);
 }
 }
 
