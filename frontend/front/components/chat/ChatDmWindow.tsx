@@ -32,12 +32,14 @@ interface ChatDMWindowProps {
   className?: string;
   userInfo: SimpUserI;
   simpRoomInfo: SimpRoomI;
+  blockIdList: number[];
   customOnClickXOption?: () => void;
 }
 const ChatDMWindow = ({
   className,
   userInfo,
   simpRoomInfo,
+  blockIdList,
   customOnClickXOption,
 }: ChatDMWindowProps) => {
   const socket = useContext(SocketContext);
@@ -47,6 +49,7 @@ const ChatDMWindow = ({
   const [notifyStr, setNotifyStr] = useState<string>("Loading");
   const { inputRef, sentMsgList, deleteSentMessage, handleFormSubmit } =
     useMessageForm({
+      blockIdList,
       simpRoomInfo,
       userInfo,
       socket,
@@ -136,6 +139,7 @@ const ChatDMWindow = ({
               )}
             </Frame>
             <MessageBox
+              blockIdList={blockIdList}
               messageList={messageList}
               sentMsgList={sentMsgList}
               userInfo={userInfo}

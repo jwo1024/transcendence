@@ -32,12 +32,12 @@ import {
 } from "@/types/ChatSocketEventName";
 
 interface UserListMenuBoxProps {
-  // userInfo: SimpUserI;
+  userInfo: SimpUserI;
   roomInfo: RoomI;
   isAdmin: boolean;
 }
 const UserListMenuBox = ({
-  // userInfo,
+  userInfo,
   roomInfo,
   isAdmin,
 }: UserListMenuBoxProps) => {
@@ -187,7 +187,7 @@ const UserListMenuBox = ({
               <label key={index}>
                 <UserBlock
                   user={user}
-                  role="admin"
+                  role="user"
                   handleRadioChange={handleRadioChange}
                 />
               </label>
@@ -236,7 +236,7 @@ const UserListMenuBox = ({
 
       {/* Mini Profile */}
       {friendProfile ? (
-        <MiniProfileBlock friendProfile={friendProfile} />
+        <MiniProfileBlock friendProfile={friendProfile} userInfo={userInfo} />
       ) : null}
     </MenuBoxLayout>
   );

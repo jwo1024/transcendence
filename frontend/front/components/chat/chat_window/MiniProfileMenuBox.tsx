@@ -15,8 +15,9 @@ import {
 
 interface MiniProfileMenuBoxProps {
   freindInfo: SimpUserI;
+  userInfo: SimpUserI;
 }
-const MiniProfileMenuBox = ({ freindInfo }: MiniProfileMenuBoxProps) => {
+const MiniProfileMenuBox = ({ freindInfo, userInfo }: MiniProfileMenuBoxProps) => {
   const socket = useRef(useContext(SocketContext)); // TODO : check 렌더링 소켓... !
   const [friendProfile, setFriendProfile] = useState<UserI | null>(null);
   const [notifyStr, setNotifyStr] = useState<string>("");
@@ -47,7 +48,7 @@ const MiniProfileMenuBox = ({ freindInfo }: MiniProfileMenuBoxProps) => {
     <MenuBoxLayout>
       {/* Mini Profile */}
       {friendProfile ? (
-        <MiniProfileBlock friendProfile={friendProfile} />
+        <MiniProfileBlock friendProfile={friendProfile} userInfo={userInfo} />
       ) : null}
       <NotifyBlock>{notifyStr}</NotifyBlock>
     </MenuBoxLayout>

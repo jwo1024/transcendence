@@ -36,6 +36,8 @@ const ChatRoomBlock = ({
   const [notifyStr, setNotifyStr] = useState<string>("");
 
   const joinRoom = (chatGroup: SimpRoomI) => {
+    if (chatGroup.hasPass && passInputRef.current?.value === "")
+      return setNotifyStr("비밀번호를 입력해주세요");
     const roomDTO = (): RoomJoinDTO => {
       if (chatGroup.hasPass) {
         return {
@@ -46,13 +48,27 @@ const ChatRoomBlock = ({
     };
     socket?.once(ON_RESPONSE_ROOM_JOIN, (data) => {
       const res: ResponseDTO = data;
-      console.log(data);
-      console.log("join room response : ", res);
-      if (res.success) setNotifyStr("");
-      else setNotifyStr(`채팅채널 입장에 살패하였습니다 : ${res.message}}`);
+      console.log("join room response : ", data);
+      setNotifyStr(() => {
+        if (!res.success)
+          return `채팅채널 입장에 살패하였습니다 : ${res.message}`;
+        else if (confirm("채팅방에 입장하시겠습니다!")) {
+          handleOpenWindow?.addOpenWindow({ roomData: chatRoom });
+          setMsgAlert(false);
+          return "";
+        } else return "";
+      });
     });
     console.log("!join room : ", roomDTO());
     socket?.emit(EMIT_ROOM_JOIN, roomDTO());
+  };
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!isJoinedList) joinRoom(chatRoom);
+    else {
+      handleOpenWindow?.addOpenWindow({ roomData: chatRoom });
+      setMsgAlert(false);
+    }
   };
 
   // MSG ALERT
@@ -70,12 +86,12 @@ const ChatRoomBlock = ({
     };
   }, []);
 
-  // inner component AlermView
-  interface AlermViewProps {
+  // inner component AlermCircle
+  interface AlermCircleProps {
     isJoinedList: boolean;
     type: roomType;
   }
-  const AlermView = ({ isJoinedList, type }: AlermViewProps) => {
+  const AlermCircle = ({ isJoinedList, type }: AlermCircleProps) => {
     // TODO : with : surlee : alert 창 띄우기
     if (!isJoinedList) return null;
     if (type === "dm") {
@@ -88,46 +104,34 @@ const ChatRoomBlock = ({
     );
   };
 
-  const handleClickButton = () => {
-    if (!isJoinedList) {
-      // TODO 이거 순서대로 진행 안될 가능성 매우 농후 (비동기)
-      joinRoom(chatRoom);
-      if (notifyStr === ""){
-        handleOpenWindow?.addOpenWindow({ roomData: chatRoom });
-        setMsgAlert(false);
-      }
-    } else {
-      handleOpenWindow?.addOpenWindow({ roomData: chatRoom });
-      setMsgAlert(false);
-    }
-  };
-
   // form ?
   return (
     <div className="flex flex-row m-1 bg-stone-200" key={chatRoom.roomId}>
       <span className="flex-1 p-2 font-bold truncate">
         {chatRoom.roomName}
-        {msgAlert ? AlermView({ isJoinedList, type: chatRoom.roomType }) : null}
+        {msgAlert
+          ? AlermCircle({ isJoinedList, type: chatRoom.roomType })
+          : null}
       </span>
       <span className="w-16 p-2">[ {chatRoom.joinUsersNum} ]</span>
-      <span className="w-230 p-1">
-        {chatRoom.hasPass ? (
-          // minlegnth & maxlength 적용안됨 (왜?)
-          <Input
-            ref={passInputRef}
-            type="password"
-            placeholder="password"
-            className=" w-24"
-            maxlength="5"
-            minlength="1"
-          />
-        ) : (
-          "비밀번호 없음"
-        )}
-      </span>
-      <Button className="w-28 h-3/4 " onClick={handleClickButton}>
-        참여하기
-      </Button>
+      <form onSubmit={handleSubmit}>
+        <span className="w-230 p-1">
+          {chatRoom.hasPass ? (
+            // minlegnth & maxlength 적용안됨 (왜?)
+            <Input
+              ref={passInputRef}
+              type="password"
+              placeholder="password"
+              className=" w-24"
+              maxlength="5"
+              minlength="1"
+            />
+          ) : (
+            "비밀번호 없음"
+          )}
+        </span>
+        <Button className="w-28 h-3/4 ">참여하기</Button>
+      </form>
       <NotifyBlock>{notifyStr}</NotifyBlock>
     </div>
   );

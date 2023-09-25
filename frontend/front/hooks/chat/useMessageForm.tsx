@@ -41,11 +41,13 @@ interface useMessageFormProps {
   simpRoomInfo: SimpRoomI;
   userInfo: SimpUserI;
   socket: Socket | undefined;
+  blockIdList: number[];
 }
 const useMessageForm = ({
   simpRoomInfo,
   userInfo,
   socket,
+  blockIdList,
 }: useMessageFormProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [sentMsgList, dispatch] = useReducer(reducer, [] as SendMessageDTO[]);
@@ -56,6 +58,7 @@ const useMessageForm = ({
   };
 
   const handleSendMessage = () => {
+    // if (blockIdList.includes(simpRoomInfo.roomId)) return;
     const messageData: SendMessageDTO = {
       roomId: simpRoomInfo.roomId,
       userId: userInfo?.id || -1,

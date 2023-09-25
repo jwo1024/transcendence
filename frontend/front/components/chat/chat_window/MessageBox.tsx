@@ -15,12 +15,14 @@ interface MessageBoxProps {
   // sentMessage?: MessageDTO;
   userInfo: SimpUserI;
   sentMsgList: SendMessageDTO[];
+  blockIdList: number[];
 }
 
 const MessageBox = ({
   messageList,
   userInfo,
   sentMsgList,
+  blockIdList,
 }: MessageBoxProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +39,21 @@ const MessageBox = ({
       bg="white"
     >
       {messageList.map((messageInfo, index) => {
+        if (messageInfo.user.id && blockIdList.includes(messageInfo.user.id))
+          return (
+            <div
+              className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "
+              key={index}
+            >
+              <NameTag>{"block"}</NameTag>
+              <span className="text-ellipsis break-all ">
+                {"🙉block user send message🙉"}
+              </span>
+              <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
+                {messageInfo.created_at?.toLocaleString()}
+              </span>
+            </div>
+          );
         return (
           // message overflow 처리하기
           <div

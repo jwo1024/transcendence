@@ -70,4 +70,4 @@ const useChatRoomListReducer = () => {
 };
 
 export default useChatRoomListReducer;
-export type { SimpRoomI as WaitingRoomI, ChatRoomStateI };
+export type { SimpRoomI, ChatRoomStateI };
