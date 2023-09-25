@@ -9,31 +9,22 @@ import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
 import { resultNickname } from "@/types/GameType";
 
-import io from "socket.io-client";
+import io, { Socket } from 'socket.io-client';
 
-const token = sessionStorage.getItem("accessToken");
-const socket = io('http://localhost:4000/ladder_game', {
-extraHeaders: {
-    Authorization: `Bearer ${token}`
-}
-});
+import {
+  ON_ERROR,
+  ON_CONNECT,
+  ON_DISCONNECT,
+} from "@/types/ChatSocketEventName";
 
-// const socket = io("http://localhost:4000/ladder_game");
 
 
 export default function GamePage() {
 
   const router = useRouter();
-  // const [token, setToken] = useState<string | null>(null);
-  // const [socket, setSocket] = useState<Socket | null>(null);
-
-  socket.on("disconnect", (reason) => {
-    // todo: remove
-    console.log("disconnect!");
-    // socket.disconnect();
-    setTimeout(() => {router.push("/menu");}, 3000);
-  });
-
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [resultOfGame, setResultOfGame] = useState<resultNickname>({winPlayer:"",losePlayer:""})
+  const [gamePhase, setGamePhase] = useState<"wait" | "start" | "end">("wait");
   const [left, setLeft] = useState({
     nickname: "searching...",
     ladder: 0,
@@ -47,14 +38,51 @@ export default function GamePage() {
     lose: 0,
   });
 
-  // const [gameStart, setGameStart] = useState(false);
-  // const [gameEnd, setGameEnd] = useState(false);
-  // const [winNickName, setWinNickName] = useState("");
-  // const [loseNickName, setLoseNickName] = useState("");
-  const [resultOfGame, setResultOfGame] = useState<resultNickname>({winPlayer:"",losePlayer:""})
+  useEffect(() => {
+    const token = sessionStorage.getItem("accessToken"); // tmp
+    setSocket(
+      io('http://localhost:4000/ladder_game', {
+        extraHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+    console.log("gameSocket : Mount");
+    return () => {
+      if (socket) socket.close();
+      setSocket(null);
+      console.log("gameSocket : Unmount");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!socket) {
+      // router.push(`${errorPage}?error=socket_problem`);
+      return;
+    }
+    socket.on(ON_CONNECT, () => {
+      console.log(`Socket ${socket.id} connected`);
+    });
+    // Socket 연결 실패 시
+    socket.on(ON_DISCONNECT, (error) => {
+      console.error(`Socket connection failed: ${socket.id}`, error);
+      setTimeout(() => {router.push("/menu");}, 3000);
+    });
+
+    socket.on(ON_ERROR, (error) => {
+      console.error(`Socket connection error: ${socket.id}`, error);
+    });
 
 
-  const [gamePhase, setGamePhase] = useState<"wait" | "start" | "end">("wait");
+  // socket.on(ON_DISCONNECT, (reason) => {
+  //   // todo: remove
+  //   console.log("disconnect!");
+  //   // socket.disconnect();
+  //   alert("failed to connect. go back to menu");
+  //   setTimeout(() => {router.push("/menu");}, 3000);
+  // });
+
+
 
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
@@ -82,6 +110,17 @@ export default function GamePage() {
       setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
       setGamePhase("end");
   });
+  return () => {
+    socket?.off(ON_CONNECT);
+    socket?.off(ON_DISCONNECT);
+    socket?.off("setMiniProfile");
+    socket?.off("startGame");
+    socket?.off("endGame");
+    socket?.offAny();
+    socket?.disconnect();
+    socket?.close();
+  };
+}, [socket]);
 
   return (
     <div className="flex items-center justify-center h-screen">

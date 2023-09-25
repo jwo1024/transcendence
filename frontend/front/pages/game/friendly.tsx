@@ -10,15 +10,12 @@ import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
 import { resultNickname } from "@/types/GameType";
 
+import {
+  ON_ERROR,
+  ON_CONNECT,
+  ON_DISCONNECT,
+} from "@/types/ChatSocketEventName";
 
-import io from 'socket.io-client';
-
-  const token = sessionStorage.getItem("accessToken");
-  const socket = io('http://localhost:4000/friendly_game', {
-    extraHeaders: {
-        Authorization: `Bearer ${token}`
-    }
-});
 // const socket = io('http://localhost:4000/friendly_game');
 
 interface SimpUserI
@@ -51,17 +48,24 @@ const invite: gameInvitationI =
   toUser: user2
 }
 
+import io, { Socket } from 'socket.io-client';
+
+  // const token = sessionStorage.getItem("accessToken");
+//   const socket = io('http://localhost:4000/friendly_game', {
+//     extraHeaders: {
+//         Authorization: `Bearer ${token}`
+//     }
+// });
+
+
+
 export default function GamePage() {
-
+  
   const router = useRouter();
-
-  socket.on("disconnect", (reason) => {
-    // todo: remove
-    console.log("disconnect!");
-    socket.disconnect();
-    setTimeout(() => {router.push("/menu");}, 3000);
-  });
-
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [resultOfGame, setResultOfGame] = useState<resultNickname>({winPlayer:"",losePlayer:""})
+  const [gamePhase, setGamePhase] = useState<"wait" | "start" | "end">("wait");
+  const [isInvited, setIsInvited] = useState(false);
   const [left, setLeft] = useState({
     nickname: "searching...",
     ladder: 0,
@@ -74,13 +78,63 @@ export default function GamePage() {
     win: 0,
     lose: 0,
   });
+  const [mode, setMode] = useState<string |null>("normal");
 
-  const [resultOfGame, setResultOfGame] = useState<resultNickname>({winPlayer:"",losePlayer:""})
+  const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const clickedButton = event.nativeEvent.submitter.name;
+    setMode(clickedButton);
+    // console.log(clickedButton);
+    // clickedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
+    }
 
-  const [gamePhase, setGamePhase] = useState<"wait" | "start" | "end">("wait");
+  useEffect(() => {
+    const token = sessionStorage.getItem("accessToken"); // tmp
+    setSocket(
+      io('http://localhost:4000/friendly_game', {
+        extraHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    );
+    console.log("gameSocket : Mount");
+    return () => {
+      if (socket) socket.close();
+      setSocket(null);
+      console.log("gameSocket : Unmount");
+    };
+  }, []);
 
-  const [isInvited, setIsInvited] = useState(false);
+  useEffect(()=>{
+    if(!socket) return;
+    socket.emit("chooseGameType", mode);
+  }, [mode]);
 
+  useEffect(() => {
+    if (!socket) {
+      // router.push(`${errorPage}?error=socket_problem`);
+      return;
+    }
+    socket.on(ON_CONNECT, () => {
+      console.log("Socket connected");
+    });
+    // Socket 연결 실패 시
+    socket.on(ON_DISCONNECT, (error) => {
+      console.error("Socket connection failed:", error);
+      setTimeout(() => {router.push("/menu");}, 3000);
+    });
+
+    socket.on(ON_ERROR, (error) => {
+      console.error("Socket error:", error);
+    });
+
+
+  // socket.on(ON_DISCONNECT, (reason) => {
+  //   // todo: remove
+  //   console.log("disconnect!");
+  //   socket.disconnect();
+  //   setTimeout(() => {router.push("/menu");}, 3000);
+  // });
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
     setLeft({
@@ -96,15 +150,6 @@ export default function GamePage() {
       lose: profile2.loses,
     });
   });
-
-  const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const clickedButton = event.nativeEvent.submitter.name;
-    console.log(clickedButton);
-    socket.emit("chooseGameType", clickedButton);
-    // clickedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
-    }
-
 
     socket.on("savePlayer", (callback) => {
       callback(invite);
@@ -124,6 +169,22 @@ export default function GamePage() {
       setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
       setGamePhase("end");
     });
+
+    return () => {
+      socket?.off(ON_CONNECT);
+      socket?.off(ON_DISCONNECT);
+      socket?.off("setMiniProfile");
+      socket?.off("savePlayer");
+      socket?.off("guestArrive");
+      socket?.off("startGame");
+      socket?.off("endGame");
+      socket?.offAny();
+      socket?.disconnect();
+      socket?.close();
+    };
+  }, [socket]);
+
+  
 
   // socket.on('refuseGame', () => {
   //   router.push("/menu");

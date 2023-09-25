@@ -81,7 +81,11 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 			await this.connectedFriendlyPlayerService.updateInvitation(current, inviteData);
 		});
 		this.profileService.ingame(userId);
-		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
+		this.logger.log(`current Player :`);
+		// todo:
+		const data = JSON.stringify(current);
+		this.logger.log(`${data}`);
+		// this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 
 		if (await this.connectedFriendlyPlayerService.isHostPlayer(current))
 		{
@@ -93,6 +97,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		}
 		else
 		{
+			this.logger.log(`handleConnection: not host, not guest`);
 			this.profileService.logOn(socket.data.userId);
 			return socket.disconnect();
 		}
