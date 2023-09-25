@@ -20,11 +20,12 @@ const TaskButton = ({
   };
   return (
     <Frame
-      className="flex flex-row p-0.5 h-full m-0.5 items-center"
+      className="flex flex-row p-0.5 px-3 m-1 items-center justify-center text-md overflow-hidden whitespace-nowrap max-w-xs"
       onClick={handleStartButtonClick}
       boxShadow={active && buttonClicked ? "in" : "out"}
+      h="100%"
     >
-      <span className="px-7">{text}</span>
+      {text}
     </Frame>
   );
 };
