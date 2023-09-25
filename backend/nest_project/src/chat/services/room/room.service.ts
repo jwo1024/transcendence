@@ -105,24 +105,27 @@ export class RoomService {
     //   this.logger.log(`user ${w.user.id}`);
     //   this.logger.log(`room ${w.room.roomId}`);
     // }
+
     // RoomEntity에 UserEntity 추가 -> 관계성 테이블에 자동 생성
     if (!room.users) {
       room.users = [user];
     } else {
       room.users.push(user);
     }
+
     if (!room.connections)
       room.connections = [newConnection];
     else
       room.connections.push(newConnection);
 
-    this.logger.log(`users: ${room.users}`);
-    if(room.users)
-      this.logger.log(`users: ${room.users.length}`);
+    // this.logger.log(`users: ${room.users}`);
+    // if(room.users)
+    //   this.logger.log(`users: ${room.users.length}`);
 
-    this.logger.log(`users: ${room.connections}`);
-    if(room.connections)
-      this.logger.log(`connections: ${room.connections.length}`);
+    // this.logger.log(`users: ${room.connections}`);
+    // if(room.connections)
+    //   this.logger.log(`connections: ${room.connections.length}`);
+
     // RoomEntity 저장
     return this.roomRepository.save(room);
   }
@@ -282,7 +285,10 @@ export class RoomService {
     const editedRoom = await this.getRoomEntityWithCUM(roomId);
     // editedRoom.roomName = newData.roomName;
     editedRoom.roomType = newData.roomType;
-    editedRoom.roomPass = newData.roomPass;
+    if(newData.roomPass === undefined)
+      editedRoom.roomPass = null;
+    else
+      editedRoom.roomPass = newData.roomPass;
     
     return  this.roomRepository.save(editedRoom);
   }

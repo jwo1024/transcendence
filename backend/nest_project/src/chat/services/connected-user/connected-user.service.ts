@@ -24,6 +24,12 @@ export class ConnectedUserService {
     return this.connectedUserRepository.save(connectedUser);
   }
 
+  async findOnebyUserId(userId : number) : Promise<ConnectedUserI> {
+    return this.connectedUserRepository.findOne({
+      where : { user: {id : userId}}
+    }); 
+  }
+
   async createfast(socketId : string, user: UserI, room : RoomEntity): Promise<ConnectedUserI> {
     this.logger.log(`user : ${user.id}`);
     return this.connectedUserRepository.save({socketId, user, room });
