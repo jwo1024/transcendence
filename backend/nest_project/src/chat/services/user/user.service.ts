@@ -58,7 +58,7 @@ export class UserService {
 		return  this.userRepository.findOne(
 			{
 				where: {id : userId},
-				relations: {connections : true, rooms : true}
+				relations: ['connections', 'rooms']
 			});
 	}
 
@@ -71,7 +71,7 @@ export class UserService {
 
 	async getAllUsersWithConnections(): Promise<UserEntity[] | undefined> {
 		return this.userRepository.find(
-		  { relations: {connections : true} });
+		  { relations: ['connections'] });
 	  }
 
 	// async getOneUserWithConnections(): Promise<UserEntity[] | undefined> {
