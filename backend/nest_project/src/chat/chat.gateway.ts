@@ -291,6 +291,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomInvite: RoomInviteDTO) 
   {
+    this.logger.log(`!!!!!!!!!!!!!!!!!${roomInvite.targetUserNickname}@@@@@@@`);
     const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
     if(targetProfile === null || targetProfile === undefined)
     {
@@ -356,6 +357,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     
     //타겟 납치 & 타겟에게 알림
     await this.roomService.addUserToRoom(targetEntity.id, currentRoom.roomId, connection.socketId);
+   this.logger.log(``)
     const newUserProfile = await this.profileService.getUserProfileById(targetEntity.id);
     const currentRoomId = (currentRoom).roomId;
     
@@ -630,6 +632,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     const room: RoomI 
       = await this.roomService.getRoomEntityWithConnections(roomId);
+    this.logger.log(`admins : ${room.roomAdmins}`);
+    this.logger.log(`admins : ${room.roomAdmins.length}`);
     if (!room)
       return;
     const connectedUsers = room.connections;
@@ -733,7 +737,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() adminDto: AdminRelatedDTO)
   {
-    const amIAdmin = await this.roomService.isRoomAdmin(socket.data.user.userId, adminDto.roomId)
+    const amIAdmin = await this.roomService.isRoomAdmin(socket.data.userId, adminDto.roomId)
     if (amIAdmin === false)
     {
       this.emitErrorEvent(socket.id, "Response-Admin-add", "you're not allowed to do that");
@@ -745,9 +749,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitErrorEvent(socket.id, "Response-Admin-add", "the room is not exist any more");
       return ;
     }
-    this.roomService.addAdmintoRoom(adminDto.roomId, adminDto.targetUserId);
-    this.emitOneRoomToUsersInRoom(adminDto.roomId);
+    if (await (this.roomService.addAdmintoRoom(adminDto.roomId, adminDto.targetUserId)) === null)
+    {
+      this.emitErrorEvent(socket.id, "Response-Admin-add", "the user is not in the room");
+      return ;
+    } 
     
+    this.emitResponseEvent(socket.id, "Response-Admin-add");
+    this.emitOneRoomToUsersInRoom(adminDto.roomId);
     const newAdmin = await this.profileService.getUserProfileById(adminDto.targetUserId);
     this.emitNotice( currentRoom, `[${newAdmin.nickname}]님이 새로운 admin이 되었습니다!`);
   }

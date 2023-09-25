@@ -304,10 +304,13 @@ export class RoomService {
 
   async addAdmintoRoom(roomId: number, targetId : number) : Promise<RoomI>
   {
-    const currentRoom = await this.getRoom(roomId);
-    if (currentRoom.roomAdmins.find(finding => finding === targetId))
+    const currentRoom = await this.getRoomEntityWithCUM(roomId);
+    if (currentRoom.roomAdmins.find(finding => finding === targetId) !== undefined)
       return currentRoom; //이미 관리자인 경우 무시
-    //추가하는 시점에 유저가 users 엔테티에 있는지 확인하면 더 좋겠지만 너무 복잡해지므로 생략하겠음.
+    if (currentRoom.users.find(finding => finding.id === targetId ) === undefined)
+    {
+      return null;
+    }
     currentRoom.roomAdmins.push(targetId);
     return this.roomRepository.save(currentRoom);
   }
