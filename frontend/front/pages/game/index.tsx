@@ -65,6 +65,7 @@ export default function GamePage() {
     socket.on(ON_CONNECT, () => {
       console.log(`Socket ${socket.id} connected`);
     });
+
     socket.on(ON_DISCONNECT, (reason) => {
       // console.error(`Socket connection failed: ${socket.id}`, reason);
       console.log(`Socket Disconnected : `, reason);
@@ -72,7 +73,7 @@ export default function GamePage() {
     });
 
     socket.on(ON_ERROR, (error) => {
-      console.error(`Socket connection error: ${socket.id}`, error);
+      console.error(`Socket error: ${socket.id}`, error);
     });
 
 
@@ -96,35 +97,13 @@ export default function GamePage() {
   });
 
   socket.on('endGame', (winner_nickname, loser_nickname, check) => {
-      // setWinNickName(winner_nickname);
-      // setLoseNickName(loser_nickname);
       setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
       check();
       setGamePhase("end");
   });
 
-//   // todo: game debug //////////////////////////////////
-//   // socket.active;
-//   const listnerArr = socket.listenersAny();
-//   // console.log(listnerArr);
-//   listnerArr.forEach((ele) => console.log(ele));
-
-//   // todo: game debug /////////////////
-// setInterval(() => {
-//   const listnerArr = socket.listenersAny();
-//   // console.log(listnerArr);
-//   listnerArr.forEach((ele) => console.log(ele));
-// }, 2000);
-// ////////////////////////////////
-
   return () => {
-    //todo:
     socket?.removeAllListeners();
-    // socket?.off(ON_CONNECT);
-    // socket?.off(ON_DISCONNECT);
-    // socket?.off("setMiniProfile");
-    // socket?.off("startGame");
-    // socket?.off("endGame");
     socket?.disconnect();
     socket?.close();
   };

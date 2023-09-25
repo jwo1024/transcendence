@@ -112,7 +112,6 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // event lister
 
     socket.on('paddleMove', (data: any) => {
       left.y = data.leftY;
@@ -130,6 +129,7 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     //   right.score = data.scoreRight;
     // });
 
+    // todo: change name
     socket.on('updateCanvas', (data: any) => {
       ball.x = data.a;
       ball.y = data.b;

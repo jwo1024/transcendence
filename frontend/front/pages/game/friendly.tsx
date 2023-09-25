@@ -106,8 +106,10 @@ export default function GamePage() {
   }, []);
 
   useEffect(()=>{
-    if(!socket) return;
-    socket.emit("chooseGameType", mode);
+    if(!socket)
+      return;
+
+      socket.emit("chooseGameType", mode);
   }, [mode]);
 
   useEffect(() => {
@@ -116,25 +118,18 @@ export default function GamePage() {
       return;
     }
     socket.on(ON_CONNECT, () => {
-      console.log("Socket connected");
+      console.log(`Socket ${socket.id} connected`);
     });
-    // Socket 연결 실패 시
-    socket.on(ON_DISCONNECT, (error) => {
-      console.error("Socket connection failed:", error);
+
+    socket.on(ON_DISCONNECT, (reason) => {
+      console.log(`Socket Disconnected : `, reason);
       setTimeout(() => {router.push("/menu");}, 3000);
     });
 
     socket.on(ON_ERROR, (error) => {
-      console.error("Socket error:", error);
+      console.error(`Socket error: ${socket.id}`, error);
     });
 
-
-  // socket.on(ON_DISCONNECT, (reason) => {
-  //   // todo: remove
-  //   console.log("disconnect!");
-  //   socket.disconnect();
-  //   setTimeout(() => {router.push("/menu");}, 3000);
-  // });
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
     setLeft({
@@ -163,21 +158,14 @@ export default function GamePage() {
     setGamePhase("start");
   });
   
-  socket.on('endGame', (winner_nickname, loser_nickname) => {
-      // setWinNickName(winner_nickname);
-      // setLoseNickName(loser_nickname);
+  socket.on('endGame', (winner_nickname, loser_nickname, check) => {
       setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
+      check();
       setGamePhase("end");
     });
 
     return () => {
-      socket?.off(ON_CONNECT);
-      socket?.off(ON_DISCONNECT);
-      socket?.off("setMiniProfile");
-      socket?.off("savePlayer");
-      socket?.off("guestArrive");
-      socket?.off("startGame");
-      socket?.off("endGame");
+      socket?.removeAllListeners();
       socket?.disconnect();
       socket?.close();
     };
