@@ -45,12 +45,17 @@ export default function GamePage() {
         extraHeaders: {
           Authorization: `Bearer ${token}`,
         },
+        // autoConnect: false, ////////////////////
       })
     );
+    // game debug
+    console.log(socket?.active);
+    console.log(socket?.active);
+
     console.log("gameSocket : Mount");
     return () => {
       if (socket) socket.close();
-      setSocket(null);
+        setSocket(null);
       console.log("gameSocket : Unmount");
     };
   }, []);
@@ -63,26 +68,15 @@ export default function GamePage() {
     socket.on(ON_CONNECT, () => {
       console.log(`Socket ${socket.id} connected`);
     });
-    // Socket 연결 실패 시
-    socket.on(ON_DISCONNECT, (error) => {
-      console.error(`Socket connection failed: ${socket.id}`, error);
+    socket.on(ON_DISCONNECT, (reason) => {
+      // console.error(`Socket connection failed: ${socket.id}`, reason);
+      console.log(`Socket Disconnected : `, reason);
       setTimeout(() => {router.push("/menu");}, 3000);
     });
 
     socket.on(ON_ERROR, (error) => {
       console.error(`Socket connection error: ${socket.id}`, error);
     });
-
-
-  // socket.on(ON_DISCONNECT, (reason) => {
-  //   // todo: remove
-  //   console.log("disconnect!");
-  //   // socket.disconnect();
-  //   alert("failed to connect. go back to menu");
-  //   setTimeout(() => {router.push("/menu");}, 3000);
-  // });
-
-
 
 
   socket.on("setMiniProfile", (profile1: any, profile2: any) => {
@@ -104,24 +98,41 @@ export default function GamePage() {
     setGamePhase("start");
   });
 
-  socket.on('endGame', (winner_nickname, loser_nickname) => {
+  socket.on('endGame', (winner_nickname, loser_nickname, check) => {
       // setWinNickName(winner_nickname);
       // setLoseNickName(loser_nickname);
       setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
+      check();
       setGamePhase("end");
   });
+
+//   // todo: game debug //////////////////////////////////
+//   // socket.active;
+//   const listnerArr = socket.listenersAny();
+//   // console.log(listnerArr);
+//   listnerArr.forEach((ele) => console.log(ele));
+
+//   // todo: game debug /////////////////
+// setInterval(() => {
+//   const listnerArr = socket.listenersAny();
+//   // console.log(listnerArr);
+//   listnerArr.forEach((ele) => console.log(ele));
+// }, 2000);
+// ////////////////////////////////
+
   return () => {
     //todo:
-    // socket.removeAllListeners();
-    socket?.off(ON_CONNECT);
-    socket?.off(ON_DISCONNECT);
-    socket?.off("setMiniProfile");
-    socket?.off("startGame");
-    socket?.off("endGame");
+    socket?.removeAllListeners();
+    // socket?.off(ON_CONNECT);
+    // socket?.off(ON_DISCONNECT);
+    // socket?.off("setMiniProfile");
+    // socket?.off("startGame");
+    // socket?.off("endGame");
     socket?.disconnect();
     socket?.close();
   };
 }, [socket]);
+
 
   return (
     <div className="flex items-center justify-center h-screen">
