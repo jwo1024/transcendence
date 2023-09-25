@@ -23,6 +23,19 @@ export class ProfileService {
         private userService: UserService,
     ) {}
 
+    async initUsers() : Promise<void> {
+        const result = await this.userProfileRepository.update({}, { status : userStatus.offline} );
+        console.log(`result [${new Date()}] `,  result);
+        const list = await this.getAllUserProfiles();
+        console.log('=============== initiated user list ===================')
+        for (const user of list) {
+            const { id , nickname, status } = user;
+            console.log(`[${id}]-${nickname}: ${status == 0 ? 'offine' : 'not offline'}`);
+        }
+        console.log('=====================================')
+    
+    }
+
     async logOn(id: number): Promise<void> {
         await this.userProfileRepository.update({id: id}, {status: userStatus.online});
     }

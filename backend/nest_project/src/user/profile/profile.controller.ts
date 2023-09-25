@@ -16,7 +16,9 @@ import { sign } from 'crypto';
 @UseGuards(AuthGuard())
 export class ProfileController {
     // 이것은 백엔드 로직이므로, Get 요청에 대해 직접 값을 리턴하면 안된다.
-    constructor(private profileService: ProfileService) {}
+    constructor(private profileService: ProfileService) {
+        this.profileService.initUsers();
+    }
     
     @Get('/all') // 실제 서비스에서는 사용하지 않을 것이다.
     getAllUserProfiles(@Req() req): Promise<UserProfile[]> {
