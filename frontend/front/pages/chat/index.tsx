@@ -138,13 +138,11 @@ const ListenSocketBlock = ({
     });
     socket?.on(ON_INVITE_TO_CHAT, (data) => {
       console.log("socket.on ON_INVITE_TO_CHAT", data);
-      const inviteData: number = data;
-      if (confirm(`채팅방에 초대되셨습니다! 입장하시겠어요?`)) {
-        confirm("JOIN 후 addOpenWindow 해야함 - INVITE_TO_CHAT 으로 simpRoomI 가 왔으면 함")
-        // join 후
-        // addOpenWindow( { roomId: inviteData, roomType: "private" });
-      }
+      const roomData: SimpRoomI = data;
+      if (confirm(`채팅방에 초대되셨습니다! 채팅방을 열까요?`))
+        addOpenWindow({ roomData: roomData });
     });
+    // socket?.once()
     return () => {
       socket?.off(ON_MY_BLOCK_LIST);
       socket?.off(ON_INVITE_TO_CHAT);

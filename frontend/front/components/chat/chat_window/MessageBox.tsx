@@ -9,6 +9,7 @@ import type {
   RecvMessageDTO,
   SimpUserI,
 } from "@/types/ChatInfoType";
+import { data } from "autoprefixer";
 
 interface MessageBoxProps {
   messageList: RecvMessageDTO[];
@@ -30,7 +31,16 @@ const MessageBox = ({
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messageList, sentMsgList]);
 
-  console.log("messageList", messageList);
+  const formatDateTime = (date: Date) => {
+    const obj = new Date(date);
+    const year = obj.getFullYear();
+    const month = obj.getMonth();
+    const day = obj.getDate();
+    const hours = obj.getHours();
+    const minutes = obj.getMinutes();
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  };
+
   return (
     <Frame
       className="flex flex-col flex-1 overflow-y-scroll p-2 "
@@ -45,12 +55,11 @@ const MessageBox = ({
               className=" bg-stone-300 m-0.5 pl-1 rounded text-ellipsis "
               key={index}
             >
-              <NameTag>{"block"}</NameTag>
               <span className="text-ellipsis break-all ">
                 {"🙉block user send message🙉"}
               </span>
               <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
-                {messageInfo.created_at?.toLocaleString()}
+                {formatDateTime(messageInfo.created_at)}
               </span>
             </div>
           );
@@ -65,7 +74,7 @@ const MessageBox = ({
             )}
             <span className="text-ellipsis break-all ">{messageInfo.text}</span>
             <span className="text-sm m-1 text-zinc-100 ml-2 text-ellipsis break-all">
-              {messageInfo.created_at?.toLocaleString()}
+              {formatDateTime(messageInfo.created_at)}
             </span>
           </div>
         );
