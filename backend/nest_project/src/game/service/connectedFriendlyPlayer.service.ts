@@ -25,7 +25,11 @@ export class ConnectedFriendlyPlayerService {
 
 	async createPlayer(id:number, socketId : string): Promise<ConnectedFriendlyPlayerEntity>
 	{
-		return this.connectedFriendlyPlayerRepository.save({id : id, socketId: socketId});
+		return this.connectedFriendlyPlayerRepository.save({
+			id : id, socketId: socketId,
+			hostId: 0, guestId: 0,
+			refuseGame: false, checkTimer: 0,
+		});
 	}
 
 	//
@@ -97,7 +101,7 @@ export class ConnectedFriendlyPlayerService {
 
 	async deletePlayer(id: number)
 	{
-		await this.connectedFriendlyPlayerRepository.softDelete({id: id});
+		await this.connectedFriendlyPlayerRepository.delete({id: id});
 	}
 
 	async deleteAll() {

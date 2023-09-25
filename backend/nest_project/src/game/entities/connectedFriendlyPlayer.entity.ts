@@ -21,6 +21,6 @@ export class ConnectedFriendlyPlayerEntity
   refuseGame: boolean = false;
 
   @Column()
-  checkTimer: number = null;
+  checkTimer: number = 0;
 
 }
