@@ -111,12 +111,13 @@ export default function GamePage() {
       setGamePhase("end");
   });
   return () => {
+    //todo:
+    // socket.removeAllListeners();
     socket?.off(ON_CONNECT);
     socket?.off(ON_DISCONNECT);
     socket?.off("setMiniProfile");
     socket?.off("startGame");
     socket?.off("endGame");
-    socket?.offAny();
     socket?.disconnect();
     socket?.close();
   };

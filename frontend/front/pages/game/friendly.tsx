@@ -178,7 +178,6 @@ export default function GamePage() {
       socket?.off("guestArrive");
       socket?.off("startGame");
       socket?.off("endGame");
-      socket?.offAny();
       socket?.disconnect();
       socket?.close();
     };
