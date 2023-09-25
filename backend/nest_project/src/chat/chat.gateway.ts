@@ -195,14 +195,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.emitUserJoingingRooms(socket.id, userEntity);
     // const currentConnections = await this.connectedUserService.getByRoomId(null);
     const currentConnections = await this.connectedUserService.getAllConnectedSocketIds();
-    this.logger.log(`cC : ${currentConnections}`);
-    this.logger.log(`cC : ${(currentConnections).length}`);
     //  현 서버에 소켓 연결된 모든 채팅 사용자에게 room 정보를 보냄
     for (const connection of currentConnections)
     {
-        this.logger.log(`dddd`);
         const rooms = await this.roomService.getRoomsByType(['open']); //roomType이 DM, private 이 아닌 애들만.
-        // this.logger.log(`connection_socketId : ${connection.socketId}`);
         this.server.to(connection).emit('rooms', rooms);
     }
   }
@@ -704,12 +700,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
   private async onAdminMethods(roomId : number, meId : number, targetUserId : number) : Promise<boolean>
   {
-    if (this.roomService.isRoomOwner(targetUserId, roomId))
-    return false; //target이 주인장인 경우 무시
-  if (meId === targetUserId)
-    return false; //본인을 퇴장시키는 경우 무시 //증말 싫다 이런 사용자.....ㅠ
-  if (await this.roomService.isRoomAdmin(meId, roomId) === false)
-    return false; //요청한 user가 admin이 아닌 경우 무시
+    if ((await this.roomService.isRoomOwner(targetUserId, roomId)) === true)
+      return false; //target이 주인장인 경우
+    if (await this.roomService.isRoomAdmin(meId, roomId) === false)
+      return false; //요청한 user가 admin이 아닌 경우
+    if (meId === targetUserId)
+      return false; //본인을 대상으로한 행동
   }
 
   @SubscribeMessage('Admin-kick')
@@ -818,7 +814,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.emitErrorEvent(socket.id, "Response-Admin-mute", "this room is not exist");
         return ;
       }
-      this.server.to(targetSocket.socketId).emit('got-muted', now);
+      this.logger.log(`now : ${now}`);
+      this.logger.log (` now type : ${typeof(now)}`)
+      this.server.to(targetSocket.socketId).emit(`got-muted_${room.roomId}`, now);
       this.emitNotice(room, `${targetProfile.nickname}님이 3분간 mute 당했습니다.`);
     }
 
