@@ -83,20 +83,45 @@ export class RoomService {
     const room = await this.getRoomEntityWithBoth(roomId);
     if (!room) 
       return null;
+    
+      this.logger.log(`room users : ${room.users}`);
+    if(room.users !== undefined && room.users !== null)
+    {
+      this.logger.log(`users in room : ${room.users.length}`);
+      if(room.users.length > 0)
+        this.logger.log(`users in room : ${room.users[0].id}`);
+    }
 
     // ConnectedUserEntity 생성
     const connectedUser = new ConnectedUserEntity();
     connectedUser.user = user;
     connectedUser.room = room;
     connectedUser.socketId = socketId;
-    await this.connectedUserRepository.save(connectedUser);
-
+    const newConnection = await this.connectedUserRepository.save(connectedUser);
+    // if (w !== undefined && w != null)
+    // {
+    //   this.logger.log(`w ${w}`);
+    //   this.logger.log(`user ${w.user.id}`);
+    //   this.logger.log(`room ${w.room.roomId}`);
+    // }
     // RoomEntity에 UserEntity 추가 -> 관계성 테이블에 자동 생성
     if (!room.users) {
       room.users = [user];
     } else {
       room.users.push(user);
     }
+    if (!room.connections)
+      room.connections = [newConnection];
+    else
+      room.connections.push(newConnection);
+
+    this.logger.log(`users: ${room.users}`);
+    if(room.users)
+      this.logger.log(`users: ${room.users.length}`);
+
+    this.logger.log(`users: ${room.connections}`);
+    if(room.connections)
+      this.logger.log(`connections: ${room.connections.length}`);
     // RoomEntity 저장
     return this.roomRepository.save(room);
   }
