@@ -133,7 +133,7 @@ const ChatDMWindow = ({
               {roomInfo ? (
                 <StatusBlock>{`[${
                   friendInfo?.nickname || "Loading"
-                }] 의 신나는 DM 방`}</StatusBlock>
+                }]의 신나는 DM 방`}</StatusBlock>
               ) : (
                 <StatusBlock>{notifyStr}</StatusBlock>
               )}
@@ -156,7 +156,7 @@ const ChatDMWindow = ({
         </div>
         {/* menu box */}
         {showMenuBox[0] && friendInfo ? (
-          <MiniProfileMenuBox freindInfo={friendInfo} />
+          <MiniProfileMenuBox freindInfo={friendInfo} userInfo={userInfo} />
         ) : null}
       </div>
     </Window>

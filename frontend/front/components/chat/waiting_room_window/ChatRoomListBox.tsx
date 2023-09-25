@@ -52,7 +52,7 @@ const ChatRoomBlock = ({
       setNotifyStr(() => {
         if (!res.success)
           return `채팅채널 입장에 살패하였습니다 : ${res.message}`;
-        else if (confirm("채팅방에 입장하시겠습니다!")) {
+        else if (confirm("채팅채널에 입장 하시겠습니다!")) {
           handleOpenWindow?.addOpenWindow({ roomData: chatRoom });
           setMsgAlert(false);
           return "";
@@ -73,15 +73,19 @@ const ChatRoomBlock = ({
 
   // MSG ALERT
   const [msgAlert, setMsgAlert] = useState<boolean>(false);
+  const onMessageAdded = (data: any) => {
+    console.log("MSG ALERT : ", data);
+    setMsgAlert(true);
+  };
   useEffect(() => {
     if (isJoinedList) {
-      socket?.on(`${ON_MESSAGE_ADDED_ROOMID}${chatRoom.roomId}`, (data) => {
-        console.log(`MSG ALERT : room ${chatRoom.roomName}`, data);
-        setMsgAlert(true);
-      });
+      socket?.on(
+        `${ON_MESSAGE_ADDED_ROOMID}${chatRoom.roomId}`,
+        onMessageAdded
+      );
     }
     return () => {
-      socket?.off(ON_MESSAGE_ADDED_ROOMID);
+      socket?.off(ON_MESSAGE_ADDED_ROOMID, onMessageAdded);
       socket?.off(ON_RESPONSE_ROOM_JOIN);
     };
   }, []);
@@ -116,21 +120,27 @@ const ChatRoomBlock = ({
       <span className="w-16 p-2">[ {chatRoom.joinUsersNum} ]</span>
       <form onSubmit={handleSubmit}>
         <span className="w-230 p-1">
-          {chatRoom.hasPass ? (
-            // minlegnth & maxlength 적용안됨 (왜?)
-            <Input
-              ref={passInputRef}
-              type="password"
-              placeholder="password"
-              className=" w-24"
-              maxlength="5"
-              minlength="1"
-            />
-          ) : (
-            "비밀번호 없음"
+          {isJoinedList ? null : (
+            <>
+              {chatRoom.hasPass ? (
+                // minlegnth & maxlength 적용안됨 (왜?)
+                <Input
+                  ref={passInputRef}
+                  type="password"
+                  placeholder="password"
+                  className=" w-24"
+                  maxlength="5"
+                  minlength="1"
+                />
+              ) : (
+                "비밀번호 없음"
+              )}
+            </>
           )}
         </span>
-        <Button className="w-28 h-3/4 ">참여하기</Button>
+        <Button className="w-30 h-3/4 ">
+          {isJoinedList ? "채팅창열기" : "참여하기"}
+        </Button>
       </form>
       <NotifyBlock>{notifyStr}</NotifyBlock>
     </div>
@@ -154,10 +164,14 @@ const ChatRoomListBox = ({
   return (
     <Frame className="p-4 overflow-auto" boxShadow="in" bg={"white"}>
       <div className="flex flex-row bg-stone-500 rounded-md text-white overflow-auto">
-        <span className="flex-1  p-2">방제</span>
+        <span className="flex-1  p-2">
+          {isJoinedList ? "~참여중인 채팅방~" : "~입장가능한 채팅방~"}
+        </span>
         <span className="w-16 p-2">[인원]</span>
-        <span className="w-28 p-2">비밀번호 유무</span>
-        <span className=" w-28">{""} </span>
+        <span className="w-28 p-2">
+          {isJoinedList ? null : "비밀번호 유무"}
+        </span>
+        <span className=" w-32">{"   "} </span>
       </div>
       <div className="overflow-auto">
         {/* chat room list */}

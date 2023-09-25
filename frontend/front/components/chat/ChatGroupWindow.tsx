@@ -22,6 +22,8 @@ import {
   ON_MESSAGES_ROOMID,
   ON_CURRENT_ROOM_ROOMID,
   ON_MESSAGE_ADDED_ROOMID,
+  ON_GOT_KICKED_ROOMID,
+  ON_GOT_BANNED_ROOMID,
   ON_CURRENT_USERS_ROOMID, // ?
   ON_GOT_MUTED_ROOMID,
   EMIT_ROOM_ENTER,
@@ -31,6 +33,7 @@ import useMessageForm from "@/hooks/chat/useMessageForm";
 import useMenuBox from "@/hooks/useMenuBox";
 import type { MenuItemInfo } from "@/hooks/useMenuBox";
 import { SocketContext } from "@/context/ChatSocketContext";
+import useTimerMute from "@/hooks/chat/useTimerMute";
 
 interface ChatGroupWindowProps {
   className?: string;
@@ -58,6 +61,7 @@ const ChatGroupWindow = ({
       userInfo,
       socket,
     }); // EMIT_MESSAGE_ADD occur inside of useMessageForm
+  const { timeStr, setIssuedAt } = useTimerMute(3);
 
   useEffect(() => {
     socket?.on(`${ON_CURRENT_ROOM_ROOMID}${simpRoomInfo.roomId}`, (data) => {
@@ -99,14 +103,28 @@ const ChatGroupWindow = ({
     socket?.on(`${ON_GOT_MUTED_ROOMID}${simpRoomInfo.roomId}`, (data) => {
       console.log("socket.on ON_GOT_MUTED_ROOMID: ", data);
       const msg: Date = data;
+      console.log("msg: ", timeStr);
+      timeStr === "" && msg && setIssuedAt(msg);
       // mute timer start ..... !
     });
-      
+    socket?.on(`${ON_GOT_KICKED_ROOMID}${simpRoomInfo.roomId}`, (data) => {
+      console.log("socket.on ON_GOT_KICKED_ROOMID: ", data);
+      alert("방에서 Kick 되었습니다.");
+      triggerClose();
+    });
+    socket?.on(`${ON_GOT_BANNED_ROOMID}${simpRoomInfo.roomId}`, (data) => {
+      console.log("socket.on ON_GOT_BANNED_ROOMID: ", data);
+      alert("방에서 Ban 되었습니다.");
+      triggerClose();
+    });
 
     return () => {
       socket?.off(`${ON_MESSAGES_ROOMID}${simpRoomInfo.roomId}`);
       socket?.off(`${ON_CURRENT_ROOM_ROOMID}${simpRoomInfo.roomId}`);
       socket?.off(`${ON_RESPONSE_ROOM_ENTER_ROOMID}${simpRoomInfo.roomId}`);
+      // socket?.off(`${ON_MESSAGE_ADDED_ROOMID}${simpRoomInfo.roomId}`); // 주석처리 for msgAlerm
+      socket?.off(`${ON_GOT_MUTED_ROOMID}${simpRoomInfo.roomId}`);
+      socket?.off(`${ON_GOT_KICKED_ROOMID}${simpRoomInfo.roomId}`);
     };
   }, []);
 
@@ -148,11 +166,11 @@ const ChatGroupWindow = ({
       {/* menu bar */}
       <MenuBar menu={menuItemsWithHandlers} />
       {/* main */}
-      <div className="flex flex-row flex-1 ">
+      <div className="flex flex-row flex-1  overflow-auto">
         {/* chat box */}
-        <div className="flex flex-col flex-1 overflow-scroll ">
+        <div className="flex flex-col flex-1 overflow-auto ">
           <Frame
-            className="flex flex-col flex-1 overflow-scroll p-1"
+            className="flex flex-col flex-1 overflow-auto p-1"
             boxShadow="in"
           >
             <Frame className="p-3" boxShadow="in" bg="white">
@@ -166,6 +184,9 @@ const ChatGroupWindow = ({
                     {roomInfo.roomType === "open" ? "공개방" : "비공개방"}
                   </StatusBlock>
                   <StatusBlock>{`인원 [${roomInfo.users.length}명]`}</StatusBlock>
+                  {timeStr !== "" ? (
+                    <StatusBlock>🙊 {timeStr} 🙊</StatusBlock>
+                  ) : null}
                 </>
               ) : (
                 <NotifyBlock>{notifyStr}</NotifyBlock>
@@ -183,8 +204,9 @@ const ChatGroupWindow = ({
               className="w-full h-full "
               placeholder="Hello, my friend !"
               ref={inputRef}
+              disabled={timeStr !== ""}
             />
-            <Button>send</Button>
+            <Button disabled={timeStr !== ""}>send</Button>
           </form>
         </div>
         {/* menu box */}
@@ -195,13 +217,14 @@ const ChatGroupWindow = ({
           />
         ) : null}
         {showMenuBox[1] && roomInfo ? (
-          <UserListMenuBox roomInfo={roomInfo} isAdmin={isAdmin} />
+          <UserListMenuBox
+            roomInfo={roomInfo}
+            isAdmin={isAdmin}
+            userInfo={userInfo}
+          />
         ) : null}
         {showMenuBox[2] && roomInfo ? (
-          <LeaveRoomMenuBox
-            roomInfo={roomInfo}
-            triggerClose={triggerClose}
-          />
+          <LeaveRoomMenuBox roomInfo={roomInfo} triggerClose={triggerClose} />
         ) : null}
       </div>
     </Window>

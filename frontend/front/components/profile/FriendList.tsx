@@ -47,7 +47,9 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
         });
         setFriendsList(data);
       })
-      .catch(() => console.log("bad response"));
+      .catch((err) => {
+        console.log(err);
+      });
   };
   const fetchBlockList = () => {
     const token = sessionStorage.getItem("accessToken");
@@ -62,7 +64,9 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
       .then((data) => {
         setBlockList(data);
       })
-      .catch(() => console.log("bad response"));
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   useEffect(() => {
@@ -102,29 +106,37 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     fetch(`http://localhost:4000${urlSuffix}/${nickname}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => {
-      if (res.status == 404) return alert("존재하지 않는 유저입니다.");
-      else if (res.status == 409) return alert("이미 등록된 유저입니다.");
-      else if (res.status == 400)
-        return alert("나 자신은 영원한 인생의 친구입니다.");
-      else if (res.status == 200) {
-        fetchFriendList();
-        fetchBlockList();
-        return alert("등록되었습니다");
-      } else return alert("알 수 없는 오류가 발생했습니다.");
-    });
+    })
+      .then((res) => {
+        if (res.status == 404) return alert("존재하지 않는 유저입니다.");
+        else if (res.status == 409) return alert("이미 등록된 유저입니다.");
+        else if (res.status == 400)
+          return alert("나 자신은 영원한 인생의 친구입니다.");
+        else if (res.status == 200) {
+          fetchFriendList();
+          fetchBlockList();
+          return alert("등록되었습니다");
+        } else return alert("알 수 없는 오류가 발생했습니다.");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
   const handleFriendDeleteClick = (user: user) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
     fetch(`http://localhost:4000/social/friend/delete/${user.id}`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
-    }).then((res) => {
-      if (res.ok) alert("삭제되었습니다.");
-      else alert("알 수 없는 오류가 발생했습니다.");
-      fetchFriendList();
-    });
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (res.ok) alert("삭제되었습니다.");
+        else alert("알 수 없는 오류가 발생했습니다.");
+        fetchFriendList();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   const handleBlockDeleteClick = (user: user) => {
@@ -132,12 +144,16 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     if (!token) return;
     fetch(`http://localhost:4000/social/block/delete/${user.id}`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
-    }).then((res) => {
-      if (res.ok) alert("삭제되었습니다.");
-      else alert("알 수 없는 오류가 발생했습니다.");
-      fetchFriendList();
-    });
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (res.ok) alert("삭제되었습니다.");
+        else alert("알 수 없는 오류가 발생했습니다.");
+        fetchFriendList();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
@@ -166,8 +182,9 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
                     >
                       Profile
                     </Button>
-                    <Button onClick={() => handleFriendDeleteClick(user)}
-                    className="w-16 h-7 flex items-center justify-center"
+                    <Button
+                      onClick={() => handleFriendDeleteClick(user)}
+                      className="w-16 h-7 flex items-center justify-center"
                     >
                       Delete
                     </Button>
