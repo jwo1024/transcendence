@@ -15,4 +15,4 @@ COPY ./front/package.json .
 
 # CMD ["ash", "-c", "while true; do sleep 1; done"]
 
-ENTRYPOINT npm i && npm run dev
+ENTRYPOINT npm i && npm run build &&  npm run start

@@ -94,7 +94,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
 
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
-    const clickedButton = event.nativeEvent.submitter.name;
+    const clickedButton = (event.target as HTMLButtonElement).name;
     const nickname = event.currentTarget[0].value;
     if (nickname == "") return alert("비었잖아..");
 
