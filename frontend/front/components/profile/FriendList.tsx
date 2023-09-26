@@ -85,7 +85,8 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
     const clickedButton = (event.target as HTMLButtonElement).name;
-    const nickname = event.currentTarget[0].value;
+    const nicknameInput = event.currentTarget[0] as HTMLInputElement;
+    const nickname = nicknameInput.value;
     if (nickname == "") return alert("비었잖아..");
 
     let urlSuffix = "/social";
