@@ -3,17 +3,7 @@ import { In, Repository, UpdateResult } from 'typeorm';
 import { UserProfile, userStatus } from './user-profile.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignupDto } from './dto/signup.dto';
-
-import * as fs from 'fs';
-import * as fsp from 'fs/promises';
-
-import * as path from 'path';
-
-
-import { sign } from 'crypto';
-import { extname } from 'path';
 import { UserService } from '../../chat/services/user/user.service';
-import { UserEntity } from 'src/chat/entities/user.entity';
 
 @Injectable()
 export class ProfileService {
@@ -32,7 +22,7 @@ export class ProfileService {
             const { id , nickname, status } = user;
             console.log(`[${id}]-${nickname}: ${status == 0 ? 'offine' : 'not offline'}`);
         }
-        console.log('=====================================')
+        console.log('=======================================================')
     
     }
 
@@ -86,14 +76,6 @@ export class ProfileService {
         return this.userProfileRepository.findOne({where : {nickname: nickname}});
     }
 
-    async deleteUserProfileById(id: number): Promise<void> { // 실제 서비스에서는 사용하지 않을 것이다.
-        await this.userProfileRepository.delete({id: id});
-    }
-
-    async deleteUserProfileByNickname(nickname: string): Promise<void> { // 실제 서비스에서는 사용하지 않을 것이다.
-        await this.userProfileRepository.delete({nickname: nickname});
-    }
-
     async updateUserProfileById(id: number, updateDto: UserProfile) {
         return await this.userProfileRepository.update({id}, updateDto); 
         //return await this.getUserProfileById(id);
@@ -106,5 +88,4 @@ export class ProfileService {
     async updateAvatar(id : number, avatar : Buffer) : Promise<any> {
         return this.userProfileRepository.update({id: id}, {avatar: avatar});
     }
-
 }

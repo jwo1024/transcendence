@@ -16,20 +16,8 @@ import { ConfigModule } from '@nestjs/config';
             ChatModule,
             GameModule,
             UserModule,
-            ConfigModule.forRoot()
-  ],
-  providers: [],
-  // controllers: [AppController],
-  // providers: [AppService], //사실 얘네는 필요 없을 듯.
+            ConfigModule.forRoot({
+              isGlobal: true, // 전역 설정으로 사용
+            }),  ],
 })
-export class AppModule {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //     // // .apply(AuthMiddleware)
-  //     // .exclude(
-  //     //   { path: '/api/users', method: RequestMethod.POST},
-  //     //   {path: '/api/users/login', method: RequestMethod.POST}
-  //     // )
-  //     .forRoutes('')
-  // }
-}
+export class AppModule {}

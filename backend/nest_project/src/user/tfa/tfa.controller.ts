@@ -5,20 +5,16 @@ import { AuthGuard } from '@nestjs/passport';
 @Controller('tfa')
 @UseGuards(AuthGuard())
 export class TfaController {
-    constructor(
-        private tfaService: TfaService
-    ) {}
-
-    
+    constructor( private tfaService: TfaService ) {}
 
     @Post('send')
     async send(@Req() req, @Res() res, @Body() body) {
         const id = req.user.userId;
         const otp = await this.tfaService.generateSecret();
-        if (!otp) return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('failed to generate token');
+        if (!otp) return res.status(HttpStatus.CONFLICT).send('failed to generate token');
         const issuedAt = await this.tfaService.sendVerificationEmail(id, body.email, otp);
         if (!issuedAt)
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('failed to send email');
+            return res.status(HttpStatus.CONFLICT).send('failed to send email');
         else {
             this.tfaService.register2FA(id, body.email, otp, issuedAt);
             return res.status(HttpStatus.OK).json({ issuedAt: issuedAt });
@@ -35,9 +31,4 @@ export class TfaController {
             return res.status(HttpStatus.UNAUTHORIZED).send('2fa-verify failed');
         }
     }
-
-    ///////////////////////////////////////////////////
-    // 로그오프 시 2FA 데이터 반드시 삭제해야함.////////////////
-    // PageValidation에서 unchecked 2FA 반드시 추방해야함////
-    ///////////////////////////////////////////////////
 }

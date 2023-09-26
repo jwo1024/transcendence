@@ -93,7 +93,7 @@ const TwoFABlock = ({
     })
       .then((res) => {
         setNotifyStr(() => {
-          if (res.status === 500)
+          if (res.status === 409)
             return "메일 전송에 실패했습니다. 다시 시도하거나 다른 이메일을 입력해 주세요";
           else if (res.ok) {
             setTwoFAtextChecked(true);
