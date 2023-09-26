@@ -1,36 +1,9 @@
-import { data } from "autoprefixer";
+import { Ball, CanvasChange, Net, Paddle, PaddlePair } from "@/types/GameType";
 import React, { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
-interface Paddle {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-  score: number;
-}
-
-interface Net {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-}
-
-interface Ball {
-  x: number;
-  y: number;
-  radius: number;
-  velocityX: number;
-  velocityY: number;
-  speed: number;
-  color: string;
-}
-
 interface PongGameProps {
-  socket: Socket
+  socket: Socket;
 }
 
 type paddleSize = {
@@ -60,14 +33,13 @@ const BallSpec: ballSpec = {
   speed: 3,
 };
 
-
-const PongGame: React.FC<PongGameProps> = ({socket}) => {
+const PongGame: React.FC<PongGameProps> = ({ socket }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(
     canvasRef.current
   );
 
-  const left = {
+  const left: Paddle = {
     x: 0,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
@@ -75,7 +47,7 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     color: "white",
     score: 0,
   };
-  const right = {
+  const right: Paddle = {
     x: CanvasSize.width - PaddleSize.width,
     y: CanvasSize.height / 2 - PaddleSize.height / 2,
     width: PaddleSize.width,
@@ -83,14 +55,14 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     color: "white",
     score: 0,
   };
-  const net = {
+  const net: Net = {
     x: CanvasSize.width / 2 - 2 / 2,
     y: 0,
     width: 2,
     height: 10,
     color: "red",
   };
-  const ball = {
+  const ball: Ball = {
     x: CanvasSize.width / 2,
     y: CanvasSize.height / 2,
     radius: BallSpec.radius,
@@ -112,24 +84,23 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-
-    socket.on('paddleMove', (data: any) => {
+    socket.on("paddleMove", (data: PaddlePair) => {
       left.y = data.leftY;
       right.y = data.rightY;
     });
 
     // todo: change name
-    socket.on('updateCanvas', (data: any) => {
+    socket.on("updateCanvas", (data: CanvasChange) => {
       ball.x = data.ballX;
       ball.y = data.ballY;
       ball.velocityX = data.veloX;
       ball.velocityY = data.veloY;
       ball.speed = data.ballSpeed;
-      
+
       left.score = data.leftScore;
       right.score = data.rightScore;
     });
-    
+
     // rendering function
 
     function drawRect(
@@ -193,16 +164,16 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
       }
     }
 
-    function movePaddle(event: any) {
+    function movePaddle(event: MouseEvent) {
       if (canvas) {
-        let rect = canvas.getBoundingClientRect();
+        const rect = canvas.getBoundingClientRect();
         const mouseY = event.clientY - rect.top - left.height / 2;
         socket.emit("mouseMove", mouseY);
       }
     }
-    
+
     canvas.addEventListener("mousemove", movePaddle);
-    
+
     // function game() {
     //   render();
     // }
