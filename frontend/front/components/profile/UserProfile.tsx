@@ -1,18 +1,10 @@
 import { FC, useState, useEffect } from "react";
 import { Fieldset } from "@react95/core";
 import Window from "../common/Window";
-
-type user = {
-  id: number;
-  nickname: string;
-  status: string;
-  ladder: number;
-  wins: number;
-  loses: number;
-};
+import { userOfList } from "@/types/UserInfo";
 
 interface ProfileProps {
-  selectedFriend: user;
+  selectedFriend: userOfList;
 }
 
 const UserProfile: FC<ProfileProps> = ({ selectedFriend }) => {
@@ -21,7 +13,7 @@ const UserProfile: FC<ProfileProps> = ({ selectedFriend }) => {
   );
 
   useEffect(() => {
-    if (selectedFriend.id === undefined) return;
+    if (selectedFriend.id === undefined || selectedFriend.id == 0) return;
     const token = sessionStorage.getItem("accessToken");
     fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image/${selectedFriend.id}`,

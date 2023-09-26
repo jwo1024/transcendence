@@ -138,7 +138,6 @@ const SignUpPage = () => {
               setUploadAvatar={setUploadAvatar}
             />
             <TwoFABlock
-              twoFAEmail={twoFAEmail}
               setTwoFAEmail={setTwoFAEmail}
               twoFAEmailValid={twoFAEmailValid}
               setTwoFAEmailValid={setTwoFAEmailValid}

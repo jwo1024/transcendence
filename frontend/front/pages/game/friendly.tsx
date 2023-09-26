@@ -65,10 +65,11 @@ export default function GamePage() {
 
   const modeSelect = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const clickedButton = event.nativeEvent.submitter.name;
+    const nativeEvent = event.nativeEvent as Event & {
+      submitter: HTMLButtonElement;
+    };
+    const clickedButton = nativeEvent.submitter.name;
     setMode(clickedButton);
-    // console.log(clickedButton);
-    // clickedButton = "normal" | "speedUp" | "smallBall" | "enjoyAll";
   };
 
   useEffect(() => {
@@ -191,7 +192,7 @@ export default function GamePage() {
           ) : gamePhase === "wait" && !isInvited ? (
             <GameLoading />
           ) : gamePhase === "start" ? (
-            <PongGame socket={socket} />
+            <PongGame socket={socket!} />
           ) : (
             /* 승자와 패자 닉네임을 string으로 전달 */ <GameResult
               result={resultOfGame}

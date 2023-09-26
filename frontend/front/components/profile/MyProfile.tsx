@@ -24,7 +24,7 @@ const actionImgCompress = async (fileSrc: File) => {
 
 const MyProfile: React.FC = () => {
   const [myData, setMydata] = useState<UserSessionStorage>({
-    id: 0,
+    id: 12,
     nickname: "",
     status: 0,
     ladder: 0,
@@ -32,9 +32,7 @@ const MyProfile: React.FC = () => {
     loses: 0,
   });
 
-  const [avatarURL, setAvatarURL] = useState<string | undefined>(
-    "https://github.com/React95.png"
-  );
+  const [avatarURL, setAvatarURL] = useState<string | null>(null);
   const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
 
   const newNickNameInputRef = useRef<HTMLInputElement>();
@@ -147,7 +145,7 @@ const MyProfile: React.FC = () => {
     >
       <div className=" flex flex-col items-center justify-between p-4">
         <div className="flex items-center space-x-8">
-          <img src={avatarURL} alt="Avatar" className=" w-32 h-32" />
+          <img src={avatarURL!} alt="Avatar" className=" w-32 h-32" />
           <div className="flex flex-col items-center space-y-3 w-28">
             <span className=" text-3xl">{myData.nickname}</span>
           </div>

@@ -3,15 +3,7 @@ import FriendList from "@/components/profile/FriendList";
 import { Button } from "@react95/core";
 import MyProfile from "@/components/profile/MyProfile";
 import UserProfile from "@/components/profile/UserProfile";
-
-type user = {
-  nickname: string;
-  state: string;
-  avatarSrc: string;
-  ladder: number;
-  win: number;
-  lose: number;
-};
+import { userOfList } from "@/types/UserInfo";
 
 export default function ProfilePage() {
   const [myProfile, setMyProfile] = useState(true);
@@ -50,15 +42,15 @@ export default function ProfilePage() {
     setFriendList((current) => !current);
   };
 
-  const [selectedFriend, setSelectedFriend] = useState<user>({
+  const [selectedFriend, setSelectedFriend] = useState<userOfList | null>({
+    id: 0,
+    status: "",
     nickname: "default",
-    state: "",
-    avatarSrc: "https://github.com/React95.png",
     ladder: 0,
-    win: 0,
-    lose: 0,
+    wins: 0,
+    loses: 0,
   });
-  const handleProfileClick = (friend: user) => {
+  const handleProfileClick = (friend: userOfList) => {
     setSelectedFriend(friend);
   };
 
@@ -68,7 +60,7 @@ export default function ProfilePage() {
         <div className="flex flex-col justify-between h-[626px]">
           {myProfile ? <MyProfile /> : null}
           {friendsProfile ? (
-            <UserProfile selectedFriend={selectedFriend} />
+            <UserProfile selectedFriend={selectedFriend!} />
           ) : null}
         </div>
         {friendList ? (
