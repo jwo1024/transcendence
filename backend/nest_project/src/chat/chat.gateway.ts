@@ -447,13 +447,50 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     //     await this.messageService.findMessagesForRoom(currentRoom), currentRoomId);
     // this.server.to(connection.socketId).emit(`messages_${currentRoomId}`, messages);
 
-    // this.emitNotice(currentRoom, `[${newUserProfile.nickname}]님이 방에 새로 들어왔습니다!`);
     //   //다른 멤버들, 커넥션들에게 알림
     // this.emitOneRoomToUsersInRoom(currentRoom.roomId);
     // const newUserEntity = await this.userService.getOneUSerWithRoomsAndConnections(socket.data.userId);
     // this.emitUserJoingingRooms(socket.id, newUserEntity);
     // this.emitRoomsToAllConnectedUser();
     
+  }
+
+  private async enterTheRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() roomId: number) 
+  {
+    if ( await (this.roomService.isRoomExist(roomId)) === false)
+      {
+        //존재하지 않는 roomId 요청일 경우 무시
+        this.emitErrorEvent(socket.id, `Response-Room-enter_${roomId}`, "the room is not exist now.");
+        return ;
+      }
+      const usersIntheRoom = (await this.roomService.getRoomEntityWithUsers(roomId)).users;
+    // const connectionsInTheRoom  = await this.connectedUserService.getByRoomId(roomId);
+
+    const isExistUser = usersIntheRoom.find(finding => finding.id === socket.data.userId);
+    if (isExistUser === null || isExistUser === undefined)
+    {
+      this.emitErrorEvent(socket.id, `Response-Room-enter_${roomId}`, "You are not envolved here right now. Join first!");
+      return ;
+    }
+    if ( await this.roomService.isBannedUser(socket.data.userId, roomId))
+    {
+      this.emitErrorEvent(socket.id, `Response-Room-enter_${roomId}`, "you are banned by that room.");
+      return ; //ban 처리된 유저이면 요청 무시
+    }
+    const roomFromDB = await this.roomService.getRoomEntityWithMessages(roomId);
+    const currentRoomId = (await roomFromDB).roomId;
+    //DB에서 messages 불러와서 사용자에게 보내주기.
+    const messages = await this.messageMapper.Create_simpleDTOArrays(
+        await this.messageService.findMessagesForRoom(roomFromDB), currentRoomId);
+    socket.emit(`messages_${currentRoomId}`, messages);
+
+    //이벤트명 동적생성
+    // await this.server.to(socket.id).emit(`messages_${currentRoomId}`, await messages);
+    
+    this.emitOneRoomToOneUser(roomId, socket.id,`Response-Room-enter_${roomId}`);
+    this.emitUserJoingingRooms(socket.id, await this.userService.getOne(socket.data.userId));
   }
 
   @SubscribeMessage('Room-join')
@@ -472,13 +509,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitErrorEvent(socket.id, "Response-Room-join", "this user is banned from the room.")
       return ; //ban 처리된 유저
     }
-
+    if (roomFromDB.users.find(finding => finding.id === socket.data.userId ) !== undefined)
+    {
+      await this.enterTheRoom(socket, room.roomId);
+      return;
+    }
     if (( await this.roomService.isValidForJoin( roomFromDB, room)) === false)
     {
       this.emitErrorEvent(socket.id, "Response-Room-join", "not valid password")
       return ; //참여할 자격이 안됨.
     }
-
     //새 참여자 추가하기
       if(this.roomService.addUserToRoom(socket.data.userId, roomFromDB.roomId, socket.id) === null)
       {
