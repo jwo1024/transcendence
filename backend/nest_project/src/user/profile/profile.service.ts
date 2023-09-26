@@ -27,7 +27,11 @@ export class ProfileService {
     }
 
     async logOn(id: number): Promise<any> {
-        return await this.userProfileRepository.update({id: id}, {status: userStatus.online});
+        if(await this.getUserProfileById(id) != null)
+            console.log(`logon start ${(await this.getUserProfileById(id)).status}`);
+        await this.userProfileRepository.update({id: id}, {status: userStatus.online});
+        if(await this.getUserProfileById(id) != null)
+            console.log(`logon end ${(await this.getUserProfileById(id)).status}`);
     }
     
     async logOff(id: number): Promise<void> {
@@ -39,7 +43,12 @@ export class ProfileService {
     }
 
     async inchat(id: number): Promise<void> {
+        if(await this.getUserProfileById(id) != null)
+            console.log(`inchat start ${(await this.getUserProfileById(id)).status}`);
         await this.userProfileRepository.update({id: id}, {status: userStatus.inChat});
+        if(await this.getUserProfileById(id) != null)
+            console.log(`inchat end ${(await this.getUserProfileById(id)).status}`);
+    
     }
     
     async signUp(signupDto: SignupDto): Promise<void> {

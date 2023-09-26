@@ -121,18 +121,17 @@ export class AuthController {
     const userId = req.user.userId;
     const accessToken = req.headers.authorization?.split('Bearer ')[1];
     const user = await this.profileService.getUserProfileById(userId);
-    if (!user) throw new Error('user not found');
-    else {
-      if (
-        user.status !== userStatus.inChat &&
-        user.status !== userStatus.inGame
-      ) {
+    if (!user)
+      throw new Error('user not found');
+    else { 
+      if (user.status !== userStatus.inGame) {
         AuthService.setSession(userId, accessToken);
         await this.profileService.logOn(userId);
         const { id, nickname, status, ladder, wins, loses } = user;
         return res.send({ id, nickname, status, ladder, wins, loses });
-      } else {
-        console.log('user is already in chat or game');
+      }
+      else {
+        console.log('user is already in game');
         res.redirect(`${process.env.FRONTEND_URL}`);
       }
     }

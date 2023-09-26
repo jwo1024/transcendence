@@ -262,7 +262,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
     //초대할 상대방 소켓 정보 가져오기
     const socketTheOther = await this.connectedUserService.findByUser(userTheOther);
-    if (socketTheOther === undefined)
+    if (socketTheOther === undefined || socketTheOther === null)
     {
       await this.deleteRoom(createdRoom.roomId); //만든 방 삭제
       this.connectedUserService.removeByUserIdAndRoomId(socket.data.userId, createdRoom.roomId);
@@ -648,7 +648,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     else
     {
       if (userId === roomToleave.roomOwner)
-        this.changeOwner(AfterRoom);
+        await this.changeOwner(AfterRoom);
     }
     this.emitResponseEventWithNumber(socket.id, "Response-Room-leave", roomId);
     this.emitNotice(roomToleave, `[${userNickname}]님이 방을 나갔습니다!`);
