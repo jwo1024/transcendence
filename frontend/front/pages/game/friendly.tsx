@@ -91,7 +91,7 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!socket) return;
-
+    console.log(mode);
     socket.emit("chooseGameType", mode);
   }, [mode]);
 
@@ -177,7 +177,7 @@ export default function GamePage() {
               className="flex flex-col items-center w-[800px] h-[600px] bg-gray-500 justify-center space-y-6 "
             >
               <Button className="w-60 h-16" name="normal">
-                <span className="text-5xl">Normal</span>
+                <span className="text-5xl">Choose!</span>
               </Button>
               <Button className="w-60 h-16" name="speedUp">
                 <span className="text-5xl">Speed Up</span>
@@ -186,7 +186,7 @@ export default function GamePage() {
                 <span className="text-5xl">Small Ball</span>
               </Button>
               <Button className="w-60 h-16" name="enjoyAll">
-                <span className="text-5xl">Enjoy all</span>
+                <span className="text-5xl">Normal</span>
               </Button>
             </form>
           ) : gamePhase === "wait" && !isInvited ? (

@@ -332,14 +332,10 @@ export class FriendlyGameGateway
       gameTimer: null,
     };
 
-    this.logger.log(`도대체 뭐야 ${match.game_type}`);
     if (match.game_type === 'speedUp') {
-    gameField.ballSpeed = 30;
+    gameField.ballSpeed = 20;
     } else if (match.game_type === 'smallBall') {
     gameField.ballRadius = 5;
-    } else if (match.game_type === 'enjoyAll') {
-    gameField.ballSpeed = 30;
-      gameField.ballRadius = 5;
     }
 
     this.logger.log(
@@ -538,8 +534,8 @@ export class FriendlyGameGateway
       if (gameField.scoreRight > 2) {
         this.endGame(match.match_id, null);
       }
-      if (match.game_type === 'speedUp' || match.game_type === 'enjoyAll')
-        resetBall(gameField, 30, -1);
+      if (match.game_type === 'speedUp')
+        resetBall(gameField, 20, -1);
       else resetBall(gameField, 10, -1);
     } else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth) {
       ++gameField.scoreLeft;
@@ -548,8 +544,8 @@ export class FriendlyGameGateway
       if (gameField.scoreLeft > 2) {
         this.endGame(match.match_id, null);
       }
-      if (match.game_type === 'speedUp' || match.game_type === 'enjoyAll')
-        resetBall(gameField, 30, 1);
+      if (match.game_type === 'speedUp')
+        resetBall(gameField, 20, 1);
       else resetBall(gameField, 10, 1);
     }
 
