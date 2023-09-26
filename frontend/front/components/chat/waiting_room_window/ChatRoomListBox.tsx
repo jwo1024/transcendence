@@ -6,7 +6,6 @@ import type {
   RoomJoinDTO,
   SimpRoomI,
   ResponseDTO,
-  RecvMessageDTO,
 } from "@/types/ChatInfoType";
 import NotifyBlock from "@/components/common/NotifyBlock";
 // Types & Hooks & Contexts
@@ -73,8 +72,8 @@ const ChatRoomBlock = ({
 
   // MSG ALERT
   const [msgAlert, setMsgAlert] = useState<boolean>(false);
-  const onMessageAdded = (data: any) => {
-    console.log("MSG ALERT : ", data);
+  const onMessageAdded = () => {
+    console.log("MSG ALERT ");
     setMsgAlert(true);
   };
   useEffect(() => {

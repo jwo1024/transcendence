@@ -1,5 +1,5 @@
 // Libraries
-import { use, useContext, useRef, useState, useEffect } from "react";
+import { useContext, useRef, useState, useEffect } from "react";
 import { Fieldset, Input, Button } from "@react95/core";
 // Components
 import MenuBoxLayout from "../common/MenuBoxLayout";

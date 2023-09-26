@@ -15,6 +15,8 @@ export const EMIT_ROOM_INVITE = "Room-invite";
 export const EMIT_ROOM_ENTER = "Room-enter";
 export const EMIT_GET_USER_PROFILE = "get-user-profile";
 export const EMIT_GET_USERS = "get-users";
+export const EMIT_GAME_INVITE = "Game-invite";
+export const EMIT_REFUSE_GAME_INVITE = "Refuse-Game-invite";
 // on
 export const ON_ROOMS = "rooms";
 export const ON_ME_JOINING_ROOMS = "me-joining-rooms";
@@ -26,6 +28,7 @@ export const ON_USER_PROFILE_INFO = "user-profile-info";
 export const ON_GOT_MUTED_ROOMID = "got-muted_";
 export const ON_GOT_KICKED_ROOMID = "got-kicked_";
 export const ON_GOT_BANNED_ROOMID = "got-banned_";
+export const ON_GOT_INVITED_TO_GAME = "got-invited-to-game";
 export const ON_MY_BLOCK_LIST = "my-block-list";
 export const ON_CURRENT_ROOM_ROOMID = "current-room_";
 export const ON_VISIBLE_ROOMS = "visible_rooms";
@@ -48,6 +51,8 @@ export const ON_RESPONSE_GET_USERS = "Response-get-users";
 export const ON_RESPONSE_GET_USER_PROFILE = "Response-get-user-profile";
 
 export const ON_RESPONSE_OWNER_ROOM_EDIT = "Response-Owner-Room-edit";
+
+export const ON_RESPONSE_GAME_INVITE = "Responsse-Game-invite";
 
 // "get-users""current-users_${roomId}"
 // "Response-get-users"

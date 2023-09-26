@@ -1,4 +1,4 @@
-import { Frame, Input, Button } from "@react95/core";
+import { Frame, Input } from "@react95/core";
 import { useEffect } from "react";
 
 interface AvatarBlockProps {

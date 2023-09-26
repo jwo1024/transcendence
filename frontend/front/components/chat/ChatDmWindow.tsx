@@ -19,7 +19,6 @@ import {
   ON_MESSAGES_ROOMID,
   ON_CURRENT_ROOM_ROOMID,
   ON_MESSAGE_ADDED_ROOMID,
-  ON_CURRENT_USERS_ROOMID, // ?
   EMIT_ROOM_ENTER,
   ON_RESPONSE_ROOM_ENTER_ROOMID,
 } from "@/types/ChatSocketEventName";
@@ -49,7 +48,6 @@ const ChatDMWindow = ({
   const [notifyStr, setNotifyStr] = useState<string>("Loading");
   const { inputRef, sentMsgList, deleteSentMessage, handleFormSubmit } =
     useMessageForm({
-      blockIdList,
       simpRoomInfo,
       userInfo,
       socket,

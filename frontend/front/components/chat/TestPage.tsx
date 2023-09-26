@@ -1,5 +1,5 @@
 // Libraies
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { Button } from "@react95/core";
 // Components
 import Window from "../common/Window";

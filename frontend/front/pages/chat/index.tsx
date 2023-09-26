@@ -1,6 +1,5 @@
 // Libaraies
 import { useEffect, useState, useContext } from "react";
-import { useRouter } from "next/router";
 // Components
 import WaitingRoomWindow from "@/components/chat/WaitingRoomWindow";
 import ChatGroupWindow from "@/components/chat/ChatGroupWindow";
@@ -9,11 +8,13 @@ import ChatDmWindow from "@/components/chat/ChatDmWindow";
 import useChatRoomListReducer from "@/hooks/chat/useChatRoomListReducer";
 import ChatSocketContext from "@/context/ChatSocketContext";
 import { HandleChatOpenWindowContext } from "@/context/ChatOpenWindowContext";
-import { RoomCreateDTO, SimpRoomI, SimpUserI } from "@/types/ChatInfoType";
+import { SimpRoomI, SimpUserI } from "@/types/ChatInfoType";
 import { SocketContext } from "@/context/ChatSocketContext";
 import {
   ON_INVITE_TO_CHAT,
   ON_MY_BLOCK_LIST,
+  ON_GOT_INVITED_TO_GAME,
+  EMIT_REFUSE_GAME_INVITE,
 } from "@/types/ChatSocketEventName";
 
 const ChatPage = () => {
@@ -43,10 +44,6 @@ const ChatPage = () => {
       id: user.id,
       nickname: user.nickname,
     });
-  };
-
-  const routeErrorPage = () => {
-    // TODO
   };
 
   return (
@@ -118,19 +115,16 @@ interface ListenSocketBlockProps {
   children: React.ReactNode;
 }
 const ListenSocketBlock = ({
-  blockIdList,
   setBlockIdList,
   addOpenWindow,
   children,
 }: ListenSocketBlockProps) => {
   const socket = useContext(SocketContext);
-  const router = useRouter();
 
   useEffect(() => {
     // 초기 blockList 업데이트
     // 채팅방 초대
     // 게임 초대
-    //tmp block setBlockIdList([98069,]);
     socket?.on(ON_MY_BLOCK_LIST, (data) => {
       console.log("socket.on ON_MY_BLOCK_LIST", data);
       const blockList: number[] = data;
@@ -142,7 +136,16 @@ const ListenSocketBlock = ({
       if (confirm(`채팅방에 초대되셨습니다! 채팅방을 열까요?`))
         addOpenWindow({ roomData: roomData });
     });
-    // socket?.once()
+    socket?.on(ON_GOT_INVITED_TO_GAME, (data) => {
+      console.log("socket.on ON_GOT_INVITED_TO_GAME", data);
+      const user: SimpUserI = data;
+      if (
+        !confirm(
+          `[${user.nickname}]으로부터 게임에 초대되셨습니다! 게임을 열까요?`
+        )
+      )
+        socket.emit(EMIT_REFUSE_GAME_INVITE, { hostId: user.id });
+    });
     return () => {
       socket?.off(ON_MY_BLOCK_LIST);
       socket?.off(ON_INVITE_TO_CHAT);

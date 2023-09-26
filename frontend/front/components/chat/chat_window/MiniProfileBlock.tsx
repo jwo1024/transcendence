@@ -1,10 +1,7 @@
 // Libaries
-import { Fieldset, Button } from "@react95/core";
-import { useContext } from "react";
+import { Fieldset } from "@react95/core";
 // Types & Hooks & Contexts
 import type { UserI, SimpUserI } from "@/types/ChatInfoType";
-import InviteGameButton from "./InviteGameButton";
-import { SocketContext } from "@/context/ChatSocketContext";
 
 interface MiniProfileBlockProps {
   friendProfile: UserI;
@@ -12,9 +9,7 @@ interface MiniProfileBlockProps {
 }
 const MiniProfileBlock = ({
   friendProfile,
-  userInfo,
 }: MiniProfileBlockProps) => {
-  const socket = useContext(SocketContext);
 
   return (
     <Fieldset
