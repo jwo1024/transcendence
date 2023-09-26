@@ -2,3 +2,7 @@ db
 .DS_Store
 ./backend/node_modules
 ./frontend/node_modules
+./frontend/front/.env.local
+./backend/nest_project/.env
+./.env
+.env
