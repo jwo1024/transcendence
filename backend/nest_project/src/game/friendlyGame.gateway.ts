@@ -365,17 +365,17 @@ export class FriendlyGameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() userY: number,
   ) {
-    const player1 =
+    const player =
       await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id);
-    if (!player1) return;
-    const match = await this.matchService.getByPlayerId(player1.id);
-    // const opponent = await this.matchService.getOpponentByPlayerId(
-    //   match.match_id,
-    //   player.id,
-    // );
-    const opponent = await this.connectedFriendlyPlayerService.getPlayer(player1.guestId);
+    if (!player) return;
+    const match = await this.matchService.getByPlayerId(player.id);
+    const opponent = await this.matchService.getOpponentByPlayerIdFriend(
+      match.match_id,
+      player.id,
+    );
+    // const opponent = await this.connectedFriendlyPlayerService.getPlayer(player.guestId);
     //
-    const player = await this.connectedFriendlyPlayerService.getPlayer(opponent.hostId);
+    // const player = await this.connectedFriendlyPlayerService.getPlayer(opponent.hostId);
     const gameField = await this.getGameFieldByMatchId(match.match_id);
 
     if (userY < 0) {
