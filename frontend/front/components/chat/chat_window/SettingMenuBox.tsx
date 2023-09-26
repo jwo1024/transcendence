@@ -33,7 +33,7 @@ const SettingMenuBox = ({
   const socket = useContext(SocketContext);
   const [checkedPassword, setCheckedPassword] = useState<boolean>(false);
   const passInputRef = useRef<HTMLInputElement>(null);
-  const [roomType, setRoomType] = useState<roomType>(roomInfo.roomType);
+  const [roomType, setRoomType] = useState<roomType>("open");
 
   const handleCheckedPassword = () => {
     setCheckedPassword(!checkedPassword);
