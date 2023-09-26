@@ -15,5 +15,5 @@ export class SimpleProfileDto {
 	status : userStatus;
 	ladder: number;
 	wins: number;
-	loses: number;``
+	loses: number;
 }
