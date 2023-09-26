@@ -8,11 +8,11 @@ export class HistoryEntity
 	@PrimaryGeneratedColumn({type: 'integer'}) 
 	history_id: number;
 
-	@ManyToOne(() => UserProfile, (user) => user.id)
+	// @ManyToOne(() => UserProfile, (user) => user.id)
 	@Column({ type: 'integer', nullable: false })
 	win_user_id: number;
 
-	@ManyToOne(() => UserProfile, (user) => user.id)
+	// @ManyToOne(() => UserProfile, (user) => user.id)
 	@Column({ type: 'integer', nullable: false })
 	lose_user_id: number;
 
