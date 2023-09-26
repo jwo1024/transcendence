@@ -13,13 +13,13 @@ import { join } from 'path';
 import { UserEntity } from '../../chat/entities/user.entity';
 import { UserService } from '../../chat/services/user/user.service';
 import { TfaService } from '../tfa/tfa.service';
-
+const env = new ConfigService();
 @Module({
   imports: [TypeOrmModule.forFeature([UserProfile, UserEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: 'plzsaveus',
-      signOptions: { expiresIn: 60 * 60,}
+      secret: env.get<string>('JWT_SECRET'),
+      signOptions: { expiresIn: Number(env.get<string>('JWT_EXPIRES_IN')) }
     })],
   controllers: [AuthController],
   providers: [AuthService, ConfigService, ProfileService, JwtStrategy,UserService, TfaService],

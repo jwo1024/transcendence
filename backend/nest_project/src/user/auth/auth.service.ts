@@ -6,8 +6,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserProfile } from '../profile/user-profile.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class AuthService {

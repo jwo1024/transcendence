@@ -1,12 +1,14 @@
+import { ConfigService } from "@nestjs/config";
+const env = new ConfigService();
+
 export default {
     transport: {
-      host: 'smtp.gmail.com',
-      port: 587, // SMTP 포트 번호 (일반적으로 587 또는 465 사용)
+      host: env.get<string>('TFA_EMAIL_HOST'),//'smtp.gmail.com',
+      port: Number(env.get<string>('TFA_EMAIL_PORT')), // SMTP 포트 번호 (일반적으로 587 또는 465 사용)
       secure: false, // true이면 SSL을 사용
       auth: {
-        user: 'j7254913@gmail.com',
-        pass: 'tnejdimmcqnfdwbt',
+        user: env.get<string>('TFA_EMAIL_AUTH_USER'),
+        pass: env.get<string>('TFA_EMAIL_AUTH_PASS'),
       }
     }
 };
-// 여기도 전부 configService에서 가져다 쓰는 형태로 리팩토링 해야한다.
