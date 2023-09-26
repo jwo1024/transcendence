@@ -12,6 +12,7 @@ import { ConnectedPlayerEntity } from "src/game/entities/connectedPlayer.entity"
 import { MatchEntity } from "src/game/entities/match.entity";
 import { HistoryEntity } from "src/game/entities/history.entity";
 import { ConnectedFriendlyPlayerEntity } from "src/game/entities/connectedFriendlyPlayer.entity";
+import { InvitationEntity } from "src/game/entities/invitation.entity";
 
 export const typeORMConfig : TypeOrmModule = {
 	logging: {
@@ -45,6 +46,7 @@ export const typeORMConfig : TypeOrmModule = {
 				ConnectedFriendlyPlayerEntity,
 				MatchEntity,
 				HistoryEntity,
+				InvitationEntity,
 	],
 
 	synchronize: true
