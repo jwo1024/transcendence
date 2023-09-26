@@ -1,5 +1,4 @@
 import { Fieldset, Button, Input } from "@react95/core";
-import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 interface NickNameBlockProps {
@@ -11,7 +10,6 @@ const TwoFactorAuthentication = ({
   email,
   logonAndGoMenuPage,
 }: NickNameBlockProps) => {
-  const router = useRouter();
   const textFromEmail = useRef<HTMLInputElement>();
   // 0 = 미인증, 1 = 실패, 2 = 성공
   const [success, setSuccess] = useState<number>(0);

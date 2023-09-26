@@ -1,28 +1,18 @@
-import MiniProfile from "@/components/game/MiniProfile";
 import React, { useEffect, useState } from "react";
 import FriendList from "@/components/profile/FriendList";
-import Window from "@/components/common/Window";
-import { ThemeProvider, Button } from "@react95/core";
+import { Button } from "@react95/core";
 import MyProfile from "@/components/profile/MyProfile";
 import UserProfile from "@/components/profile/UserProfile";
-import { UserInfo } from "@/types/UserInfo";
-import sendAvatar from "@/components/common/sendAvatar";
-import { UserSessionStorage } from "@/types/SignUpType";
-// 임시 백엔드 타입용.
-type user = {
-  nickname: string;
-  state: string;
-  avatarSrc: string;
-  ladder: number;
-  win: number;
-  lose: number;
-};
+import { userOfList } from "@/types/UserInfo";
 
 export default function ProfilePage() {
   const [myProfile, setMyProfile] = useState(true);
   const [friendsProfile, setFriendsProfile] = useState(true);
   const [friendList, setFriendList] = useState(true);
   const [imageURL, setImageURL] = useState("https://github.com/React95.png");
+
+  // ??
+  console.log(imageURL);
 
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken");
@@ -52,15 +42,15 @@ export default function ProfilePage() {
     setFriendList((current) => !current);
   };
 
-  const [selectedFriend, setSelectedFriend] = useState<user>({
+  const [selectedFriend, setSelectedFriend] = useState<userOfList | null>({
+    id: 0,
+    status: "",
     nickname: "default",
-    state: "",
-    avatarSrc: "https://github.com/React95.png",
     ladder: 0,
-    win: 0,
-    lose: 0,
+    wins: 0,
+    loses: 0,
   });
-  const handleProfileClick = (friend: user) => {
+  const handleProfileClick = (friend: userOfList) => {
     setSelectedFriend(friend);
   };
 
@@ -70,7 +60,7 @@ export default function ProfilePage() {
         <div className="flex flex-col justify-between h-[626px]">
           {myProfile ? <MyProfile /> : null}
           {friendsProfile ? (
-            <UserProfile selectedFriend={selectedFriend} />
+            <UserProfile selectedFriend={selectedFriend!} />
           ) : null}
         </div>
         {friendList ? (

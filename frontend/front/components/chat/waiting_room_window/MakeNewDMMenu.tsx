@@ -1,5 +1,5 @@
 // Libraries
-import { use, useContext, useRef, useState, useEffect } from "react";
+import { useContext, useRef, useState, useEffect } from "react";
 import { Fieldset, Input, Button } from "@react95/core";
 // Components
 import MenuBoxLayout from "../common/MenuBoxLayout";
@@ -52,7 +52,8 @@ const MakeNewDMMenu = ({ userInfo }: MakeNewChatMenuBoxProps) => {
       else setErrorMsg(null);
     });
     socket?.emit(EMIT_DM_CREATE, { room: newRoom, userNickname: friendNick });
-   
+    if (friendNickRef.current?.value === undefined) return;
+    friendNickRef.current.value = "";
   };
 
   return (

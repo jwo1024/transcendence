@@ -27,7 +27,6 @@ interface SettingMenuBoxProps {
 
 // SettingMenuBox
 const SettingMenuBox = ({
-  confirmButtonName,
   roomInfo,
   isOwner,
 }: SettingMenuBoxProps) => {

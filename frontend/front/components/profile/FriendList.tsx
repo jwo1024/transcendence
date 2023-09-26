@@ -1,33 +1,16 @@
-import React, { useEffect, useState } from "react";
-import {
-  Frame,
-  ThemeProvider,
-  List,
-  Input,
-  Button,
-  Fieldset,
-} from "@react95/core";
-import { Fax } from "@react95/icons";
+import React, { useEffect, useState, useRef } from "react";
+import { List, Input, Button, Fieldset } from "@react95/core";
 import Window from "../common/Window";
-import Cookies from "js-cookie";
-import { access } from "fs";
-
-type user = {
-  id: number;
-  nickname: string;
-  status: string;
-  ladder: number;
-  wins: number;
-  loses: number;
-};
+import { userOfList } from "@/types/UserInfo";
 
 interface FriendListProps {
-  handleProfileClick: (friend: user) => void;
+  handleProfileClick: (friend: userOfList) => void;
 }
 
 const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
-  const [friendsList, setFriendsList] = useState<user[]>([]);
-  const [blockList, setBlockList] = useState<user[]>([]);
+  const [friendsList, setFriendsList] = useState<userOfList[]>([]);
+  const [blockList, setBlockList] = useState<userOfList[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchFriendList = () => {
     const token = sessionStorage.getItem("accessToken");
@@ -39,7 +22,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
         return res.json();
       })
       .then((data) => {
-        data.map((friend: user) => {
+        data.map((friend: userOfList) => {
           if (friend.status == "0") friend.status = "오프라인";
           else if (friend.status == "1") friend.status = "온라인";
           else if (friend.status == "2") friend.status = "게임중";
@@ -86,16 +69,26 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
 
   // request plus friend
 
-  const addFriendOrBlock = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onClickAddFriend = () => {
+    addFriendOrBlock("addFriendButton");
+  };
+
+  const onClickBlockUser = () => {
+    addFriendOrBlock("blockButton");
+  };
+
+  const addFriendOrBlock = (clickedButton: string) => {
+    // event.preventDefault();
     // 친구추가 버튼을 눌렀다면 clickedButton = "addFriendButton"
     // 차단하기 버튼을 눌렀다면 clickedButton = "blockButton"
     // submitter의 빨간줄은 무시해도됨. 브라우저에서 알아먹음
 
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
-    const clickedButton = event.nativeEvent.submitter.name;
-    const nickname = event.currentTarget[0].value;
+    // const clickedButton = event.nativeEvent.submitter.name;
+    // const nicknameInput = inputRef.current?.value;
+    const nickname = inputRef.current?.value;
+    console.log(clickedButton);
     if (nickname == "") return alert("비었잖아..");
 
     let urlSuffix = "/social";
@@ -122,7 +115,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
         console.log(err);
       });
   };
-  const handleFriendDeleteClick = (user: user) => {
+  const handleFriendDeleteClick = (user: userOfList) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
     fetch(`http://localhost:4000/social/friend/delete/${user.id}`, {
@@ -139,7 +132,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
       });
   };
 
-  const handleBlockDeleteClick = (user: user) => {
+  const handleBlockDeleteClick = (user: userOfList) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
     fetch(`http://localhost:4000/social/block/delete/${user.id}`, {
@@ -223,15 +216,15 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
       </div>
       <div className="flex items-center justify-between py-3 px-2 border-2 border-white">
         <form
-          onSubmit={addFriendOrBlock}
+          // onSubmit={addFriendOrBlock}
           className="flex flex-row w-full aitems-center justify-between"
         >
-          <Input className=" w-64" />
+          <Input className=" w-64" ref={inputRef} />
           {/* <Button onClick={addFriend}>친구추가</Button> */}
-          <Button className="w-20" name="addFriendButton">
+          <Button className="w-20" onClick={onClickAddFriend}>
             Add
           </Button>
-          <Button className="w-20" name="blockButton">
+          <Button className="w-20" onClick={onClickBlockUser}>
             Block
           </Button>
         </form>

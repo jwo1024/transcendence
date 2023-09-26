@@ -7,3 +7,12 @@ interface UserInfo {
 }
 
 export type { UserInfo };
+
+export interface userOfList {
+  id: number;
+  status: string;
+  nickname: string;
+  ladder: number;
+  wins: number;
+  loses: number;
+}

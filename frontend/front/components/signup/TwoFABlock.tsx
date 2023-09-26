@@ -1,18 +1,16 @@
 // Libraries
-import { useEffect, useState, useRef, use } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button, Input } from "@react95/core";
 import { isEmail } from "class-validator";
 // Components
 import CheckBox from "@/components/common/CheckBox";
 
 interface TwoFABlockProps {
-  twoFAEmail: string | undefined;
   setTwoFAEmail: React.Dispatch<React.SetStateAction<string | undefined>>;
   twoFAEmailValid: boolean;
   setTwoFAEmailValid: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const TwoFABlock = ({
-  twoFAEmail,
   setTwoFAEmail,
   twoFAEmailValid,
   setTwoFAEmailValid,

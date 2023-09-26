@@ -24,7 +24,6 @@ import {
   ON_MESSAGE_ADDED_ROOMID,
   ON_GOT_KICKED_ROOMID,
   ON_GOT_BANNED_ROOMID,
-  ON_CURRENT_USERS_ROOMID, // ?
   ON_GOT_MUTED_ROOMID,
   EMIT_ROOM_ENTER,
   ON_RESPONSE_ROOM_ENTER_ROOMID,
@@ -56,7 +55,6 @@ const ChatGroupWindow = ({
   const [notifyStr, setNotifyStr] = useState<string>("Loading");
   const { inputRef, sentMsgList, deleteSentMessage, handleFormSubmit } =
     useMessageForm({
-      blockIdList,
       simpRoomInfo,
       userInfo,
       socket,

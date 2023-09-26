@@ -41,13 +41,11 @@ interface useMessageFormProps {
   simpRoomInfo: SimpRoomI;
   userInfo: SimpUserI;
   socket: Socket | undefined;
-  blockIdList: number[];
 }
 const useMessageForm = ({
   simpRoomInfo,
   userInfo,
   socket,
-  blockIdList,
 }: useMessageFormProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [sentMsgList, dispatch] = useReducer(reducer, [] as SendMessageDTO[]);
@@ -58,7 +56,6 @@ const useMessageForm = ({
   };
 
   const handleSendMessage = () => {
-    // if (blockIdList.includes(simpRoomInfo.roomId)) return;
     const messageData: SendMessageDTO = {
       roomId: simpRoomInfo.roomId,
       userId: userInfo?.id || -1,
@@ -66,14 +63,14 @@ const useMessageForm = ({
     };
     if (messageData.text === "") return;
     dispatch({ type: "ADD", message: messageData });
-    // console.log("messageData", messageData);
     console.log("socket?.emit(EMIT_MESSAGE_ADD, messageData)", messageData);
     socket?.emit(EMIT_MESSAGE_ADD, messageData); // 보낼때
     resetInputMessage();
   };
 
   const resetInputMessage = () => {
-    inputRef.current!.value = "";
+    if (inputRef.current?.value === undefined) return;
+    inputRef.current.value = "";
   };
 
   const deleteSentMessage = (msg: RecvMessageDTO) => {

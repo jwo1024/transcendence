@@ -9,7 +9,6 @@ import type {
   RecvMessageDTO,
   SimpUserI,
 } from "@/types/ChatInfoType";
-import { data } from "autoprefixer";
 
 interface MessageBoxProps {
   messageList: RecvMessageDTO[];

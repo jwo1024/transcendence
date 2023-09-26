@@ -66,6 +66,8 @@ const MakeNewChatMenu = () => {
         else setErrorMsg(null);
       });
     }
+    if (titleRef.current?.value === undefined) return;
+    titleRef.current.value = "";
   };
 
   return (

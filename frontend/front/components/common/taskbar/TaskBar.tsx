@@ -39,8 +39,8 @@ const TaskBar = ({ currentPage }: { currentPage: string }) => {
     if (key !== -1) updatedTaskLists[key].active = true;
     setTaskLists(updatedTaskLists);
     setActiveTaskButton(key);
-    // console.log("key : ", key);
-    // console.log(activeTaskButton);
+
+    console.log(activeTaskButton);
   };
 
   return (
