@@ -54,6 +54,11 @@ export interface RoomInviteDTO {
   roomId: number;
 }
 
+export interface RoomleaveDTO {
+  roomId: number;
+}
+
+
 // MessageDTO
 // - RecvMessageDTO : MessageI
 export interface RecvMessageDTO {
