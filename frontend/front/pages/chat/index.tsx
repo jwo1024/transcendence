@@ -135,8 +135,8 @@ const ListenSocketBlock = ({
     socket?.on(ON_INVITE_TO_CHAT, (data) => {
       console.log("socket.on ON_INVITE_TO_CHAT", data);
       const roomData: SimpRoomI = data;
-      if (confirm(`채팅방에 초대되셨습니다! 채팅방을 열까요?`))
-        addOpenWindow({ roomData: roomData });
+      alert(`채팅방에 초대되셨습니다!`);
+      addOpenWindow({ roomData: roomData });
     });
     socket?.on(ON_GOT_INVITED_TO_GAME, (data) => {
       console.log("socket.on ON_GOT_INVITED_TO_GAME", data);

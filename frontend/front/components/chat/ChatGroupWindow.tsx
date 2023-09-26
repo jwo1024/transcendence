@@ -202,7 +202,7 @@ const ChatGroupWindow = ({
               className="w-full h-full "
               placeholder="Hello, my friend !"
               ref={inputRef}
-              disabled={timeStr !== ""}
+              disabled={roomInfo === undefined || timeStr !== ""}
             />
             <Button disabled={timeStr !== ""}>send</Button>
           </form>
