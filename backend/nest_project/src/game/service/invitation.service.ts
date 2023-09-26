@@ -20,7 +20,7 @@ export class InvitationService {
 		// @InjectRepository(MatchEntity) private matchRepository: Repository<MatchEntity>,
 		// @InjectRepository(UserProfile) private userProfileRepository: Repository<UserProfile>,
 		// @InjectRepository(ConnectedPlayerEntity) private connectedPlayerRepository: Repository<ConnectedPlayerEntity>,
-		// @InjectRepository(ConnectedFriendlyPlayerEntity) private connectedFriendlyPlayerRepository: Repository<ConnectedFriendlyPlayerEntity>,
+		@InjectRepository(ConnectedFriendlyPlayerEntity) private connectedFriendlyPlayerRepository: Repository<ConnectedFriendlyPlayerEntity>,
 		// private dataSource: DataSource,
 		// private connectedPlayerService: ConnectedPlayerService,
 		// private connectedFriendlyPlayerService: ConnectedFriendlyPlayerService,
@@ -85,7 +85,8 @@ export class InvitationService {
 		// 	return null;
 		player.hostId =  invitation.host_id;
 		player.guestId = invitation.guest_id;
-		return player;
+		const temp = await this.connectedFriendlyPlayerRepository.save(player);
+		return temp;
 	}
 
 	async deleteByHostId(id: number)

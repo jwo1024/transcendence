@@ -225,7 +225,8 @@ export class FriendlyGameGateway
     this.logger.log(
       `acceptGame : [ ${guest.id} ] 는 같이 게임하고 싶어서 들어왔어`,
     );
-    await this.server.to(guest.socketId).emit('guestArrive', (check) => {
+    // 초대 디비에 수락 여부 요소를 만든다 -> 여기서 수락 여부를 트루로 바꿔준다 -> 호스트는 이걸 계속 감지하고 있다가 시작해라
+    this.server.to(guest.socketId).emit('guestArrive', (check) => {
       this.logger.log(
         `acceptGame ok! : [ ${check} ] 프론트한테 알려주고 왔어!`,
       );
@@ -237,6 +238,9 @@ export class FriendlyGameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() gameType: string,
   ) {
+    this.logger.log(
+      `setGame : ${socket.id} 는 ${gameType} 으로 초대에 응하겠어!`,
+    );
     const host = await this.connectedFriendlyPlayerService.getHostbySocketId(
       socket.id,
     );
@@ -247,16 +251,23 @@ export class FriendlyGameGateway
       this.endPlayer(socket.id, guest.id);
       return;
     }
+    this.logger.log(
+      `setGame : 내가 이 구역의 호스트 ${host.id}고 넌 게스트 ${guest.id}야.`,
+    );
     const currentMatch = await this.matchService.createCustom(
       host.id,
+      // guest.hostId,
       guest.id,
       gameType,
+    );
+    this.logger.log(
+      `setGame : 게임하고 싶은데 ${currentMatch}가 만들어졌을까..`,
     );
     if (!currentMatch) {
       this.endPlayer(socket.id, guest.id);
       return;
     }
-    clearInterval(host.checkTimer);
+    // clearInterval(host.checkTimer);
     this.logger.log(
       `setGame : match ${currentMatch.match_id} will soon start!`,
     );
@@ -264,6 +275,7 @@ export class FriendlyGameGateway
   }
 
   async startGame(match: MatchEntity) {
+    try {
     const player1 = await this.connectedFriendlyPlayerService.getPlayer(
       match.playerLeft,
     );
@@ -336,6 +348,9 @@ export class FriendlyGameGateway
     gameField.gameTimer = setInterval(() => {
       this.playGame(this.server, match, player1, player2, gameField);
     }, 20);
+  } catch (error) {
+    this.logger.error(`startGame : ${error.message}`);
+  }
   }
 
   private async getGameFieldByMatchId(match_id: number) {
@@ -350,14 +365,17 @@ export class FriendlyGameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() userY: number,
   ) {
-    const player =
+    const player1 =
       await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id);
-    if (!player) return;
-    const match = await this.matchService.getByPlayerId(player.id);
-    const opponent = await this.matchService.getOpponentByPlayerId(
-      match.match_id,
-      player.id,
-    );
+    if (!player1) return;
+    const match = await this.matchService.getByPlayerId(player1.id);
+    // const opponent = await this.matchService.getOpponentByPlayerId(
+    //   match.match_id,
+    //   player.id,
+    // );
+    const opponent = await this.connectedFriendlyPlayerService.getPlayer(player1.guestId);
+    //
+    const player = await this.connectedFriendlyPlayerService.getPlayer(opponent.hostId);
     const gameField = await this.getGameFieldByMatchId(match.match_id);
 
     if (userY < 0) {
@@ -371,6 +389,8 @@ export class FriendlyGameGateway
       rightY: gameField.paddleRightY,
     };
 
+    this.logger.log(`제대로 가고 잇니,, ${player.id} : ${player.socketId}`);
+    this.logger.log(`제대로 가고 잇니,, ${opponent.id} : ${opponent.socketId}`);
     if (match.playerLeft === player.id) {
       gameField.paddleLeftY = userY;
       this.server.to(player.socketId).emit('paddleMove', data);

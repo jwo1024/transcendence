@@ -338,7 +338,6 @@ export class LadderGameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() userY: number,
   ) {
-    try {
       const player = await this.connectedPlayerService.getPlayerBySocketId(
         socket.id,
       );
@@ -349,10 +348,6 @@ export class LadderGameGateway
         player.id,
       );
       const gameField = await this.getGameFieldByMatchId(match.match_id);
-
-      // let gameField = gameFieldMap.get(match.match_id);
-
-      // console.log(`match_id is ${match.match_id}, MapSize ${gameFieldMap.size} ,movePlayer : ${gameField}`);
 
       if (userY < 0) {
         userY = 0;
@@ -374,9 +369,6 @@ export class LadderGameGateway
         this.server.to(player.socketId).emit('paddleMove', data);
         this.server.to(opponent.socketId).emit('paddleMove', data);
       }
-    } catch (error) {
-      tryCatchLogger.error(`movePlayer : ${error.message}`);
-    }
   }
 
   private async updateProfile(

@@ -138,10 +138,8 @@ export default function GamePage() {
     });
 
     socket.on("guestArrive", (callback) => {
-      console.log("손님 왔는데 받아라~"); 
-      useEffect(() => {
-        setIsInvited(true);
-      }, []);
+      console.log("손님 왔는데 받아라~");
+      setIsInvited(true);
       callback("ok");
     });
 
