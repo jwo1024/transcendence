@@ -283,6 +283,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomInvite: RoomInviteDTO) 
   {
+    this.logger.log(`input room : ${roomInvite.roomId}`);
+    this.logger.log(`input nickname : ${roomInvite.targetUserNickname}`);
     const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
     if(targetProfile === null || targetProfile === undefined)
     {
@@ -317,8 +319,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // const tempEntity = await this.userService.getOne(targetProfile.id);
     // const targetEntity = await this.userService.getOneUSerWithRoomsAndConnections(targetUserId);
     // const  = await this.userService.getOneUSerWithRoomsAndConnections(targetUserId);
-    this.logger.log(`target : ${targetEntity}`);
-    this.logger.log(`target : ${targetEntity.connections}`);
+    // this.logger.log(`target : ${targetEntity}`);
+    // this.logger.log(`target : ${targetEntity.connections}`);
     this.logger.log(`!!!!!!!!!!!!target : ${targetEntity.id}`);
     const connection = await this.connectedUserService.findOnebyUserId(targetEntity.id);
     // const connection = targetEntity.connections;
@@ -591,23 +593,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket, 
     @MessageBody() rooml : RoomleaveDTO) 
   {
-            // const roomToleave = await this.roomService.getRoom(rooml.roomId);
-            // this.logger.log(`roomId : ${rooml.roomId}`);
-            // this.logger.log(`roomToleave${roomToleave.roomName}`);
-            // if (!roomToleave)
-            // {
-            //   this.emitErrorEvent(socket.id, "Response-Room-leave", "this room is not existed now");
-            //   return ;
-            // }
-            // const targetId = socket.data.userId;
-            // const targetUserI = await this.userService.getOneUSerWithRoomsAndConnections(targetId);
-            // if (targetUserI === undefined)
-            // {
-            //   this.emitErrorEvent(socket.id, "Response-Room-leave", "not found user");
-            //   return ;
-            // }
-            // this.roomService.removeUserFromRoom(targetUserI, socket.id, roomToleave.roomId);
-
     const roomId = rooml.roomId;
     const roomToleave = await this.roomService.getRoom(roomId);
     if (!roomToleave)
@@ -616,9 +601,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return ;
     }
     const userId = socket.data.userId;
-    // this.logger.log(`userId : ${userId}`);
     const userProfile = await this.profileService.getUserProfileById(userId);
-    // this.logger.log(`userProfile : ${userProfile}`);
     if (!userProfile)
     {
       this.emitErrorEvent(socket.id,"Response-Room-leave", "not found user");
@@ -629,10 +612,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const userChat = await this.userService.getOneUSerWithRoomsAndConnections(userId);
 
     //나갈 유저 제거
-    this.roomService.removeUserFromRoom(userChat, socket.id, roomToleave.roomId);
-    // this.roomService.removeUserFromRoom(userChat, socket.id, roomId);
-    roomToleave.users = roomToleave.users.filter(user => user.id !== userId);
-    await this.connectedUserService.removeByUserIdAndRoomId(userId, roomId);
+    await this.roomService.removeUserFromRoom(userChat, socket.id, roomToleave.roomId);
+    // roomToleave.users = roomToleave.users.filter(user => user.id !== userId);
+    // await this.connectedUserService.removeByUserIdAndRoomId(userId, roomId);
     
     this.emitResponseEventWithNumber(socket.id, "Response-Room-leave", rooml.roomId);
     this.emitJoiningRoomsToOneUser(socket.data.userId, socket.id);
@@ -643,7 +625,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.logger.log(AfterRoom.users);
     if (AfterRoom.users === undefined || AfterRoom.users.length === 0)
     {
-      this.logger.log(`delete!!!!!!!!!!!!!!!!!!!`);
       await this.deleteRoom(roomId);
       await this.emitUserJoingingRooms(socket.id, await (this.userService.getOneUSerWithRoomsAndConnections(userId)));
       await this.emitRoomsToAllConnectedUser();
@@ -657,7 +638,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.emitResponseEventWithNumber(socket.id, "Response-Room-leave", roomId);
     this.emitNotice(roomToleave, `[${userNickname}]님이 방을 나갔습니다!`);
     this.emitOneRoomToUsersInRoom(roomToleave.roomId);
-    // this.emitUserJoingingRooms(socket.id, await (this.userService.getOne(userId)));
     this.emitRoomsToAllConnectedUser();
   }
   
@@ -843,6 +823,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
       const joiningrooms = (await this.userService.getUserWithrooms(user.id)).rooms;
       // const joiningrooms = user.rooms;
+      this.logger.log(`join : ${joiningrooms}`);
+      // this.logger.log(`join : ${joiningrooms.length}`);
       await this.server.to(socketId).emit( 'me-joining-rooms', 
         await this.roomMapper.Create_simpleDTOArrays(joiningrooms));
   }
