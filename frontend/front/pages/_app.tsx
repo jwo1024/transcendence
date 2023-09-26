@@ -17,13 +17,19 @@ export default function App({ Component, pageProps }: AppProps) {
       window.location.pathname !== "/" &&
       window.location.pathname !== "/signup"
     ) {
+      const token = sessionStorage.getItem("accessToken");
       fetch(`${backendUrl}/auth/validity`, {
         headers: {
-          authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+          authorization: `Bearer ${token}`,
         },
       })
         .then((res) => {
           if (res.status === 401) {
+            fetch(`${backendUrl}/auth/logoff`, {
+              headers: {
+                authorization: `Bearer ${token}`
+            }
+          });
             window.location.href = "/";
           }
         })

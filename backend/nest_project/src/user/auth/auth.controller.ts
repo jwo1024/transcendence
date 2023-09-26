@@ -90,14 +90,14 @@ export class AuthController {
     if (!user)
       throw new Error('user not found');
     else { 
-      if (user.status !== userStatus.inChat && user.status !== userStatus.inGame) {
+      if (user.status !== userStatus.inGame) {
         AuthService.setSession(userId, accessToken);
         await this.profileService.logOn(userId);
         const { id, nickname, status, ladder, wins, loses } = user;
         return res.send({ id, nickname, status, ladder, wins, loses });
       }
       else {
-        console.log('user is already in chat or game');
+        console.log('user is already in game');
         res.redirect(`http://localhost:3001/`);
       }
     } 
