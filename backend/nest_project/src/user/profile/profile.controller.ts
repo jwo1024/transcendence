@@ -26,18 +26,23 @@ export class ProfileController {
     
     @Get('/id/:id')
     getUserProfileById(@Param('id') id : number): Promise<UserProfile> {
+        if (id == null || id === undefined)
+            throw new BadRequestException('invalid id');
         return this.profileService.getUserProfileById(id);
     }
 
     @Get('/nickname/:nickname')
     getUserProfileByNickname(@Param('nickname') nickname : string): Promise<UserProfile> {
+        if (nickname == null || nickname === undefined)
+            throw new BadRequestException('invalid id');
         return this.profileService.getUserProfileByNickname(nickname);
     }
     
     @Post('/rename')
     async renameUserProfile(@Req() req, @Res() res, @Body() body) {
+        if (!body || !body.rename)
+            return res.status(400).send('invalid nickname');
         const rename = body.rename;
-        if (!rename || rename === undefined) return res.status(400).send('invalid nickname');
         const renamed = await this.profileService.getUserProfileByNickname(rename);
         if (renamed != null) return res.status(409).send('nickname already exists');
         const user = await this.profileService.getUserProfileById(req.user.userId);
@@ -48,11 +53,15 @@ export class ProfileController {
 
     @Post('/update/id/:id')
     updateUserProfileById(@Param('id') id : number, @Body() updateDto: any) {
+        if (!id || !updateDto)
+            throw new BadRequestException('BadReqeustException');
         return this.profileService.updateUserProfileById(id, updateDto);
     }
     
     @Post('/update/nickname/:nickname')
     updateUserProfileByNickname(@Param('nickname') nickname : string, @Body() updateDto: any) {
+        if (!nickname || !updateDto)
+            throw new BadRequestException('BadReqeustException');
         return this.profileService.updateUserProfileByNickname(nickname, updateDto);
     }
         
@@ -74,6 +83,8 @@ export class ProfileController {
 
     @Get('image/:id')
     async getMyImage(@Req() req, @Res() res, @Param('id') id : number) {
+        if (!id)
+            throw new BadRequestException('invalid id');
         console.log('id : ', id);
         const user = await this.profileService.getUserProfileById(id);
         if (!user)
@@ -103,8 +114,8 @@ export class ProfileController {
    @Post('/signup')
    async signUp(@Req() req, @Res() res, @Body() signUpDto: SignupDto) { 
     const requserId = req.user.userId;
-    if (requserId != signUpDto.id)
-        throw new Error('invalid user id');
+    if (!signUpDto || requserId != signUpDto.id)
+        throw new Error('invalid input');
     const result = await this.profileService.getUserProfileById(requserId);
     if (result) {
         console.log('[409 Exception]user(', requserId, ') already exists');

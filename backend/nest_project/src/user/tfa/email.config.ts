@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-config({ path: './.tfaconf' });
+config({ path: '.env' });
 
 export default {
     transport: {
