@@ -164,23 +164,6 @@ export class RoomService {
     await this.connectedService.removeByUserIdAndRoomId(userId, roomId);
   }
 
-  // async deleteRoomById(user: UserI, socketId : string, roomId: number) {
-  //   // 1. 방(RoomEntity)을 찾습니다.
-  //   const room = await this.roomRepository.findOne({where: {roomId}});
-
-  //   if (!room)
-  //     return;
-
-  //   // 2. 방(RoomEntity)과 연결된 사용자(UserEntity)의 rooms 배열에서 해당 방(RoomEntity)을 삭제합니다.
-  //   // 이때, TypeORM에서는 자동으로 연관 관계가 해제됩니다.
-  //   for (const user of room.users) {
-  //     user.rooms = user.rooms.filter((userRoom) => userRoom.roomId !== roomId);
-  //   }
-
-  //   // 3. 방(RoomEntity)을 삭제합니다.
-  //   await this.roomRepository.remove(room);
-  // }
-
   async getAllRooms(): Promise<RoomI[]> {
     return await this.roomRepository.find();
   }
@@ -295,10 +278,11 @@ export class RoomService {
 
   async addUserToBanList( adminDto : AdminRelatedDTO) : Promise<RoomI> 
   {
-    const editedRoom = await this.getRoom(adminDto.roomId);
-    if (editedRoom.roomBanned.find(target => target === adminDto.targetUserId))
-      return this.getRoom(adminDto.roomId); //이미 ban 처리 되어있다면 업데이트 없이 무시
+    const editedRoom = await this.getRoomEntityWithCUM(adminDto.roomId);
+    if (editedRoom.roomBanned.find(target => target === adminDto.targetUserId) != undefined)
+      return null; //이미 ban 처리 되어있다면 업데이트 없이 무시
     editedRoom.roomBanned.push(adminDto.targetUserId);
+
     return this.roomRepository.save(editedRoom);
   }
 

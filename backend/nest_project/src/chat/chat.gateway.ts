@@ -833,34 +833,67 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitRoomsToAllConnectedUser();
     }
 
+
     @SubscribeMessage('Admin-Ban')
     async onBanSomeone(
       @ConnectedSocket() socket: Socket,
       @MessageBody() adminDto: AdminRelatedDTO
     )
     {
+      // this.logger.log(`BBBBBBBBBAAAAAAAAANNNNN!!!`);
+      // return ;
       if (await this.onAdminMethods(adminDto.roomId, socket.data.userId, adminDto.targetUserId) === false)
       {
         this.emitErrorEvent(socket.id, "Response-Admin-Ban", "You're not allowed to do that");
         return ;
       }
+      // this.logger.log(`dfsdfsdfsdsf`);
       
       // target을 현재 방의 banlist에 추가
       const updatedRoom = await this.roomService.addUserToBanList(adminDto);
+      if (updatedRoom === null)
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-Ban", "Ther user is already banned");
+        // this.logger.log(`dddddd@@@@@@@@@@@@@@@@@@@@`);
+        return ;
+
+      }
+      // this.logger.log(`dddddd!!!!!!!!!!!!!!!!!!!`);
 
        //퇴장처리(onLeaveRoom과 겹치는 부분 리팩토링시 함수로 빼기)
-       const roomToleave = await this.roomService.getRoom(adminDto.roomId);
+       const roomToleave = await this.roomService.getRoomEntityWithCUM(adminDto.roomId);
        if (!roomToleave)
        {
+        // this.logger.log(`dddddd@@@@@@@@@@@@@@@@@@@@`);
         this.emitErrorEvent(socket.id, "Response-Admin-Ban", "the room is not exist any more");
         return ;
        }
-       const targetId = adminDto.targetUserId;
-      //  this.joinedRoomService.deleteBySocketId(socket.id);
-      //  this.connectedUserService.
-      this.connectedUserService.deleteByUserIdAndRoomId(targetId , adminDto.roomId)
-      this.roomService.deleteUserRoomRelationship(targetId, adminDto.roomId);
+       const targetUserI = await this.userService.getOneUSerWithRoomsAndConnections(adminDto.targetUserId);
+       if (targetUserI === undefined)
+       {
+        // this.logger.log(`dddddd@@@@@@@@@@@@@@@@@@@@`);
+         this.emitErrorEvent(socket.id, "Response-Admin-Ban", "not found user");
+         return ;
+        }
+      if (roomToleave.users.find(finding => finding.id === targetId ) === undefined)
+      {
+        // this.logger.log(`dddddd@@@@@@@@@@@@@@@@`);
+        this.emitErrorEvent(socket.id, "Response-Admin-Ban", "the user is not in the room");
+        return ;
+      }
+        this.roomService.removeUserFromRoom(targetUserI, socket.id, roomToleave.roomId);
+        const targetId = adminDto.targetUserId;
 
+        const targetSocket = await this.connectedUserService.findOnebyUserId(targetId);
+        if (targetSocket !== undefined)
+        {
+          //쫓겨난 사람에게 새로 방정보 제공 --> 현재 접속한 경우에만.
+          this.server.to(targetSocket.socketId).emit(`got-banned_${roomToleave.roomId}`);
+          
+          this.emitJoiningRoomsToOneUser(targetId, targetSocket.socketId);
+          this.emitRoomsToOneUser(targetSocket.socketId);
+        }
+        
       const targetUserNickname = (await this.profileService.getUserProfileById(targetId)).nickname;
 
        //현재 방 유저에게 현재 방 정보 제공
