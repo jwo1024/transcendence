@@ -283,7 +283,7 @@ export class RoomService {
     else
       editedRoom.roomPass = this.hashPassword(newData.roomPass);
     
-    return  this.roomRepository.save(editedRoom);
+    return  (await this.roomRepository.save(editedRoom));
   }
 
   async addUserToBanList( adminDto : AdminRelatedDTO) : Promise<RoomI> 

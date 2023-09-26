@@ -26,7 +26,7 @@ export class MessageService {
     {
       const newMessage 
         = await this.messageMapper.Create_dtoToEntity(messageDto, userId); 
-      return this.messageRepository.save(this.messageRepository.create(newMessage));
+      return await this.messageRepository.save(this.messageRepository.create(newMessage));
     }
     
     async findMessagesForRoom(room: RoomI): Promise<MessageI[]> 

@@ -167,7 +167,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
     // 유저를 방에 추가 시킴 
-    if (this.roomService.addUserToRoom(socket.data.userId, createdRoom.roomId, socket.id) === null)
+    if (await this.roomService.addUserToRoom(socket.data.userId, createdRoom.roomId, socket.id) === null)
     {
       this.emitErrorEvent(socket.id, "Response-Room-create", "failed to join the room");
       return ;
@@ -630,7 +630,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       = await this.messageService.create(messageDTO, socket.data.userId);
 
     const connetedUsers = room.connections;
-    if (connetedUsers === undefined)
+    if (connetedUsers === undefined || connetedUsers === null)
     {
       //현재 실시간으로 받을 유저들이 없을 뿐, 데이터 베이스에 해당 메세지는 저장 되었다.
       this.emitResponseEvent(socket.id, "Response-Message-add");
@@ -640,11 +640,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     // 현재 방에 소켓 연결된 사람들에게 메세지 전달
     const currentRoomId = room.roomId;
     this.logger.log( `connetedUsers : ${connetedUsers.length}`);
+    await this.messageMapper.Create_entityToSimpleDto(createdMessage, currentRoomId);
     for(const user of connetedUsers) 
     {
       this.emitResponseEvent(socket.id, "Response-Message-add");
-      const temp = await this.messageMapper.Create_entityToSimpleDto(createdMessage, currentRoomId);
-      // this.logger.log(`temp : ${temp.text}`);
       this.server.to(user.socketId).emit(
         `messageAdded_${currentRoomId}`,
          await this.messageMapper.Create_entityToSimpleDto(createdMessage, currentRoomId));
