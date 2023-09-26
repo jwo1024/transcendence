@@ -102,6 +102,17 @@ export class LadderGameGateway
       // 클라이언트에서 이벤트 인지하면 menu로 리다이렉션
     }
 
+    // todo: temp code
+    // const temp = await this.connectedPlayerService.getPlayer(userProfile.id);
+    // if (temp)
+    // {
+    //   this.connectedPlayerService.updateSocketId(temp, socket.id);
+    //   this.profileService.ingame(userId);
+    //   ladderQueue.push(temp);
+    //   this.logger.log(`reconnected current Player : ${temp.id}, ${temp.socketId}`);
+    //   return ;
+    // }
+
     const current = await this.connectedPlayerService.createPlayer(
       userId,
       socket.id,

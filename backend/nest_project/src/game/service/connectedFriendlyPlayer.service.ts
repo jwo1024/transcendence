@@ -74,6 +74,11 @@ export class ConnectedFriendlyPlayerService {
 
 	async isHostPlayer(player: FriendlyPlayer): Promise<boolean>
 	{
+		if (!player)
+		{
+			console.log(`${player} no player but check,,?`);
+			return false;
+		}
 		if (player.id === player.hostId)
 			return true;
 		else
@@ -82,6 +87,11 @@ export class ConnectedFriendlyPlayerService {
 
 	async isGuestPlayer(player: FriendlyPlayer): Promise<boolean>
 	{
+		if (!player)
+		{
+			console.log(`${player} no player but check,,?`);
+			return false;
+		}
 		if (player.id === player.guestId)
 			return true;
 		else

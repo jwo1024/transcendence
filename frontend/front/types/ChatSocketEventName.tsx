@@ -52,7 +52,7 @@ export const ON_RESPONSE_GET_USER_PROFILE = "Response-get-user-profile";
 
 export const ON_RESPONSE_OWNER_ROOM_EDIT = "Response-Owner-Room-edit";
 
-export const ON_RESPONSE_GAME_INVITE = "Responsse-Game-invite";
+export const ON_RESPONSE_GAME_INVITE = "Response-Game-invite";
 
 // "get-users""current-users_${roomId}"
 // "Response-get-users"

@@ -42,7 +42,7 @@ const UserListMenuBox = ({
   roomInfo,
   isAdmin,
 }: UserListMenuBoxProps) => {
-  const userList: SimpUserI[] = roomInfo?.users || [];
+  const [userList, setUserList] = useState<SimpUserI[]>(roomInfo?.users || []);
   const socket = useRef(useContext(SocketContext)); // TODO : check 렌더링 소켓... !
   const inviteNickRef = useRef<HTMLInputElement>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -62,6 +62,10 @@ const UserListMenuBox = ({
       socket.current?.off(ON_USER_PROFILE_INFO);
     };
   }, []);
+
+  useEffect(() => {
+    if (roomInfo.users) setUserList(roomInfo?.users || []);
+  }, [roomInfo]);
 
   const handleClickKick = () => {
     emitAdminEvent(EMIT_ADMIN_KICK, ON_RESPONSE_ADMIN_KICK, "Kick");

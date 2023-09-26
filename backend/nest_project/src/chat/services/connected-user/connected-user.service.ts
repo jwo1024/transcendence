@@ -30,6 +30,13 @@ export class ConnectedUserService {
     }); 
   }
 
+  async deleteAllbyUserId(userId : number) {
+    // return this.connectedUserRepository.find({
+    //   where : { user: {id : userId}}
+    // }); 
+    await this.connectedUserRepository.delete({ user: { id: userId }});
+  }
+
   async createfast(socketId : string, user: UserI, room : RoomEntity): Promise<ConnectedUserI> {
     this.logger.log(`user : ${user.id}`);
     return this.connectedUserRepository.save({socketId, user, room });

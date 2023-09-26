@@ -185,7 +185,7 @@ export class FriendlyGameGateway
       this.logger.log(
         `endPlayer : [ ${player_id} ] 이제 갈거니까 초대 디비도 삭제할게~`,
       );
-      this.invitationSercive.deleteByHostId(player_id);
+      await this.invitationSercive.deleteByHostId(player_id);
     }
     this.server.in(socket_id).disconnectSockets(true);
     this.logger.log(
@@ -225,7 +225,11 @@ export class FriendlyGameGateway
     this.logger.log(
       `acceptGame : [ ${guest.id} ] 는 같이 게임하고 싶어서 들어왔어`,
     );
-    this.server.to(guest.socketId).emit('guestArrive');
+    await this.server.to(guest.socketId).emit('guestArrive', (check) => {
+      this.logger.log(
+        `acceptGame ok! : [ ${check} ] 프론트한테 알려주고 왔어!`,
+      );
+    });
   }
 
   @SubscribeMessage('chooseGameType')

@@ -26,8 +26,8 @@ export class ProfileService {
     
     }
 
-    async logOn(id: number): Promise<void> {
-        await this.userProfileRepository.update({id: id}, {status: userStatus.online});
+    async logOn(id: number): Promise<any> {
+        return await this.userProfileRepository.update({id: id}, {status: userStatus.online});
     }
     
     async logOff(id: number): Promise<void> {

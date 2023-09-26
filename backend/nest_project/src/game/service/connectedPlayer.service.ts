@@ -22,12 +22,10 @@ export class ConnectedPlayerService {
 		return this.connectedPlayerRepository.save({id : id, socketId: socketId});
 	}
 
-	//
 	async getPlayer(id: number): Promise<ConnectedPlayerEntity>
 	{
 		return this.connectedPlayerRepository.findOne({
 			where: { "id": id }
-			// relations: ['user'] // user 데이터베이스 연결되면 처리
 		});
 	}
 
@@ -37,6 +35,13 @@ export class ConnectedPlayerService {
 			where: { "socketId": socketId }
 		});
 	}
+
+	// todo: temp code
+	// async updateSocketId(player: ConnectedPlayerEntity, socket_id: string): Promise<ConnectedPlayerEntity>
+	// {
+	// 	player.socketId = socket_id;
+	// 	return player;
+	// }
 
 	async getSocketIdById(id: number): Promise<string>
 	{
