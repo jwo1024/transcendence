@@ -628,6 +628,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   } 
 
+  private async emitRoomsToOneUser(socketId : string)
+  {
+      const rooms = await this.roomService.getRoomsByType(['open']); //roomType이 DM, private 이 아닌 애들만.
+      await this.server.to(socketId).emit('rooms', rooms);
+  } 
+
   private async emitOneRoomToUsersInRoom(roomId : number)
   {
     const room: RoomI 
@@ -696,6 +702,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       await this.server.to(connection.socketId).emit(
         'me-joining-rooms', joiningrooms);
     }
+  }
+
+  private async emitJoiningRoomsToOneUser(userId: number,socketId : string)
+  {
+      const joiningrooms = await this.roomMapper.Create_simpleDTOArrays((await this.userService.getUserWithrooms(userId)).rooms);
+      await this.server.to(socketId).emit('me-joining-rooms', joiningrooms);
   }
 
   private async emitUserJoingingRooms(socketId : string, user : UserI)
@@ -790,15 +802,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         return ;
       }
       const targetId = adminDto.targetUserId;
-
-      this.connectedUserService.deleteByUserIdAndRoomId(targetId , adminDto.roomId);
-      this.roomService.deleteUserRoomRelationship(targetId, adminDto.roomId);
+      const targetUserI = await this.userService.getOneUSerWithRoomsAndConnections(adminDto.targetUserId);
+      if (targetUserI === undefined)
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-kick", "not found user");
+        return ;
+      }
+      if (roomToleave.users.find(finding => finding.id === targetId ) === undefined)
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-kick", "the user is not in the room");
+        return ;
+      }
+      this.roomService.removeUserFromRoom(targetUserI, socket.id, roomToleave.roomId);
+      const targetSocket = await this.connectedUserService.findOnebyUserId(targetId);
+      if(targetSocket !== undefined)
+      {
+        //쫓겨난 사람에게 새로 방정보 제공 --> 현재 접속한 경우에만.
+        this.server.to(targetSocket.socketId).emit(`got-kicked_${roomToleave.roomId}`);
+  
+        this.emitJoiningRoomsToOneUser(targetId, targetSocket.socketId);
+        this.emitRoomsToOneUser(targetSocket.socketId);
+      }
 
       const targetUserNickname = (await this.profileService.getUserProfileById(targetId)).nickname;
       //현재 방 유저에게 현재 방 정보 제공
       this.emitResponseEvent(socket.id, "Response-Admin-kick");
       this.emitOneRoomToUsersInRoom(adminDto.roomId);
       this.emitNotice(roomToleave, `${targetUserNickname}님이 kick 당했습니다.`);
+
       this.emitRoomsToAllConnectedUser();
     }
 
