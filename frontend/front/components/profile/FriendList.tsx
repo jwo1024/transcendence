@@ -1,16 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-  Frame,
-  ThemeProvider,
-  List,
-  Input,
-  Button,
-  Fieldset,
-} from "@react95/core";
-import { Fax } from "@react95/icons";
+import { List, Input, Button, Fieldset } from "@react95/core";
 import Window from "../common/Window";
-import Cookies from "js-cookie";
-import { access } from "fs";
 
 type user = {
   id: number;

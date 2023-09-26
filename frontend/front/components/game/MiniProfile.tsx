@@ -1,5 +1,5 @@
 import React from "react";
-import { Frame, ThemeProvider, TitleBar } from "@react95/core";
+import { Frame, ThemeProvider } from "@react95/core";
 
 interface MiniProfileProps {
   nickname: string;

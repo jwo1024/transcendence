@@ -1,14 +1,9 @@
-import MiniProfile from "@/components/game/MiniProfile";
 import React, { useEffect, useState } from "react";
 import FriendList from "@/components/profile/FriendList";
-import Window from "@/components/common/Window";
-import { ThemeProvider, Button } from "@react95/core";
+import { Button } from "@react95/core";
 import MyProfile from "@/components/profile/MyProfile";
 import UserProfile from "@/components/profile/UserProfile";
-import { UserInfo } from "@/types/UserInfo";
-import sendAvatar from "@/components/common/sendAvatar";
-import { UserSessionStorage } from "@/types/SignUpType";
-// 임시 백엔드 타입용.
+
 type user = {
   nickname: string;
   state: string;
@@ -23,6 +18,9 @@ export default function ProfilePage() {
   const [friendsProfile, setFriendsProfile] = useState(true);
   const [friendList, setFriendList] = useState(true);
   const [imageURL, setImageURL] = useState("https://github.com/React95.png");
+
+  // ??
+  console.log(imageURL);
 
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken");

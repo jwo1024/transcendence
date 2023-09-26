@@ -1,11 +1,5 @@
 import { FC, useState, useEffect } from "react";
-import {
-  Fieldset,
-  Frame,
-  ThemeProvider,
-  TitleBar,
-  Button,
-} from "@react95/core";
+import { Fieldset } from "@react95/core";
 import Window from "../common/Window";
 
 type user = {
@@ -22,7 +16,6 @@ interface ProfileProps {
 }
 
 const UserProfile: FC<ProfileProps> = ({ selectedFriend }) => {
-  const myProfile: boolean = true;
   const [profileAvatarSrc, setProfileAvatarSrc] = useState<string | undefined>(
     "https://github.com/React95.png"
   );
@@ -30,7 +23,7 @@ const UserProfile: FC<ProfileProps> = ({ selectedFriend }) => {
   useEffect(() => {
     if (selectedFriend.id === undefined) return;
     const token = sessionStorage.getItem("accessToken");
-     fetch(
+    fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/image/${selectedFriend.id}`,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -47,14 +40,19 @@ const UserProfile: FC<ProfileProps> = ({ selectedFriend }) => {
       .catch((error) => {
         console.error("Error fetching image:", error);
       });
-    
   }, [selectedFriend]);
 
   return (
-    <Window title="User Profile" w="320" h="260" xOption={false} minimizeOption={false}>
+    <Window
+      title="User Profile"
+      w="320"
+      h="260"
+      xOption={false}
+      minimizeOption={false}
+    >
       <div className=" flex flex-col items-center justify-between p-4 pb-1">
         <div className="flex items-center space-x-8">
-          <img src={profileAvatarSrc} alt='Avatar' className=" w-32 h-32" />
+          <img src={profileAvatarSrc} alt="Avatar" className=" w-32 h-32" />
           <div className="flex flex-col items-center space-y-3 w-28">
             <span className=" text-3xl">{selectedFriend.nickname}</span>
           </div>

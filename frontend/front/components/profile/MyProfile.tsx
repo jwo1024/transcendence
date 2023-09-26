@@ -1,16 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Fieldset,
-  Frame,
-  ThemeProvider,
-  TitleBar,
-  Button,
-  Input,
-} from "@react95/core";
+import { Fieldset, Button, Input } from "@react95/core";
 import Window from "../common/Window";
 import { UserSessionStorage } from "@/types/SignUpType";
 import sendAvatar from "../func/sendAvatar";
-import type { SignupDto, User42Dto } from "@/types/SignUpType";
 import imageCompression from "browser-image-compression";
 
 // interface ProfileProps {
@@ -40,12 +32,10 @@ const MyProfile: React.FC = () => {
     loses: 0,
   });
 
-  const myProfile: boolean = true;
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
   const [avatarURL, setAvatarURL] = useState<string | null>(null);
+  //??
+  console.log(avatarURL);
   const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
-
   const [profileAvatarSrc, setProfileAvatarSrc] = useState<string | undefined>(
     "https://github.com/React95.png"
   );
@@ -53,6 +43,7 @@ const MyProfile: React.FC = () => {
 
   useEffect(() => {
     const user = sessionStorage.getItem("user");
+    console.log(user);
     const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
     setMydata(user_obj);
 
@@ -116,8 +107,6 @@ const MyProfile: React.FC = () => {
       });
   };
 
-  const [newNickName, setNewNickName] = useState<string | null>(null);
-
   const onSubmitNickname = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nickname = newNickNameInputRef.current?.value;
@@ -130,26 +119,29 @@ const MyProfile: React.FC = () => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ rename: nickname })
-    }).then((res) => {
-      if (res.status == 409)
-        return alert("이미 존재하는 닉네임입니다. 다른 닉네임을 입력해주세요.");
-      else if (res.ok) {
-        const user = sessionStorage.getItem("user");
-        const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
-        // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
-        setMydata({ ...user_obj, nickname: nickname });
-        // 로컬스토리지를 비우고 새로 업데이트
-        sessionStorage.clear();
-        sessionStorage.setItem("user", JSON.stringify(myData)); 
-        return alert("닉네임이 변경되었습니다.");
-      }
-      else
-        return alert("오마이갓 비상사태 큰일났다");
-    }).catch((error) => {
-      console.error("Error while change nickname:", error);
-      alert("에러발생했잔아");
-    });
+      body: JSON.stringify({ rename: nickname }),
+    })
+      .then((res) => {
+        if (res.status == 409)
+          return alert(
+            "이미 존재하는 닉네임입니다. 다른 닉네임을 입력해주세요."
+          );
+        else if (res.ok) {
+          const user = sessionStorage.getItem("user");
+          console.log(user);
+          const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
+          // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
+          setMydata({ ...user_obj, nickname: nickname });
+          // 로컬스토리지를 비우고 새로 업데이트
+          sessionStorage.clear();
+          sessionStorage.setItem("user", JSON.stringify(myData));
+          return alert("닉네임이 변경되었습니다.");
+        } else return alert("오마이갓 비상사태 큰일났다");
+      })
+      .catch((error) => {
+        console.error("Error while change nickname:", error);
+        alert("에러발생했잔아");
+      });
   };
   return (
     <Window

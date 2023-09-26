@@ -8,7 +8,6 @@ import React, { useEffect, useState } from "react";
 import { PageContext } from "@/context/PageContext";
 
 export default function App({ Component, pageProps }: AppProps) {
-  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "failed";
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "failed";
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState<string>("");
