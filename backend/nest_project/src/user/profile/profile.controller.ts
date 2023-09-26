@@ -15,12 +15,11 @@ import { sign } from 'crypto';
 @Controller('profile')
 @UseGuards(AuthGuard())
 export class ProfileController {
-    // 이것은 백엔드 로직이므로, Get 요청에 대해 직접 값을 리턴하면 안된다.
     constructor(private profileService: ProfileService) {
         this.profileService.initUsers();
     }
     
-    @Get('/all') // 실제 서비스에서는 사용하지 않을 것이다.
+    @Get('/all')
     getAllUserProfiles(@Req() req): Promise<UserProfile[]> {
         return this.profileService.getAllUserProfiles();
     }
@@ -33,16 +32,6 @@ export class ProfileController {
     @Get('/nickname/:nickname')
     getUserProfileByNickname(@Param('nickname') nickname : string): Promise<UserProfile> {
         return this.profileService.getUserProfileByNickname(nickname);
-    }
-     
-    @Post('/delete/id/:id')
-    deleteUserProfileById(@Param('id') id : number): Promise<void> {
-        return this.profileService.deleteUserProfileById(id);
-    }
-    
-    @Post('/delete/nickname/:nickname')
-    deleteUserProfileByNickname(@Param('nickname') nickname : string): Promise<void> {
-        return this.profileService.deleteUserProfileByNickname(nickname);
     }
     
     @Post('/rename')
@@ -57,12 +46,12 @@ export class ProfileController {
         return res.status(200).send('nickname changed');
     }
 
-    @Post('/update/id/:id') // 이 라우터로는 요청 안올거다.
+    @Post('/update/id/:id')
     updateUserProfileById(@Param('id') id : number, @Body() updateDto: any) {
         return this.profileService.updateUserProfileById(id, updateDto);
     }
     
-    @Post('/update/nickname/:nickname') // 이 라우터로는 요청 안올거다.
+    @Post('/update/nickname/:nickname')
     updateUserProfileByNickname(@Param('nickname') nickname : string, @Body() updateDto: any) {
         return this.profileService.updateUserProfileByNickname(nickname, updateDto);
     }
@@ -96,15 +85,15 @@ export class ProfileController {
     }
 
     @Post('image')
-    @UseInterceptors(FileInterceptor('image', {storage: memoryStorage()})) // 이미지를 메모리에 저장합니다.
+    @UseInterceptors(FileInterceptor('image', {storage: memoryStorage()}))
     async uploadImage(@Req() req, @UploadedFile() image: Express.Multer.File) {
         try {
             if (!image) {
-            console.log('no image uploaded');// 이미지가 업로드되지 않았을 경우 에러 처리
+            console.log('no image uploaded');
             throw new Error('No image uploaded');
             }
             console.log('Image uploaded successfully');
-            return await this.profileService.updateAvatar(req.user.userId, image.buffer);            // avatar.buffer에 이미지 데이터가 Buffer 형태로 저장됩니다.
+            return await this.profileService.updateAvatar(req.user.userId, image.buffer);
              } catch (error) {
         console.log('error in uploadImage : ', error);
           throw new Error(error.message);
@@ -117,7 +106,7 @@ export class ProfileController {
     if (requserId != signUpDto.id)
         throw new Error('invalid user id');
     const result = await this.profileService.getUserProfileById(requserId);
-    if (result) { // 진짜 이상한, 발생하면 안되는 상황
+    if (result) {
         console.log('[409 Exception]user(', requserId, ') already exists');
         res.status(409).send('user already exists');
         throw new ConflictException('user already exists');

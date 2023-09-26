@@ -1,16 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import emailConfig from './email.config';
-import { isEmail } from 'class-validator';
-import { pseudoRandomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-
-
-////////////////////////////////////////////////
-///[ 1. config에, Tfa expire time을 넣어야한다. ]///
-///[ 2. /auth/validate에, undone 2FA인 id를 폐기하는 처리를 해야한다.]///
-////////////////////////////////////////////////
 
 export interface TfaData {
     email: string;
@@ -18,7 +10,6 @@ export interface TfaData {
     issuedAt: Date; 
     verified: boolean;
 }
-
 
 @Injectable()
 export class TfaService {
@@ -51,7 +42,6 @@ export class TfaService {
         }
     }
     
-    
     register2FA(id: number, email: string, token: string, issuedAt: Date) {
         const tfaData: TfaData = {
             email : email,
@@ -78,8 +68,7 @@ export class TfaService {
             return null;
         }                
     }
-    
-    
+       
     check2FAValidity(id: number, token: string){
         const tfaData = this.tfaData.get(id);
         if (tfaData === undefined)
@@ -90,6 +79,4 @@ export class TfaService {
             throw new HttpException('token expired', HttpStatus.BAD_REQUEST);
         tfaData.verified = true;
     }
-
-
 }

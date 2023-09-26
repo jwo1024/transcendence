@@ -67,7 +67,7 @@ const TwoFactorAuthentication = ({
     })
       .then((res) => {
         setNotifyStr("");
-        if (res.status === 500) {
+        if (res.status === 409) {
           setSuccess(1);
           setTwoFAEmailValid(false);
           setNotifyStr(

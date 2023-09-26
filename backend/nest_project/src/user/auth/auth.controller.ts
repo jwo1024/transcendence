@@ -14,7 +14,7 @@ class Image42 {
 
 @Controller('auth')
 export class AuthController { 
-  image42: Map<number, Image42> = new Map<number, Image42>(); // 이 컨트롤러 내부에서만 사용될 자료구조
+  image42: Map<number, Image42> = new Map<number, Image42>();
   constructor(
     private authService: AuthService,
     private profileService: ProfileService,
@@ -63,7 +63,7 @@ export class AuthController {
     }
   }
 
-  @Get('validity') // 로그인 이후 (/와 /signup을 제외한)_app.tsx의 모든 페이지에 대해서 시작 부분에 놓는다
+  @Get('validity')
   @UseGuards(AuthGuard())
   async session(@Req() req, @Res() res) {
     const accessToken = req.headers.authorization?.split('Bearer ')[1];
@@ -81,8 +81,8 @@ export class AuthController {
     return res.status(HttpStatus.OK).send({ message: '[validity success] : valid session' });
   }
     
-  @Post('logon') // signup을 나가면서 logon 요청
-  @UseGuards(AuthGuard())  // logon은 AuthGuard 거치지만, logout은 거치지 않는다. 왜냐하면 창 닫힐 때는 처리 속도가 빨라야해서 fetch가 아닌 sendBeacon으로 처리하기 때문이다. sendbeacon은 header를 못넣는다. 그래서 AuthGuard를 거치지 않는다.
+  @Post('logon')
+  @UseGuards(AuthGuard())
   async logOn(@Req() req, @Res() res) {
     const userId = req.user.userId;
     const accessToken = req.headers.authorization?.split('Bearer ')[1];
@@ -93,7 +93,7 @@ export class AuthController {
       if (user.status !== userStatus.inChat && user.status !== userStatus.inGame) {
         AuthService.setSession(userId, accessToken);
         await this.profileService.logOn(userId);
-        const { id, nickname, status, ladder, wins, loses } = user; // 브라우저의 localStorage에 저장될 정보라고 함
+        const { id, nickname, status, ladder, wins, loses } = user;
         return res.send({ id, nickname, status, ladder, wins, loses });
       }
       else {

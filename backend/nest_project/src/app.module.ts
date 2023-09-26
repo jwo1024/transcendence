@@ -16,8 +16,9 @@ import { ConfigModule } from '@nestjs/config';
             ChatModule,
             GameModule,
             UserModule,
-            ConfigModule.forRoot()
-  ],
+            ConfigModule.forRoot({
+              isGlobal: true, // 전역 설정으로 사용
+            }),  ],
   providers: [],
   // controllers: [AppController],
   // providers: [AppService], //사실 얘네는 필요 없을 듯.

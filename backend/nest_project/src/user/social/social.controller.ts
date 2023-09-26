@@ -12,7 +12,6 @@ export class SocialController {
         
         @Get('friend/list')
         async getFriendList(@Req() req, @Res() res) : Promise<FriendDto[]> {
-        // <id, nickname, status>의 배열 형태를 반환한다.
         const user = await this.profileService.getUserProfileById(req.user.userId);
         const { friend_list } = user;
         let friendDtoList: FriendDto[] = [];
@@ -30,14 +29,14 @@ export class SocialController {
             const target = await this.profileService.getUserProfileByNickname(nickname);
             
             if (!target)
-                return res.status(HttpStatus.NOT_FOUND).send('no such user');//throw new BadRequestException('no such user');
+                return res.status(HttpStatus.NOT_FOUND).send('no such user');
             else if (me.id === target.id)
-                return res.status(HttpStatus.BAD_REQUEST).send('cannot add myself'); // throw new BadRequestException('cannot add myself');
+                return res.status(HttpStatus.BAD_REQUEST).send('cannot add myself');
             else if (me.friend_list.includes(target.id))
-                return res.status(HttpStatus.CONFLICT).send('already friend'); // throw new ConflictException('already friend');
+                return res.status(HttpStatus.CONFLICT).send('already friend');
             else
             {   
-                me.friend_list.push(target.id); // 이렇게 했을때 db에 반영하려면?
+                me.friend_list.push(target.id);
                 const ret = await this.profileService.updateUserProfileById(me.id, me);
                 console.log(ret);
                 return res.status(200).send('friend added');
@@ -49,7 +48,7 @@ export class SocialController {
         const me = await this.profileService.getUserProfileById(req.user.userId);
         const target = await this.profileService.getUserProfileById(targetId);
         if (!target)
-            throw new BadRequestException('no such user'); // 일어날일 없는 것
+            throw new BadRequestException('no such user');
         else
         {
             me.friend_list = me.friend_list.filter(id => id !== target.id);
@@ -60,7 +59,6 @@ export class SocialController {
     
     @Get('block/list')
     async getBlockList(@Req() req, @Res() res) : Promise<FriendDto[]> {
-        // <id, nickname, status>의 배열 형태를 반환한다.
         const user = await this.profileService.getUserProfileById(req.user.userId);
         const { block_list } = user;
         let blockedDtoList: FriendDto[] = [];
@@ -77,14 +75,14 @@ export class SocialController {
             const target = await this.profileService.getUserProfileByNickname(nickname);
             
             if (!target)
-                return res.status(HttpStatus.NOT_FOUND).send('no such user');//throw new BadRequestException('no such user');
+                return res.status(HttpStatus.NOT_FOUND).send('no such user');
             else if (me.id === target.id)
-                return res.status(HttpStatus.BAD_REQUEST).send('cannot add myself'); // throw new BadRequestException('cannot add myself');
+                return res.status(HttpStatus.BAD_REQUEST).send('cannot add myself');
             else if (me.block_list.includes(target.id))
-                return res.status(HttpStatus.CONFLICT).send('already blocked'); // throw new ConflictException('already friend');
+                return res.status(HttpStatus.CONFLICT).send('already blocked');
             else
             {   
-                me.block_list.push(target.id); // 이렇게 했을때 db에 반영하려면?
+                me.block_list.push(target.id);
                 const ret = await this.profileService.updateUserProfileById(me.id, me);
                 console.log(ret);
                 return res.status(200).send('friend added');
@@ -96,7 +94,7 @@ export class SocialController {
         const me = await this.profileService.getUserProfileById(req.user.userId);
         const target = await this.profileService.getUserProfileById(targetId);
         if (!target)
-            throw new BadRequestException('no such user'); // 일어날일 없는 것
+            throw new BadRequestException('no such user');
         else
         {
             me.block_list = me.block_list.filter(id => id !== target.id);
