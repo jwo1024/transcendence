@@ -1,21 +1,22 @@
 import { roomType } from "../types/roomTypes";
 import { SimpleUserDto } from "./simpleUser.dto";
+import { IsString, IsNotEmpty } from "class-validator";
 
-//jchoi
 export class RoomCreateDTO {
 
-  roomName: string; //not null  100자 이내
+  @IsString()
+  @IsNotEmpty()
+  roomName: string;
+  roomType: roomType; 
 
-  roomType: roomType; //not null  'dm' 'open' 'private' 중 하나
-
-  roomPass?: string; // 15자 이내
+  roomPass?: string; 
 
 }
 
 export class RoomJoinDTO 
 {
 
-  roomId: number; //not null not undefined
+  roomId: number; 
 
   roomPass?: string; 
 
@@ -24,22 +25,22 @@ export class RoomJoinDTO
 export class RoomInviteDTO 
 {
 
-  targetUserNickname: string; //not null not undefined
+  targetUserNickname: string; 
 
-  roomId: number;  //not null not undefined
+  roomId: number;
 
 }
 
 export class RoomleaveDTO
 {
-  roomId: number;  //not null not undefined
+  roomId: number; 
 }
 
 export class AdminRelatedDTO 
 {
-  targetUserId: number;  //not null not undefined
+  targetUserId: number; 
 
-  roomId: number;  //not null not undefined
+  roomId: number; 
 }
 
 export class SimpleRoomDTO {
@@ -55,9 +56,9 @@ export class SpecificRoomDTO {
   roomName: string;
   roomType: roomType;
   hasPass : boolean;
-  roomOwner: number; //owner user의 id
-  roomAdmins: number[]; //ids
-  roomBanned: number[]; //idsx
+  roomOwner: number; 
+  roomAdmins: number[];
+  roomBanned: number[];
   users: SimpleUserDto[];
   created_at?: Date;
 }

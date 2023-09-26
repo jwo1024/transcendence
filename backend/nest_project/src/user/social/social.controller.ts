@@ -39,7 +39,7 @@ export class SocialController {
                 me.friend_list.push(target.id);
                 const ret = await this.profileService.updateUserProfileById(me.id, me);
                 console.log(ret);
-                return res.status(200).send('friend added');
+                return res.status(200).ㄱsend('friend added');
          }
     }
     
@@ -102,7 +102,4 @@ export class SocialController {
             return res.status(200).send('block deleted');
         }
     }
-
-
-    
 }

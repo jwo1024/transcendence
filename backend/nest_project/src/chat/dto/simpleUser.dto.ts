@@ -1,12 +1,8 @@
 import { userStatus } from "../../user/profile/user-profile.entity";
 
-//jchoi 
 export class SimpleUserDto {
-
     id: number; 
-
-    nickname: string;  //not null not undefined
-
+    nickname: string;
 }
 
 export class SimpleProfileDto {

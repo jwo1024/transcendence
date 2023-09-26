@@ -1,23 +1,22 @@
 import { SimpleUserDto } from "./simpleUser.dto";
+import { IsString } from "class-validator";
 
-//jchoi
 export class MessageDTO {
 
-  roomId: number; //number > 0 not null, not undefined
-
+  roomId: number; 
   userId: number;
   
-  text: string; // 100자 이내 not null ,  not undefined
-
+  @IsString()
+  text: string;
 }
 
 export class SimpleMessageDTO 
 {
-  id : number; // not null,  not undefined
+  id : number; 
 
-  text: string; //100자 이내 not null ,  not undefined
+  text: string; 
 
-  user: SimpleUserDto; // not null,  not undefined
+  user: SimpleUserDto; 
 
   roomId: number; 
 

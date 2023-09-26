@@ -9,6 +9,8 @@ export class TfaController {
 
     @Post('send')
     async send(@Req() req, @Res() res, @Body() body) {
+        if (!body || !body.email)
+            return res.status(HttpStatus.CONFLICT).send('invalid request');
         const id = req.user.userId;
         const otp = await this.tfaService.generateSecret();
         if (!otp) return res.status(HttpStatus.CONFLICT).send('failed to generate token');
@@ -23,6 +25,8 @@ export class TfaController {
 
     @Post('verify')
     verify(@Req() req, @Res() res, @Body() body) {
+        if (!body || !body.code)
+            return res.status(HttpStatus.UNAUTHORIZED).send('invalid request');
         try {
             this.tfaService.check2FAValidity(req.user.userId, body.code);
             return res.status(HttpStatus.OK).json({ message: '2fa-verify success' });
