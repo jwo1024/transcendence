@@ -239,7 +239,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return ;
     }
     
-    if(this.roomService.addUserToRoom(socket.data.userId, createdRoom.roomId, socket.id) === null)
+    if ((await this.roomService.addUserToRoom(socket.data.userId, createdRoom.roomId, socket.id)) === null)
     {
       this.emitErrorEvent(socket.id, "Response-DM-create", "failed to join the DM");
       return ;
@@ -256,7 +256,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
     //상대방 사용자를 초대
-    if (this.roomService.addUserToRoom(userTheOther.id, createdRoom.roomId, socketTheOther.socketId) === null)
+    if ((await this.roomService.addUserToRoom(userTheOther.id, createdRoom.roomId, socketTheOther.socketId)) === null)
     {
       this.deleteRoom(createdRoom.roomId); //만든 방 삭제
       this.connectedUserService.removeByUserIdAndRoomId(socket.data.userId, createdRoom.roomId);
@@ -364,6 +364,97 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     
   }
 
+
+  @SubscribeMessage('Game-invite')
+  async onInviteToGame(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() roomInvite: RoomInviteDTO) 
+  {
+    const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
+    if(targetProfile === null || targetProfile === undefined)
+    {
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "user is not found");
+      return ;
+    }
+    const targetUserId = targetProfile.id;
+    const userEntity = await this.userService.getOne(socket.data.userId);
+    if(userEntity === undefined || userEntity === null)
+    {
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "something's going wrong. please try again");
+      return ;
+    }
+    const userProfile = await this.profileService.getUserProfileById(socket.data.userId);
+
+    //내가 차단한 유저 초대시
+    if (userProfile.block_list.find(finding => finding === targetUserId) !== undefined )
+    {
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "you've blocked target user");
+      return ;
+    }
+
+    // 나를 차단한 유저에게 초대 안 보냄
+    if (targetProfile.block_list.find(finding => finding === userEntity.id) !== undefined )
+    {
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "you've been blocked");
+      return ;
+    }
+    
+    // 현재 접속한 유저가 아닐 경우 초대 안 보냄
+    const targetEntity = await this.userService.getOne(targetProfile.id);
+    // const tempEntity = await this.userService.getOne(targetProfile.id);
+    // const targetEntity = await this.userService.getOneUSerWithRoomsAndConnections(targetUserId);
+    // const  = await this.userService.getOneUSerWithRoomsAndConnections(targetUserId);
+    this.logger.log(`target : ${targetEntity}`);
+    this.logger.log(`target : ${targetEntity.connections}`);
+    this.logger.log(`!!!!!!!!!!!!target : ${targetEntity.id}`);
+    const connection = await this.connectedUserService.findOnebyUserId(targetEntity.id);
+    // const connection = targetEntity.connections;
+    // this.logger.log(`!!!!!!!!!!!!!!!!!!target : ${connection}`);
+    this.logger.log(`!!!!!!!!!!!!!!!!!!target : ${connection.socketId}`);
+    // this.logger.log(`!!!!!!!!!!!!!!!!!!target : ${connection.room}`);
+    if (connection === undefined)
+    {
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "the target user is not connected to Chat right now");
+      return ; 
+    }
+    
+    const currentRoom = await this.roomService.getRoomEntityWithCUM(roomInvite.roomId);
+    if (currentRoom === undefined)
+    {
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "the room is not exist anymore");
+      return ; 
+    }
+    
+    const simpleroom = await this.roomMapper.Create_simpleInterfaceToDto(
+         currentRoom);
+    
+    this.emitResponseEvent(socket.id,  "Responsse-Room-invite");
+
+    // this.logger.log(`connections : ${targetEntity.connections}`);
+    // this.logger.log(`connections : ${targetEntity.connections[0]}`);
+    
+    //타겟 납치 & 타겟에게 알림
+    await this.roomService.addUserToRoom(targetEntity.id, currentRoom.roomId, connection.socketId);
+   this.logger.log(``)
+    const newUserProfile = await this.profileService.getUserProfileById(targetEntity.id);
+    const currentRoomId = (currentRoom).roomId;
+    
+    //납치 대상한테 알림
+    this.server.to(connection.socketId).emit("invite-to-chat", simpleroom);
+    
+    //그간 메세지 보내주기
+    // const messages = await this.messageMapper.Create_simpleDTOArrays(
+    //     await this.messageService.findMessagesForRoom(currentRoom), currentRoomId);
+    // this.server.to(connection.socketId).emit(`messages_${currentRoomId}`, messages);
+
+    // this.emitNotice(currentRoom, `[${newUserProfile.nickname}]님이 방에 새로 들어왔습니다!`);
+    //   //다른 멤버들, 커넥션들에게 알림
+    // this.emitOneRoomToUsersInRoom(currentRoom.roomId);
+    // const newUserEntity = await this.userService.getOneUSerWithRoomsAndConnections(socket.data.userId);
+    // this.emitUserJoingingRooms(socket.id, newUserEntity);
+    // this.emitRoomsToAllConnectedUser();
+    
+  }
 
   @SubscribeMessage('Room-join')
   async onJoinRoom(
