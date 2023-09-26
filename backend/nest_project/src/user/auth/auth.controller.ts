@@ -1,4 +1,14 @@
-import { Controller, Get, HttpStatus, Post, Query, Req, Res, UnauthorizedException, UseGuards} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Query,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { ProfileService } from '../profile/profile.service';
@@ -13,12 +23,12 @@ class Image42 {
 }
 
 @Controller('auth')
-export class AuthController { 
+export class AuthController {
   image42: Map<number, Image42> = new Map<number, Image42>();
   constructor(
     private authService: AuthService,
     private profileService: ProfileService,
-    private tfaService: TfaService
+    private tfaService: TfaService,
   ) {}
 
   @Get('getUrl')
@@ -27,23 +37,33 @@ export class AuthController {
   }
 
   @Get('redirect')
-  async redirectFrom42Auth(@Req() req: Request, @Res() res: Response, @Query() query: any) {
-    const accessTokenOf42User = await this.authService.getAccessTokenOf42User(query.code);
-    const userDataFrom42: User42Dto = await this.authService.getUserDataFrom42(accessTokenOf42User);
+  async redirectFrom42Auth(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query() query: any,
+  ) {
+    const accessTokenOf42User = await this.authService.getAccessTokenOf42User(
+      query.code,
+    );
+    const userDataFrom42: User42Dto =
+      await this.authService.getUserDataFrom42(accessTokenOf42User);
 
     const token = await this.authService.jwtCreation(userDataFrom42.id);
     res.cookie('accessToken', token.accessToken, { httpOnly: false });
-    const userProfile = await this.profileService.getUserProfileById( userDataFrom42.id );
+    const userProfile = await this.profileService.getUserProfileById(
+      userDataFrom42.id,
+    );
     if (!userProfile) {
-      const imageData : Image42 = new Image42();
+      const imageData: Image42 = new Image42();
       imageData.url = userDataFrom42.image_url;
       imageData.token = accessTokenOf42User;
-      this.image42.set(userDataFrom42.id, imageData);  
-      res.cookie('user42Dto', JSON.stringify(userDataFrom42), { httpOnly: false });
-    }
-    else if (userProfile.enable2FA)
+      this.image42.set(userDataFrom42.id, imageData);
+      res.cookie('user42Dto', JSON.stringify(userDataFrom42), {
+        httpOnly: false,
+      });
+    } else if (userProfile.enable2FA)
       res.cookie('twoFA', userProfile.data2FA, { httpOnly: false });
-    res.redirect('http://localhost:3001/signup');
+    res.redirect(`${process.env.FRONTEND_URL}/signup`);
   }
 
   @Get('defaultAvatar')
@@ -52,12 +72,15 @@ export class AuthController {
     try {
       const id = req.user.userId;
       const data = this.image42.get(id);
-      const imageStream = await this.authService.downloadDefaultAvatar(data.url, id, data.token);
+      const imageStream = await this.authService.downloadDefaultAvatar(
+        data.url,
+        id,
+        data.token,
+      );
       res.set('Content-Type', 'image/jpeg');
-      imageStream.pipe(res); 
+      imageStream.pipe(res);
       delete this.image42[id];
-    }
-    catch (error) {
+    } catch (error) {
       console.log('Error Occured in DefaultAvatar Router');
       throw new Error('Error Occured in DefaultAvatar Router');
     }
@@ -69,18 +92,29 @@ export class AuthController {
     const accessToken = req.headers.authorization?.split('Bearer ')[1];
     const userId = req.user.userId;
     if (!AuthService.isTokenValid(userId, accessToken)) {
-        console.log(`[session request for invalid or outdated token] - (user : ${userId})`);
-        console.log(`value : {${accessToken}}`);
-        console.log(`valid token : ${AuthService.getSession(userId)}`);
-        return res.status(HttpStatus.UNAUTHORIZED).send({ message: '[validity fail] : invalid token' });
+      console.log(
+        `[session request for invalid or outdated token] - (user : ${userId})`,
+      );
+      console.log(`value : {${accessToken}}`);
+      console.log(`valid token : ${AuthService.getSession(userId)}`);
+      return res
+        .status(HttpStatus.UNAUTHORIZED)
+        .send({ message: '[validity fail] : invalid token' });
     }
-    if (this.tfaService.is2FARegistered(userId) && !this.tfaService.is2FAConfirmed(userId)) {
+    if (
+      this.tfaService.is2FARegistered(userId) &&
+      !this.tfaService.is2FAConfirmed(userId)
+    ) {
       console.log('2fa is not confirmed');
-      return res.status(HttpStatus.UNAUTHORIZED).send({ message: '[validity fail] : 2fa is not confirmed' });
+      return res
+        .status(HttpStatus.UNAUTHORIZED)
+        .send({ message: '[validity fail] : 2fa is not confirmed' });
     }
-    return res.status(HttpStatus.OK).send({ message: '[validity success] : valid session' });
+    return res
+      .status(HttpStatus.OK)
+      .send({ message: '[validity success] : valid session' });
   }
-    
+
   @Post('logon')
   @UseGuards(AuthGuard())
   async logOn(@Req() req, @Res() res) {
@@ -98,9 +132,9 @@ export class AuthController {
       }
       else {
         console.log('user is already in game');
-        res.redirect(`http://localhost:3001/`);
+        res.redirect(`${process.env.FRONTEND_URL}`);
       }
-    } 
+    }
   }
 
   @Post('logoff')
@@ -114,12 +148,12 @@ export class AuthController {
       this.tfaService.remove2FAData(userId);
       AuthService.endSession(userId);
       await this.profileService.logOff(userId);
-    }
-    else {
-      console.log(`[logoff request for invalid or outdated token] - (user : ${userId})`);
+    } else {
+      console.log(
+        `[logoff request for invalid or outdated token] - (user : ${userId})`,
+      );
       console.log(`value : {${accessToken}}`);
     }
     console.log(`logoff done`);
   }
-  
 }

@@ -8,7 +8,7 @@ const Error_SignUp = () => {
   const frontendURL = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
   const handleClick = () => {
-    router.push(frontendURL ? frontendURL : "http://localhost:3001");
+    router.push(frontendURL ? frontendURL : `${process.env.FRONTEND_URL}`);
   };
 
   return (
