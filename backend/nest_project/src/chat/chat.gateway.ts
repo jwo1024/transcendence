@@ -631,8 +631,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private async emitRoomsToOneUser(socketId : string)
   {
       const rooms = await this.roomService.getRoomsByType(['open']); //roomType이 DM, private 이 아닌 애들만.
-      // const rooms = await this.roomService.getRoomsForUser(user.id);
-        await this.server.to(socketId).emit('rooms', rooms);
+      await this.server.to(socketId).emit('rooms', rooms);
   } 
 
   private async emitOneRoomToUsersInRoom(roomId : number)
@@ -803,16 +802,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         return ;
       }
       const targetId = adminDto.targetUserId;
+      const targetUserI = await this.userService.getOneUSerWithRoomsAndConnections(adminDto.targetUserId);
+      if (targetUserI === undefined)
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-kick", "not found user");
+        return ;
+      }
+      if (roomToleave.users.find(finding => finding.id === targetId ) === undefined)
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-kick", "the user is not in the room");
+        return ;
+      }
+      this.roomService.removeUserFromRoom(targetUserI, socket.id, roomToleave.roomId);
       const targetSocket = await this.connectedUserService.findOnebyUserId(targetId);
-      this.connectedUserService.deleteByUserIdAndRoomId(targetId , adminDto.roomId);
-      this.roomService.deleteUserRoomRelationship(targetId, adminDto.roomId);
-      
-      //쫓겨난 사람에게 새로운 방정보 제공
-      this.emitResponseEvent(targetSocket.socketId, "got-kicked");
-      this.emitJoiningRoomsToOneUser(targetId, targetSocket.socketId);
-      this.emitRoomsToOneUser(targetSocket.socketId);
-      // this.server.to(targetSocket.socketId).emit()
-      
+      if(targetSocket !== undefined)
+      {
+        //쫓겨난 사람에게 새로 방정보 제공 --> 현재 접속한 경우에만.
+        this.server.to(targetSocket.socketId).emit(`got-kicked_${roomToleave.roomId}`);
+  
+        this.emitJoiningRoomsToOneUser(targetId, targetSocket.socketId);
+        this.emitRoomsToOneUser(targetSocket.socketId);
+      }
+
       const targetUserNickname = (await this.profileService.getUserProfileById(targetId)).nickname;
       //현재 방 유저에게 현재 방 정보 제공
       this.emitResponseEvent(socket.id, "Response-Admin-kick");
@@ -820,7 +831,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       this.emitNotice(roomToleave, `${targetUserNickname}님이 kick 당했습니다.`);
 
       this.emitRoomsToAllConnectedUser();
-    
     }
 
     @SubscribeMessage('Admin-Ban')

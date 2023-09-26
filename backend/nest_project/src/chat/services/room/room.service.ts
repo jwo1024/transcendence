@@ -308,9 +308,7 @@ export class RoomService {
     if (currentRoom.roomAdmins.find(finding => finding === targetId) !== undefined)
       return currentRoom; //이미 관리자인 경우 무시
     if (currentRoom.users.find(finding => finding.id === targetId ) === undefined)
-    {
       return null;
-    }
     currentRoom.roomAdmins.push(targetId);
     return this.roomRepository.save(currentRoom);
   }
