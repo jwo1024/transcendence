@@ -55,8 +55,8 @@ export class ConnectedFriendlyPlayerService {
 
 	async getHostbySocketId(socket_id: string): Promise<ConnectedFriendlyPlayerEntity>
 	{
-		const player = this.getPlayerBySocketId(socket_id);
-		return this.getPlayer((await player).hostId);
+		const player = await this.getPlayerBySocketId(socket_id);
+		return this.getPlayer(player.hostId);
 	}
 
 	// async getGuestbySocketId(socket_id: string): Promise<ConnectedFriendlyPlayerEntity>
