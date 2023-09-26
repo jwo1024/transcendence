@@ -84,13 +84,19 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		{
 			return socket.disconnect();
 		}
-		await this.invitationSercive.updatePlayerByInvitation(current);
+		const tempPlayer = await this.invitationSercive.updatePlayerByInvitation(current);
+		if (!tempPlayer)
+		{
+		this.logger.log(`이럴 일은 거의 없겠지만 [ ${current.id} ]는 호스트도 게스트도 아니네.`);
+		return socket.disconnect();
+		}
+		this.logger.log(`호스트인지 게스트인지 모르겠지만 데이터 업데이트 시도 [ ${current.id} ].`);
 		// socket.emit('savePlayer', async (inviteData) => {
 		// 	await this.connectedFriendlyPlayerService.updateInvitation(current, inviteData);
 		// });
 		this.profileService.ingame(userId);
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
-		this.logger.log(`data taken :`);
+		this.logger.log(`current Player's data :`);
 		// todo:
 		const data = JSON.stringify(current);
 		this.logger.log(`${data}`);
@@ -156,6 +162,12 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	private async endPlayer(socket_id: string, player_id: number)
 	{
 		// socket.emit('Error', new UnauthorizedException());
+		const hostOrNot = await this.connectedFriendlyPlayerService.isHostPlayer(await this.connectedFriendlyPlayerService.getPlayer(player_id));
+		if (hostOrNot === true)
+		{
+			this.logger.log(`endPlayer : [ ${player_id} ] 이제 갈거니까 초대 디비도 삭제할게~`);
+			this.invitationSercive.deleteByHostId(player_id);
+		}
 		this.server.in(socket_id).disconnectSockets(true);
 		this.logger.log(`Friendly Game Server: socketId [ ${player_id} -> ${socket_id} ] disconnected.`);
 	};
@@ -164,12 +176,14 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	{
 		if (host.refuseGame === true)
 		{
+			this.logger.log(`checkRefuse : [ ${host.id} ] 는 거절당했어`);
 			clearInterval(host.checkTimer);
 			this.endPlayer(host.socketId, host.id);
 		}
 		const nowTime = Date.now();
 		if (nowTime - waitTime > 35000) // 35 seconds
 		{
+			this.logger.log(`checkRefuse : [ ${host.id} ] 는 너무 오래 기다렸어 나갈래`);
 			clearInterval(host.checkTimer);
 			this.endPlayer(host.socketId, host.id);
 		}
@@ -177,12 +191,14 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 
 	private async waitGame(host: FriendlyPlayer)
 	{
+		this.logger.log(`waitGame : [ ${host.id} === ${host.hostId} ] 는 게임하고 싶어`);
 		const currentTime = Date.now();
 		host.checkTimer = setInterval(() => this.checkRefuse(host, currentTime), 1000) as unknown as number;
 	}
 
 	private async acceptGame(guest: FriendlyPlayer)
 	{
+		this.logger.log(`acceptGame : [ ${guest.id} ] 는 같이 게임하고 싶어서 들어왔어`);
 		this.server.to(guest.socketId).emit("guestArrive");
 	}
 

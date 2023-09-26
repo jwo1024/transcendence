@@ -30,28 +30,72 @@ export class InvitationService {
 
 	async invite(host_id: number, guest_id: number): Promise<InvitationEntity>
 	{
-		return this.invitationRepository.save({host_id: host_id, guest_id: guest_id});
+		if (!this.checkInvitationOn(host_id) && !this.checkInvitationOn(guest_id))
+			return this.invitationRepository.save({host_id: host_id, guest_id: guest_id});
+		return null;
+	}
+
+	async checkInvitationOn(id: number): Promise<InvitationEntity>
+	{
+		const invi = await this.getByHostId(id);
+		if (invi)
+			return invi;
+		const invi2 = await this.getByGuestId(id);
+		if (invi2)
+			return invi2;
+		return null;
 	}
 
 	async getByHostId(host_id: number): Promise<InvitationEntity>
 	{
-		return this.invitationRepository.findOne({
+		const invi = await this.invitationRepository.findOne({
 			where: { host_id: host_id }
 		});
+		if (!invi)
+			return null;
+		return invi;
 	}
 
-	async updatePlayerByInvitation(host_player: FriendlyPlayer): Promise<ConnectedFriendlyPlayerEntity>
+	async getByGuestId(guest_id: number): Promise<InvitationEntity>
 	{
-		const invitation = await this.getByHostId(host_player.id);
-		// if (!invitation)
-		// 	return null;
-		console.log(`invitation service ts: `);
-		console.log(invitation);
-		if (host_player.id !== invitation.host_id)
+		const invi = await this.invitationRepository.findOne({
+			where: { guest_id: guest_id }
+		});
+		if (!invi)
 			return null;
-		host_player.hostId =  invitation.host_id;
-		host_player.guestId = invitation.guest_id;
-		return host_player;
+		return invi;
 	}
+
+	async updatePlayerByInvitation(player: FriendlyPlayer): Promise<ConnectedFriendlyPlayerEntity>
+	{
+		let invitation = await this.getByHostId(player.id);
+		if (!invitation)
+		{
+			invitation = await this.getByGuestId(player.id);
+			if (!invitation)
+				return null;
+		}
+		// console.log(`invitation service ts: `);
+		// console.log(invitation);
+		// if (player.id !== invitation.host_id)
+		// 	return null;
+		player.hostId =  invitation.host_id;
+		player.guestId = invitation.guest_id;
+		return player;
+	}
+
+	async deleteByHostId(id: number)
+	{
+		await this.invitationRepository.delete({ host_id: id });
+	}
+
+	//
+	async deleteAll() {
+		await this.invitationRepository
+		  .createQueryBuilder()
+		  .delete()
+		  .execute();
+	  }
+
 
 }
