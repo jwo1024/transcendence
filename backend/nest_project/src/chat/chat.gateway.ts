@@ -185,6 +185,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
        
     const newRoom = await this.roomService.getRoomEntityWithConnections(createdRoom.roomId);
     this.emitNotice(newRoom, `[${newRoom.roomName}]방이 만들어졌습니다.`);
+    const userProfile = await this.profileService.getUserProfileById(socket.data.userId);
+    this.emitNotice(newRoom, `[${userProfile.nickname}]님이 방에 새로 들어왔습니다!`);
     
     this.emitUserJoingingRooms(socket.id, userEntity);
     // const currentConnections = await this.connectedUserService.getByRoomId(null);
@@ -285,7 +287,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     this.logger.log(`input room : ${roomInvite.roomId}`);
     this.logger.log(`input nickname : ${roomInvite.targetUserNickname}`);
-    const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
+    
+    const targetProfile = await this.profileService.getUserProfileByNickname("roomInvite.targetUserNickname");
     if(targetProfile === null || targetProfile === undefined)
     {
       this.emitErrorEvent(socket.id, "Responsse-Room-invite", "user is not found");
