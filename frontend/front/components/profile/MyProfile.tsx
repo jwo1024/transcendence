@@ -32,9 +32,6 @@ const MyProfile: React.FC = () => {
     loses: 0,
   });
 
-  const myProfile: boolean = true;
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
   const [avatarURL, setAvatarURL] = useState<string | undefined>(
     "https://github.com/React95.png"
   );
@@ -43,8 +40,6 @@ const MyProfile: React.FC = () => {
   const newNickNameInputRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    const user = sessionStorage.getItem("user");
-    console.log(user);
     const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
     setMydata(user_obj);
 
@@ -128,7 +123,6 @@ const MyProfile: React.FC = () => {
             "이미 존재하는 닉네임입니다. 다른 닉네임을 입력해주세요."
           );
         else if (res.ok) {
-          const user = sessionStorage.getItem("user");
           const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
           // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
           setMydata({ ...user_obj, nickname: nickname });

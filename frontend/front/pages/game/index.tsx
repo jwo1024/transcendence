@@ -7,24 +7,23 @@ import PongGame from "@/components/game/PongGame";
 
 import GameLoading from "@/components/game/GameLoading";
 import GameResult from "@/components/game/GameResult";
-import { resultNickname } from "@/types/GameType";
+import { playerProfile, resultNickname } from "@/types/GameType";
 
-import io, { Socket } from 'socket.io-client';
+import io, { Socket } from "socket.io-client";
 
 import {
   ON_ERROR,
   ON_CONNECT,
   ON_DISCONNECT,
-  ON_RECONNECT,
 } from "@/types/ChatSocketEventName";
 
-
-
 export default function GamePage() {
-
   const router = useRouter();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [resultOfGame, setResultOfGame] = useState<resultNickname>({winPlayer:"",losePlayer:""})
+  const [resultOfGame, setResultOfGame] = useState<resultNickname>({
+    winPlayer: "",
+    losePlayer: "",
+  });
   const [gamePhase, setGamePhase] = useState<"wait" | "start" | "end">("wait");
   const [left, setLeft] = useState({
     nickname: "searching...",
@@ -42,7 +41,7 @@ export default function GamePage() {
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken"); // tmp
     setSocket(
-      io('http://localhost:4000/ladder_game', {
+      io("http://localhost:4000/ladder_game", {
         extraHeaders: {
           Authorization: `Bearer ${token}`,
         },
@@ -52,7 +51,7 @@ export default function GamePage() {
     console.log("gameSocket : Mount");
     return () => {
       if (socket) socket.close();
-        setSocket(null);
+      setSocket(null);
       console.log("gameSocket : Unmount");
     };
   }, []);
@@ -69,47 +68,52 @@ export default function GamePage() {
     socket.on(ON_DISCONNECT, (reason) => {
       // console.error(`Socket connection failed: ${socket.id}`, reason);
       console.log(`Socket Disconnected : `, reason);
-      setTimeout(() => {router.push("/menu");}, 3000);
+      setTimeout(() => {
+        router.push("/menu");
+      }, 3000);
     });
 
     socket.on(ON_ERROR, (error) => {
       console.error(`Socket error: ${socket.id}`, error);
     });
 
+    socket.on(
+      "setMiniProfile",
+      (profile1: playerProfile, profile2: playerProfile) => {
+        setLeft({
+          nickname: profile1.nickname,
+          ladder: profile1.ladder,
+          win: profile1.wins,
+          lose: profile1.loses,
+        });
+        setRight({
+          nickname: profile2.nickname,
+          ladder: profile2.ladder,
+          win: profile2.wins,
+          lose: profile2.loses,
+        });
+      }
+    );
 
-  socket.on("setMiniProfile", (profile1: any, profile2: any) => {
-    setLeft({
-      nickname: profile1.nickname,
-      ladder: profile1.ladder,
-      win: profile1.wins,
-      lose: profile1.loses,
+    socket.on("startGame", () => {
+      setGamePhase("start");
     });
-    setRight({
-      nickname: profile2.nickname,
-      ladder: profile2.ladder,
-      win: profile2.wins,
-      lose: profile2.loses,
-    });
-  });
 
-  socket.on('startGame', () => {
-    setGamePhase("start");
-  });
-
-  socket.on('endGame', (winner_nickname, loser_nickname, check) => {
-      setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
+    socket.on("endGame", (winner_nickname, loser_nickname, check) => {
+      setResultOfGame({
+        winPlayer: winner_nickname,
+        losePlayer: loser_nickname,
+      });
       check();
       setGamePhase("end");
+    });
 
-  });
-
-  return () => {
-    socket?.removeAllListeners();
-    socket?.disconnect();
-    socket?.close();
-  };
-}, [socket]);
-
+    return () => {
+      socket?.removeAllListeners();
+      socket?.disconnect();
+      socket?.close();
+    };
+  }, [socket]);
 
   return (
     <div className="flex items-center justify-center h-screen">
