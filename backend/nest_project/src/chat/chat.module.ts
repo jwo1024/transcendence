@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-// import { AuthModule } from 'src/auth/auth.module';
-
 import { ChatGateway } from './chat.gateway';
 
 //Entities
@@ -25,6 +23,10 @@ import { ProfileService } from '../user/profile/profile.service';
 import { RoomMapper } from './mapper/room.mapper';
 import { MessageMapper } from './mapper/message.mapper';
 import { UserMapper } from './mapper/user.mapper';
+import { InvitationService } from 'src/game/service/invitation.service';
+import { ConnectedFriendlyPlayerService } from 'src/game/service/connectedFriendlyPlayer.service';
+import { InvitationEntity } from 'src/game/entities/invitation.entity';
+import { ConnectedFriendlyPlayerEntity } from 'src/game/entities/connectedFriendlyPlayer.entity';
 
 
 @Module({
@@ -36,6 +38,8 @@ import { UserMapper } from './mapper/user.mapper';
       JoinedRoomEntity,
 	  UserEntity,
 	  UserProfile,
+    InvitationEntity,
+    ConnectedFriendlyPlayerEntity,
     ])
   ],
   providers: [
@@ -47,6 +51,8 @@ import { UserMapper } from './mapper/user.mapper';
     MessageService,
     UserService,
     ProfileService,
+    InvitationService,
+    ConnectedFriendlyPlayerService,
     //Mappers
     RoomMapper, 
     MessageMapper,
