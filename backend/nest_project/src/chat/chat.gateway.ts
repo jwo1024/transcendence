@@ -135,10 +135,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     // // remove connection from DB
     await this.connectedUserService.deleteBySocketId(socket.id);
-    const a = await this.profileService.logOn(socket.data.userId);
-    this.logger.log(`a : ${a}`);
-    this.logger.log(`!!!!!!!!!!!!!!!!!!!!!!${socket.data.userId}!!!!!!!!!!!!!!!`);
-    // await this.profileService.inchat(socket.data.userId);
+    await this.profileService.logOn(socket.data.userId);
    await socket.disconnect();
   }
 
@@ -168,6 +165,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return false;
     return true;
   } 
+
+  private async amIInTheRoom(userId : number, roomId :number) : Promise<boolean>
+  {
+    const rooms = await this.roomService.getRoomsForUser(userId);
+    if (rooms === null || rooms === undefined)
+      return false;
+    if (rooms.find(finding => finding.roomId === roomId) === undefined ||
+      rooms.find(finding => finding.roomId === roomId) === null )
+      return false;
+    return true;
+  }
 
   //For Room(단체 채팅방 만들기용 메서드)
   @SubscribeMessage('Room-create')
@@ -229,7 +237,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     if (await this.amIValidUser(socket.id) === false)
     {
-      this.emitErrorEvent(socket.id, "Response-Room-create", "you are not valid user.")
+      this.emitErrorEvent(socket.id, "Response-DM-create", "you are not valid user.")
       return ;
     }
     const room = data.room;
@@ -318,7 +326,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     if (await this.amIValidUser(socket.id) === false)
     {
-      this.emitErrorEvent(socket.id, "Response-Room-create", "you are not valid user.")
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, roomInvite.roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, "Responsse-Room-invite", "you are not valid user.")
       return ;
     }
     
@@ -414,7 +427,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @ConnectedSocket() socket: Socket,
       @MessageBody() data: {targetId: number}) 
   {
-    
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Game-invite", "you are not valid user.")
+      return ;
+    }
+   
     const targetId = data.targetId;
     const userEntity = await this.userService.getOne(socket.data.userId);
     if(userEntity === undefined || userEntity === null)
@@ -489,6 +507,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomId: number) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, `Response-Room-enter_${roomId}`, "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, `Response-Room-enter_${roomId}`, "you are not valid user.")
+      return ;
+    }
     if ( await (this.roomService.isRoomExist(roomId)) === false)
       {
         //존재하지 않는 roomId 요청일 경우 무시
@@ -515,9 +543,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const messages = await this.messageMapper.Create_simpleDTOArrays(
         await this.messageService.findMessagesForRoom(roomFromDB), currentRoomId);
     socket.emit(`messages_${currentRoomId}`, messages);
-
-    //이벤트명 동적생성
-    // await this.server.to(socket.id).emit(`messages_${currentRoomId}`, await messages);
     
     this.emitOneRoomToOneUser(roomId, socket.id,`Response-Room-enter_${roomId}`);
     this.emitUserJoingingRooms(socket.id, await this.userService.getOne(socket.data.userId));
@@ -528,6 +553,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() room: RoomJoinDTO) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-join", "you are not valid user.")
+      return ;
+    }
     const roomFromDB = await this.roomService.getRoomEntityWithUsers(room.roomId);
     if ( roomFromDB === undefined || roomFromDB === null)
     {
@@ -541,7 +571,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
     if (roomFromDB.users.find(finding => finding.id === socket.data.userId ) !== undefined)
     {
-      await this.enterTheRoom(socket, room.roomId);
+      this.emitResponseEvent(socket.id, "Response-Room-join");
+      // await this.enterTheRoom(socket, room.roomId);
       return;
     }
     if (( await this.roomService.isValidForJoin( roomFromDB, room)) === false)
@@ -580,6 +611,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomId: number) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, `Response-Room-enter_${roomId}`, "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, `Response-Room-enter_${roomId}`, "you are not valid user.")
+      return ;
+    }
     if ( await (this.roomService.isRoomExist(roomId)) === false)
       {
         //존재하지 않는 roomId 요청일 경우 무시
@@ -635,6 +676,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket, 
     @MessageBody() rooml : RoomleaveDTO) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-leave", "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, rooml.roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-leave", "you are not valid user.")
+      return ;
+    }
     const roomId = rooml.roomId;
     const roomToleave = await this.roomService.getRoom(roomId);
     if (!roomToleave)
@@ -688,6 +739,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() messageDTO: MessageDTO) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Message-add", "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, messageDTO.roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, "Response-Message-add", "you are not valid user.")
+      return ;
+    }
     const room: RoomI  = await this.roomService.getRoomEntityWithConnections(
       messageDTO.roomId);
     if ( room === undefined)
@@ -719,7 +780,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
          await this.messageMapper.Create_entityToSimpleDto(createdMessage, currentRoomId));
     }
   }
-  
   
   private async emitErrorEvent(socketId:string, errorName:string, reason: string)
   {
@@ -809,21 +869,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, specificRoom);
   }
 
-  // private async emitUserArrayToUsersInRoom(roomId : number)
-  // {
-  //   const room: RoomI 
-  //     = await this.roomService.getRoom(roomId);
-  //   if (!room)
-  //     return;
-  //   const connectedUsers = room.connections;
-  //   // const joinedUsers: JoinedRoomI[] 
-  //   //   =  await this.joinedRoomService.findByRoom(room);
-    
-  //   const currentRoomId = room.roomId; 
-  //   for (const user of connectedUsers) 
-  //     await this.server.to(user.socketId).emit(`current-room_${currentRoomId}`, room);
-  // }
-
   private async emitOneRoomToOneUser(roomId : number, socketId: string, responseEvent: string)
   {
     const room: RoomI 
@@ -879,6 +924,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() data : {editData: RoomCreateDTO, roomId: number }) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Owner-Room-edit", "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, data.roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, "Response-Owner-Room-edit", "you are not valid user.")
+      return ;
+    }
     const editData = data.editData;
     const roomId = data.roomId;
       if ( await this.roomService.isRoomOwner(socket.data.userId, roomId) === false)
@@ -902,6 +957,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() adminDto: AdminRelatedDTO)
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Admin-add", "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, adminDto.roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, "Response-Admin-add", "you are not valid user.")
+      return ;
+    }
     const amIAdmin = await this.roomService.isRoomAdmin(socket.data.userId, adminDto.roomId)
     if (amIAdmin === false)
     {
@@ -942,6 +1007,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @MessageBody() adminDto: AdminRelatedDTO
   )
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Admin-kick", "you are not valid user.")
+      return ;
+    }
+    if (await this.amIInTheRoom(socket.data.userId, adminDto.roomId)  === false )
+    {
+      this.emitErrorEvent(socket.id, "Response-Admin-kick", "you are not valid user.")
+      return ;
+    }
     if (await this.onAdminMethods(adminDto.roomId, socket.data.userId, adminDto.targetUserId) === false)
     {
       this.emitErrorEvent(socket.id, "Response-Admin-kick", "you are not allowed to do that");
@@ -995,6 +1070,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @MessageBody() adminDto: AdminRelatedDTO
     )
     {
+      if (await this.amIValidUser(socket.id) === false)
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-Ban", "you are not valid user.")
+        return ;
+      } 
+      if (await this.amIInTheRoom(socket.data.userId, adminDto.roomId)  === false )
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-Ban", "you are not valid user.")
+        return ;
+      }
       if (await this.onAdminMethods(adminDto.roomId, socket.data.userId, adminDto.targetUserId) === false)
       {
         this.emitErrorEvent(socket.id, "Response-Admin-Ban", "You're not allowed to do that");
@@ -1038,8 +1123,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
           //쫓겨난 사람에게 새로 방정보 제공 --> 현재 접속한 경우에만.
           this.server.to(targetSocket.socketId).emit(`got-banned_${roomToleave.roomId}`);
           
-          this.emitJoiningRoomsToOneUser(targetId, targetSocket.socketId);
-          this.emitRoomsToOneUser(targetSocket.socketId);
+          await this.emitJoiningRoomsToOneUser(targetId, targetSocket.socketId);
+          await this.emitRoomsToOneUser(targetSocket.socketId);
         }
         
       const targetUserNickname = (await this.profileService.getUserProfileById(targetId)).nickname;
@@ -1057,6 +1142,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @ConnectedSocket() socket: Socket,
       @MessageBody() adminDto: AdminRelatedDTO)
     {
+      if (await this.amIValidUser(socket.id) === false)
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-mute", "you are not valid user.")
+        return ;
+      } 
+      if (await this.amIInTheRoom(socket.data.userId, adminDto.roomId)  === false )
+      {
+        this.emitErrorEvent(socket.id, "Response-Admin-mute", "you are not valid user.")
+        return ;
+      }
       if (await this.onAdminMethods(adminDto.roomId, socket.data.userId, adminDto.targetUserId) === false)
       {
         this.emitErrorEvent(socket.id, "Response-Admin-mute", "You're not allowed to do that");
@@ -1099,6 +1194,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @ConnectedSocket() socket: Socket,
       @MessageBody() targetId: number)
     {
+      if (await this.amIValidUser(socket.id) === false)
+      {
+        this.emitErrorEvent(socket.id, "Response-get-user-profile", "you are not valid user.")
+        return ;
+      } 
 
       const profile_info = await this.profileService.getUserProfileById(targetId);
       if (!profile_info)
@@ -1118,6 +1218,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @MessageBody() roomId: number
     )
     {
+      if (await this.amIValidUser(socket.id) === false)
+      {
+        this.emitErrorEvent(socket.id, "Response-get-users", "you are not valid user.")
+        return ;
+      } 
+      if (await this.amIInTheRoom(socket.data.userId, roomId)  === false )
+      {
+        this.emitErrorEvent(socket.id, "Response-get-users", "you are not valid user.")
+        return ;
+      }
       const roomWithBoth = await this.roomService.getRoomEntityWithBoth(roomId);
       if (roomWithBoth === undefined)
       {

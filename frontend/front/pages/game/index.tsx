@@ -109,6 +109,22 @@ export default function GamePage() {
     });
 
     return () => {
+      const token = sessionStorage.getItem("accessToken");
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/ladder`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+        })
+        .then((data) => {
+          sessionStorage.setItem("user", JSON.stringify(data));
+        })
+        .catch((error) => {
+          console.error("Error fetching image:", error);
+        });
+
       socket?.removeAllListeners();
       socket?.disconnect();
       socket?.close();

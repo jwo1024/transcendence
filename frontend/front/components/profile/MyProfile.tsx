@@ -122,11 +122,7 @@ const MyProfile: React.FC = () => {
           );
         else if (res.ok) {
           const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
-          // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
           setMydata({ ...user_obj, nickname: nickname });
-          // 로컬스토리지를 비우고 새로 업데이트
-          sessionStorage.clear();
-          sessionStorage.setItem("user", JSON.stringify(myData));
           return alert("닉네임이 변경되었습니다.");
         } else return alert("오마이갓 비상사태 큰일났다");
       })
@@ -135,6 +131,11 @@ const MyProfile: React.FC = () => {
         alert("에러발생했잔아");
       });
   };
+
+  useEffect(() => {
+    sessionStorage.setItem("user", JSON.stringify(myData));
+  }, [myData]);
+
   return (
     <Window
       title="My Profile"
