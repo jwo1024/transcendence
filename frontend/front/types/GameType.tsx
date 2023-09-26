@@ -50,4 +50,5 @@ export interface CanvasChange {
   ballSpeed: number;
   leftScore: number;
   rightScore: number;
+  ballRadius: number;
 }

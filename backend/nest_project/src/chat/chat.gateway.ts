@@ -580,7 +580,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomId: number) 
   {
-    if (await this.connectedUserService.)
     if ( await (this.roomService.isRoomExist(roomId)) === false)
       {
         //존재하지 않는 roomId 요청일 경우 무시
