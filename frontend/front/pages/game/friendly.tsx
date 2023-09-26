@@ -75,7 +75,7 @@ export default function GamePage() {
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken"); // tmp
     setSocket(
-      io("http://localhost:4000/friendly_game", {
+      io(`${process.env.NEXT_PUBLIC_BACKEND_URL}/friendly_game`, {
         extraHeaders: {
           Authorization: `Bearer ${token}`,
         },

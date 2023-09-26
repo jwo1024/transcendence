@@ -22,7 +22,7 @@ const DesktopPage = ({ handleClick }: { handleClick: () => void }) => {
 
 const LoginPage = () => {
   const onClick = () => {
-    fetch("http://localhost:4000/auth/getUrl")
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/getUrl`)
       .then((res) => {
         if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
         return res.text();

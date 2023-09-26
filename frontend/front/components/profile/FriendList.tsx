@@ -15,7 +15,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
   const fetchFriendList = () => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
-    fetch("http://localhost:4000/social/friend/list", {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/social/friend/list`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -38,7 +38,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
 
-    fetch("http://localhost:4000/social/block/list", {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/social/block/list`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -96,7 +96,7 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
     else if (clickedButton == "blockButton") urlSuffix += "/block/add";
     else return;
 
-    fetch(`http://localhost:4000${urlSuffix}/${nickname}`, {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${urlSuffix}/${nickname}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -118,10 +118,13 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
   const handleFriendDeleteClick = (user: userOfList) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
-    fetch(`http://localhost:4000/social/friend/delete/${user.id}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/social/friend/delete/${user.id}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
       .then((res) => {
         if (res.ok) alert("삭제되었습니다.");
         else alert("알 수 없는 오류가 발생했습니다.");
@@ -135,10 +138,13 @@ const FriendList: React.FC<FriendListProps> = ({ handleProfileClick }) => {
   const handleBlockDeleteClick = (user: userOfList) => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) return;
-    fetch(`http://localhost:4000/social/block/delete/${user.id}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/social/block/delete/${user.id}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
       .then((res) => {
         if (res.ok) alert("삭제되었습니다.");
         else alert("알 수 없는 오류가 발생했습니다.");

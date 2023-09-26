@@ -8,7 +8,8 @@ import {
 } from "@/types/ChatSocketEventName";
 
 const socketUrl: string =
-  process.env.NEXT_PUBLIC_CHAT_SOCKET_URL || "http://localhost:4000/chat";
+  process.env.NEXT_PUBLIC_CHAT_SOCKET_URL ||
+  `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat`;
 export const SocketContext = createContext<Socket | undefined>(undefined);
 
 const ChatSocketContext = (props: React.PropsWithChildren<{}>) => {

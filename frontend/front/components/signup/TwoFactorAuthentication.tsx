@@ -55,7 +55,7 @@ const TwoFactorAuthentication = ({
   const sendingMailSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const token = sessionStorage.getItem("accessToken");
-    fetch("http://localhost:4000/tfa/send", {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tfa/send`, {
       method: "POST",
       headers: {
         authorization: `Bearer ${token}`,
@@ -86,7 +86,7 @@ const TwoFactorAuthentication = ({
   const validationSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const token = sessionStorage.getItem("accessToken");
-    fetch("http://localhost:4000/tfa/verify", {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tfa/verify`, {
       method: "POST",
       headers: {
         authorization: `Bearer ${token}`,
