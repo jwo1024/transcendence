@@ -147,7 +147,6 @@ export class RoomMapper{
       else
         dto.joinUsersNum = entity.users.length; 
 
-      // this.logger.log("User Nums : " , dto.joinUsersNum);
       return dto;
     }
 

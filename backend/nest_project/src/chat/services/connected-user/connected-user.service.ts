@@ -41,13 +41,9 @@ export class ConnectedUserService {
     this.logger.log(`user : ${user.id}`);
     return this.connectedUserRepository.save({socketId, user, room });
   }
-  // async createfast(socketId : string, user: UserI, room : RoomEntity): Promise<ConnectedUserI> {
-  //   this.logger.log(`user : ${user.id}`);
-  //   return this.connectedUserRepository.save({socketId, user, room });
-  // }
 
-  async createfastWithRoomId(socketId : string, user: UserI, roomId : number): Promise<ConnectedUserI> {
-    // const room = await this.roomService.getRoomEntity(roomId);
+  async createfastWithRoomId(socketId : string, user: UserI, roomId : number): Promise<ConnectedUserI> 
+  {
     const room = await this.roomRepository.findOne({where : {roomId}});
     return this.connectedUserRepository.save({socketId, user, room });
   }

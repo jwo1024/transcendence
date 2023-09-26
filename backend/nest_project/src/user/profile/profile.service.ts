@@ -17,13 +17,12 @@ export class ProfileService {
         const result = await this.userProfileRepository.update({}, { status : userStatus.offline} );
         console.log(`result [${new Date()}] `,  result);
         const list = await this.getAllUserProfiles();
-        console.log('=============== initiated user list ===================')
+        // console.log('=============== initiated user list ===================')
         for (const user of list) {
             const { id , nickname, status } = user;
-            console.log(`[${id}]-${nickname}: ${status == 0 ? 'offine' : 'not offline'}`);
+            // console.log(`[${id}]-${nickname}: ${status == 0 ? 'offine' : 'not offline'}`);
         }
-        console.log('=======================================================')
-    
+        // console.log('=======================================================')
     }
 
     async logOn(id: number): Promise<any> {

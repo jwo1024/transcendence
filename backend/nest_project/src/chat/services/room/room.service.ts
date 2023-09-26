@@ -81,12 +81,6 @@ export class RoomService {
     connectedUser.room = room;
     connectedUser.socketId = socketId;
     const newConnection = await this.connectedUserRepository.save(connectedUser);
-    // if (w !== undefined && w != null)
-    // {
-    //   this.logger.log(`w ${w}`);
-    //   this.logger.log(`user ${w.user.id}`);
-    //   this.logger.log(`room ${w.room.roomId}`);
-    // }
 
     // RoomEntity에 UserEntity 추가 -> 관계성 테이블에 자동 생성
     if (!room.users) {
@@ -129,19 +123,16 @@ export class RoomService {
     // await this.connectedService.removeByUserIdAndRoomId(userId, roomId);
     if (room.connections !== undefined)
     {
-      this.logger.log(`1`);
       await this.connectedService.removeByUserIdAndRoomId(user.id, roomId);
       room.connections = (room.connections.filter(user => user.id !== userId));
     }
     if (room.users !== undefined)
     {
-      this.logger.log(`2`);
       await this.deleteUserRoomRelationship(user.id, roomId);
       room.users = room.users.filter(user => user.id !== userId);
     }
     if (room.roomAdmins !== undefined)
     {
-      this.logger.log(`3`);
       room.roomAdmins = (room.roomAdmins.filter(user => user !== userId));
     }
     
@@ -254,7 +245,6 @@ export class RoomService {
       editedRoom.roomPass = null;
     else
       editedRoom.roomPass = await this.hashPassword(newData.roomPass);
-    this.logger.log(`pass : ${editedRoom.roomPass}`);
     
     return  (await this.roomRepository.save(editedRoom));
   }
@@ -353,15 +343,12 @@ export class RoomService {
     if (!room) {
       return null;
     }
-  // this.logger.log(`room Message : ${room.messages}`);
     // 연결된 모든 데이터 삭제
     await this.roomRepository.createQueryBuilder()
       .delete()
       .from('message_entity') // MessageEntity와 관련된 데이터 삭제
       .where('"roomRoomId" = :roomId', { roomId })
       .execute();
-
-  this.logger.log(`room Message : ${room.messages}`);
 
     await this.roomRepository.createQueryBuilder()
       .delete()
