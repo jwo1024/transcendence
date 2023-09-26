@@ -1,10 +1,11 @@
 import { userStatus } from "../../user/profile/user-profile.entity";
 
+//jchoi 
 export class SimpleUserDto {
 
-    id: number;
+    id: number; 
 
-    nickname: string;
+    nickname: string;  //not null not undefined
 
 }
 
@@ -14,5 +15,5 @@ export class SimpleProfileDto {
 	status : userStatus;
 	ladder: number;
 	wins: number;
-	loses: number;
+	loses: number;``
 }

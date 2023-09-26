@@ -1,24 +1,25 @@
 import { SimpleUserDto } from "./simpleUser.dto";
 
+//jchoi
 export class MessageDTO {
 
-  roomId: number;
+  roomId: number; //number > 0 not null, not undefined
 
   userId: number;
   
-  text: string;
+  text: string; // 100자 이내 not null ,  not undefined
 
 }
 
 export class SimpleMessageDTO 
 {
-  id : number;
+  id : number; // not null,  not undefined
 
-  text: string;
+  text: string; //100자 이내 not null ,  not undefined
 
-  user: SimpleUserDto;
+  user: SimpleUserDto; // not null,  not undefined
 
-  roomId: number;
+  roomId: number; 
 
   created_at: Date;
 }
