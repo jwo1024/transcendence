@@ -87,15 +87,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         if (!userForChat)
           return this.disconnect(socket);
         const connection = await this.connectedUserService.findByUser(userForChat)
-          this.logger.log(`connection : ${connection}`)  
         if (connection !== null)
             return this.disconnect(socket); //한 아이디로 채팅에 중복 입장 허용하지 않음
        
         //위에서 disconnect 하는 경우 (this.disconnect에 구현하면 됨)
         //"http://localhost:3001/signup"이나 메인으로 redirection 하는것도 좋을 것
-
-        
-        this.logger.log(`Try connection: ${socket.id}`); 
 
         socket.data.userId = userForChat.id;
 
@@ -106,17 +102,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         
         await this.profileService.inchat(userId);
         
-        this.logger.log(`before get rooms : ${userForChat.id}`); 
 
         //새로 만들어진 socket Id를 참여중인 room 들이 알 수 있도록 생성
         const rooms = (await this.userService.getUserWithrooms(userForChat.id)).rooms;
-        this.logger.log(`rooms : ${rooms}`);
         if (rooms !== undefined && rooms.length > 0)
         {
-          this.logger.log(`rooms : ${rooms.length}`);
           for (const room of rooms)
             await this.connectedUserService.createfastWithRoomId(socket.id, userForChat, room.roomId);
-          // this.logger.log(`!!!!`);
           }
 
         const openRooms = await this.roomService.getRoomsByType(['open']);
@@ -145,14 +137,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     socket.disconnect();
   };
 
-  @SubscribeMessage("socketId & message")
-	ServerLog(
-		@ConnectedSocket() socket: Socket,
-		@MessageBody() message: string 
-    )
-  {
-		this.logger.error(`${socket.id}: `, message);
-	}
+  // @SubscribeMessage("socketId & message")
+	// ServerLog(
+	// 	@ConnectedSocket() socket: Socket,
+	// 	@MessageBody() message: string 
+  //   )
+  // {
+	// 	this.logger.error(`${socket.id}: `, message);
+	// }
   //------------------------------------------------------
   //--------채팅 메서드 시작-------------------------
 
@@ -163,11 +155,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         @MessageBody() room:RoomCreateDTO)
         // room:RoomCreateDTO) 
   {
-    this.logger.log(`userid : ${socket.data.userId}`)
     const userEntity = await this.userService.getOne(socket.data.userId);
 
-    this.logger.log(`userEntity : ${userEntity}`);
-   
     //방을 만들고 만든 사용자를 Owner로서 임명 
     const createdRoom = await this.roomService.createRoom(room, userEntity);
     
@@ -267,8 +256,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
     //상대방 사용자를 초대
-    this.logger.log(`createdRoomID : ${createdRoom.roomId}`);
-    // if (this.roomService.addUserToRoom(userTheOther.id, createdRoom.roomId, socketTheOther.socketId) === null)
     if (this.roomService.addUserToRoom(userTheOther.id, createdRoom.roomId, socketTheOther.socketId) === null)
     {
       this.deleteRoom(createdRoom.roomId); //만든 방 삭제
@@ -291,7 +278,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomInvite: RoomInviteDTO) 
   {
-    this.logger.log(`!!!!!!!!!!!!!!!!!${roomInvite.targetUserNickname}@@@@@@@`);
     const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
     if(targetProfile === null || targetProfile === undefined)
     {
@@ -504,20 +490,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const userNickname = userProfile.nickname;
 
     const userChat = await this.userService.getOne(userId);
-    this.roomService.removeUserFromRoom(userChat, socket.id, roomId);
+    await this.roomService.removeUserFromRoom(userChat, socket.id, roomId);
+    this.emitResponseEventWithNumber(socket.id, "Response-Room-leave", roomId);
     // roomToleave.users = roomToleave.users.filter(user => user.id !== userId);
     // await this.connectedUserService.removeByUserIdAndRoomId(userId, roomId);
     
-    //주인장일 경우 계승하고 나감
-    const AfterRoom = await this.roomService.getRoomEntityWithBoth(roomId);
+    //주인장일 경우 계승하고 나감 + 아무도 없으면 다 삭제
+    const AfterRoom = await this.roomService.getRoomEntityWithCUM(roomId);
+    this.logger.log(AfterRoom.users);
     if (AfterRoom.users === undefined || AfterRoom.users.length === 0)
+    {
+      this.logger.log(`delete!!!!!!!!!!!!!!!!!!!`);
       this.deleteRoom(roomId);
+      // return ;
+      this.emitUserJoingingRooms(socket.id, await (this.userService.getOneUSerWithRoomsAndConnections(userId)));
+      this.emitRoomsToAllConnectedUser();
+      return ;
+    }
     else
     {
       if (userId === roomToleave.roomOwner)
         this.changeOwner(AfterRoom);
     }
-
+    // this.logger.log(`ddddddd!!!!!!!!!!!!!!!!!`);
+    // return ;
     this.emitResponseEventWithNumber(socket.id, "Response-Room-leave", roomId);
     this.emitNotice(roomToleave, `[${userNickname}]님이 방을 나갔습니다!`);
     this.emitOneRoomToUsersInRoom(roomToleave.roomId);
@@ -638,8 +634,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     const room: RoomI 
       = await this.roomService.getRoomEntityWithConnections(roomId);
-    this.logger.log(`admins : ${room.roomAdmins}`);
-    this.logger.log(`admins : ${room.roomAdmins.length}`);
     if (!room)
       return;
     const connectedUsers = room.connections;
@@ -647,7 +641,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       return ;//현재 접속중인 유저가 없어서 당장 전송하진 않음.
     const roomWithUsers 
         = await this.roomService.getRoomEntityWithUsers(roomId); 
-      // this.logger.log(`Emit One : room.users : ${roomWithUsers.users}`);
     if(roomWithUsers !== undefined && roomWithUsers !== null)
       this.logger.log(`Emit One : room.users : ${roomWithUsers.users.length}`);
     const specificRoom = await this.roomMapper.Create_specificInterfaceToDto(roomWithUsers);
@@ -697,8 +690,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     {
       // this.connectedUserService.
       const joiningrooms = await this.roomMapper.Create_simpleDTOArrays((await this.userService.getUserWithrooms(connection.user.id)).rooms);
-      this.logger.log(`joining : ${joiningrooms}`);
-      this.logger.log(`joining : ${joiningrooms.length}`);
       await this.server.to(connection.socketId).emit(
         'me-joining-rooms', joiningrooms);
     }
@@ -941,8 +932,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.emitErrorEvent(socket.id, "Response-Admin-mute", "this room is not exist");
         return ;
       }
-      this.logger.log(`now : ${now}`);
-      this.logger.log (` now type : ${typeof(now)}`)
       this.server.to(targetSocket.socketId).emit(`got-muted_${room.roomId}`, now);
       this.emitNotice(room, `${targetProfile.nickname}님이 3분간 mute 당했습니다.`);
     }
@@ -974,7 +963,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       @ConnectedSocket() socket: Socket,
       @MessageBody() targetId: number)
     {
-      this.logger.log(`target : ${targetId}`);
 
       const profile_info = await this.profileService.getUserProfileById(targetId);
       if (!profile_info)
@@ -982,8 +970,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         this.emitErrorEvent(socket.data.userId, "Response-get-user-profile", "the user not found");
         return ;
       }
-      // this.logger.log(`profile_info ${profile_info}`);
-      // this.logger.log(`profile_info ${profile_info.id}`);
       this.emitResponseEvent(socket.data.userId, "Response-get-user-profile");
       socket.emit( "user-profile-info",
            (await this.userMaaper.Create_simpleProfileEntityToDto(profile_info)));

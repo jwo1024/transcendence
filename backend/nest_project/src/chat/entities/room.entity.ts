@@ -35,7 +35,8 @@ export class RoomEntity {
   @OneToMany(() => ConnectedUserEntity, (conncetion) => conncetion.room)
   connections: ConnectedUserEntity[];
 
-  @OneToMany(() => MessageEntity, message => message.room, {cascade : true})
+  // @OneToMany(() => MessageEntity, message => message.room, {cascade : true})
+  @OneToMany(() => MessageEntity, message => message.room)
   messages: MessageEntity[];
 
   @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})

@@ -55,8 +55,6 @@ export class RoomService {
 
   async createRoom(room: RoomCreateDTO, creator: UserI): Promise<RoomI> 
   {
-    this.logger.log(`first step : ${room.roomName}, ${room.roomType}`);
-   
     //비밀번호 있다면 hash화 해서 저장
     if (room.roomPass != undefined)
       room.roomPass = await this.hashPassword(room.roomPass);
@@ -85,13 +83,13 @@ export class RoomService {
     if (!room) 
       return null;
     
-      this.logger.log(`room users : ${room.users}`);
-    if(room.users !== undefined && room.users !== null)
-    {
-      this.logger.log(`users in room : ${room.users.length}`);
-      if(room.users.length > 0)
-        this.logger.log(`users in room : ${room.users[0].id}`);
-    }
+    //   this.logger.log(`room users : ${room.users}`);
+    // if(room.users !== undefined && room.users !== null)
+    // {
+    //   this.logger.log(`users in room : ${room.users.length}`);
+    //   if(room.users.length > 0)
+    //     this.logger.log(`users in room : ${room.users[0].id}`);
+    // }
 
     // ConnectedUserEntity 생성
     const connectedUser = new ConnectedUserEntity();
@@ -130,38 +128,52 @@ export class RoomService {
     return this.roomRepository.save(room);
   }
 
-  async deleteUserRoomRelationship(userId: number, roomId: number): Promise<void> 
-  {
-    this.logger.log(`userId ${userId}`);
-    this.logger.log(`roomId ${roomId}`);
+  // async deleteUserRoomRelationship(userId: number, roomId: number): Promise<void> 
+  // {
+  //   // this.logger.log(`userId ${userId}`);
+  //   // this.logger.log(`roomId ${roomId}`);
 
-    await this.roomRepository
-      .createQueryBuilder()
-      .delete()
-      .from('room_entity_users_user_entity')
-      .where('"roomEntityRoomId" = :roomId AND "userEntityId" = :userId', { userId, roomId })
-      .execute();
+  //   await this.roomRepository
+  //     .createQueryBuilder()
+  //     .delete()
+  //     .from('room_entity_users_user_entity')
+  //     .where('"roomEntityRoomId" = :roomId AND "userEntityId" = :userId', { userId, roomId })
+  //     .execute();
 
-    this.logger.log(`done with delete relationship`);
-  }
+  //   // this.logger.log(`done with delete relationship`);
+  // }
 
   async removeUserFromRoom(user: UserI, socketId : string, roomId: number) 
   {
-    const room = await this.roomRepository
-      .createQueryBuilder('room')
-      .leftJoinAndSelect('room.users', 'users')
-      .leftJoinAndSelect('room.connections', 'connections')
-      .where('room.roomId = :roomId', { roomId: roomId })
-      .getOne();
-
+    // const room = await this.roomRepository
+    //   .createQueryBuilder('room')
+    //   .leftJoinAndSelect('room.users', 'users')
+    //   .leftJoinAndSelect('room.connections', 'connections')
+    //   .where('room.roomId = :roomId', { roomId: roomId })
+    //   .getOne();
+    const room = await this.getRoomEntityWithCUM(roomId);
     const userId = user.id;
-    // const userEntity = await this.userRepository.findOne({where : {id : userId}});
-    
-    // 사용자의 참여중인 방 목록에서 현재 방 삭제
-    await this.deleteUserRoomRelationship(userId, roomId); 
-    // const roomNow = await this.roomRepository.findOne({ where: {roomId: roomId}});
-
     await this.connectedService.removeByUserIdAndRoomId(userId, roomId);
+    if (room.connections !== undefined)
+    {
+    // roomToleave.users = roomToleave.users.filter(user => user.id !== userId);
+      room.connections = room.connections.filter(user => user.id !== userId);
+    }
+    if (room.users !== undefined)
+    {
+      room.users = room.users.filter(user => user.id !== userId);
+    }
+    if (room.roomAdmins.find(finding => finding === userId ) !== undefined)
+    {
+      room.roomAdmins = room.roomAdmins.filter(user => user !== userId);
+    }
+
+    // const userEntity = await this.userRepository.findOne({where : {id : userId}});
+    // 사용자의 참여중인 방 목록에서 현재 방 삭제
+    // await this.deleteUserRoomRelationship(userId, roomId);
+    // const roomNow = await this.roomRepository.findOne({ where: {roomId: roomId}});
+    
+    await this.roomRepository.save(room);
   }
 
   async getAllRooms(): Promise<RoomI[]> {
@@ -235,8 +247,6 @@ export class RoomService {
   async isRoomOwner(userId: number, roomId: number) : Promise<boolean> 
   {
     const room = await this.getRoom(roomId);
-    this.logger.log(`roomOwner : ${room.roomOwner}`);
-    this.logger.log(`userId : ${userId}`);
     if (room.roomOwner === userId)
       return true;
     return false;
@@ -268,10 +278,10 @@ export class RoomService {
     const editedRoom = await this.getRoomEntityWithCUM(roomId);
     // editedRoom.roomName = newData.roomName;
     editedRoom.roomType = newData.roomType;
-    if(newData.roomPass === undefined)
+    if (newData.roomPass === undefined)
       editedRoom.roomPass = null;
     else
-      editedRoom.roomPass = newData.roomPass;
+      editedRoom.roomPass = this.hashPassword(newData.roomPass);
     
     return  this.roomRepository.save(editedRoom);
   }
