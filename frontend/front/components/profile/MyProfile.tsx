@@ -43,12 +43,11 @@ const MyProfile: React.FC = () => {
   const myProfile: boolean = true;
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-  const [avatarURL, setAvatarURL] = useState<string | null>(null);
-  const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
-
-  const [profileAvatarSrc, setProfileAvatarSrc] = useState<string | undefined>(
+  const [avatarURL, setAvatarURL] = useState<string | undefined>(
     "https://github.com/React95.png"
   );
+  const [uploadAvatar, setUploadAvatar] = useState<File | null>(null);
+
   const newNickNameInputRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
@@ -66,7 +65,7 @@ const MyProfile: React.FC = () => {
       })
       .then((blob) => {
         const imageUrl = URL.createObjectURL(blob);
-        setProfileAvatarSrc(imageUrl);
+        setAvatarURL(imageUrl);
       })
       .catch((error) => {
         console.error("Error fetching image:", error);
@@ -109,7 +108,7 @@ const MyProfile: React.FC = () => {
       })
       .then((blob) => {
         const imageUrl = URL.createObjectURL(blob);
-        setProfileAvatarSrc(imageUrl);
+        setAvatarURL(imageUrl);
       })
       .catch((error) => {
         console.error("Error fetching image:", error);
@@ -130,26 +129,28 @@ const MyProfile: React.FC = () => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ rename: nickname })
-    }).then((res) => {
-      if (res.status == 409)
-        return alert("이미 존재하는 닉네임입니다. 다른 닉네임을 입력해주세요.");
-      else if (res.ok) {
-        const user = sessionStorage.getItem("user");
-        const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
-        // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
-        setMydata({ ...user_obj, nickname: nickname });
-        // 로컬스토리지를 비우고 새로 업데이트
-        sessionStorage.clear();
-        sessionStorage.setItem("user", JSON.stringify(myData)); 
-        return alert("닉네임이 변경되었습니다.");
-      }
-      else
-        return alert("오마이갓 비상사태 큰일났다");
-    }).catch((error) => {
-      console.error("Error while change nickname:", error);
-      alert("에러발생했잔아");
-    });
+      body: JSON.stringify({ rename: nickname }),
+    })
+      .then((res) => {
+        if (res.status == 409)
+          return alert(
+            "이미 존재하는 닉네임입니다. 다른 닉네임을 입력해주세요."
+          );
+        else if (res.ok) {
+          const user = sessionStorage.getItem("user");
+          const user_obj = JSON.parse(sessionStorage.getItem("user") || "{}");
+          // setMyData를 하면 컴포넌트가 자동 업데이트 될 것임.
+          setMydata({ ...user_obj, nickname: nickname });
+          // 로컬스토리지를 비우고 새로 업데이트
+          sessionStorage.clear();
+          sessionStorage.setItem("user", JSON.stringify(myData));
+          return alert("닉네임이 변경되었습니다.");
+        } else return alert("오마이갓 비상사태 큰일났다");
+      })
+      .catch((error) => {
+        console.error("Error while change nickname:", error);
+        alert("에러발생했잔아");
+      });
   };
   return (
     <Window
@@ -161,7 +162,7 @@ const MyProfile: React.FC = () => {
     >
       <div className=" flex flex-col items-center justify-between p-4">
         <div className="flex items-center space-x-8">
-          <img src={profileAvatarSrc} alt="Avatar" className=" w-32 h-32" />
+          <img src={avatarURL} alt="Avatar" className=" w-32 h-32" />
           <div className="flex flex-col items-center space-y-3 w-28">
             <span className=" text-3xl">{myData.nickname}</span>
           </div>
@@ -183,7 +184,7 @@ const MyProfile: React.FC = () => {
             w=""
             h=""
           />
-          <Button className="w-full">아바타 변경</Button>
+          <Button className="w-full">Avatar Confirm</Button>
         </form>
         <form
           className="flex flex-col space-y-1 p-0.5 items-center"
@@ -194,7 +195,7 @@ const MyProfile: React.FC = () => {
             className="flex-1 w-32"
             ref={newNickNameInputRef}
           />
-          <Button className="w-full">닉네임 변경</Button>
+          <Button className="w-full">Confirm</Button>
         </form>
       </div>
       <div className="p-4 w-full">
