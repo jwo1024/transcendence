@@ -127,10 +127,10 @@ const UserListMenuBox = ({
   const onSubmitInviteFriend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const inviteFriendData: RoomInviteDTO = {
-      targetUserNick: inviteNickRef.current?.value || "",
+      targetUserNickname: inviteNickRef.current?.value || "",
       roomId: roomInfo.roomId,
     };
-    if (inviteFriendData.targetUserNick === "")
+    if (inviteFriendData.targetUserNickname === "")
       return alert("닉네임을 입력해주세요.");
     console.log("socket.emit EMIT_ROOM_INVITE", inviteFriendData);
     socket.current?.emit(EMIT_ROOM_INVITE, inviteFriendData);

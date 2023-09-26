@@ -288,7 +288,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     this.logger.log(`input room : ${roomInvite.roomId}`);
     this.logger.log(`input nickname : ${roomInvite.targetUserNickname}`);
     
-    const targetProfile = await this.profileService.getUserProfileByNickname("roomInvite.targetUserNickname");
+    const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
     if(targetProfile === null || targetProfile === undefined)
     {
       this.emitErrorEvent(socket.id, "Responsse-Room-invite", "user is not found");
