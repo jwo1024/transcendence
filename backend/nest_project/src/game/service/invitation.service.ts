@@ -28,9 +28,12 @@ export class InvitationService {
 	) {}
 
 
-	async invite(host_id: number, guest_id: number): Promise<InvitationEntity>
+	async create(host_id: number, guest_id: number): Promise<InvitationEntity>
 	{
-		if (!this.checkInvitationOn(host_id) && !this.checkInvitationOn(guest_id))
+		// console.log(`초대 메서드 create입니다~`);
+		// console.log(`${await this.checkInvitationOn(host_id)}`);
+		// console.log(`${await this.checkInvitationOn(guest_id)}`);
+		if (!(await this.checkInvitationOn(host_id)) && !(await this.checkInvitationOn(guest_id)))
 			return this.invitationRepository.save({host_id: host_id, guest_id: guest_id});
 		return null;
 	}
@@ -68,6 +71,7 @@ export class InvitationService {
 
 	async updatePlayerByInvitation(player: FriendlyPlayer): Promise<ConnectedFriendlyPlayerEntity>
 	{
+		setTimeout(() => {}, 2000);
 		let invitation = await this.getByHostId(player.id);
 		if (!invitation)
 		{
