@@ -21,6 +21,7 @@ import { Player } from './dto/player.dto';
 import { ConnectedFriendlyPlayerService } from './service/connectedFriendlyPlayer.service';
 // import { ConnectedFriendlyPlayerEntity } from './entities/connectedFriendlyPlayer.entity';
 import { FriendlyPlayer } from './dto/friendlyPlayer.dto';
+import { InvitationService } from './service/invitation.service';
 
 // todo: ladder_game, friendly_game 이외의 네임스페이스 처리하는 코드 필요
 
@@ -38,6 +39,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		private connectedFriendlyPlayerService: ConnectedFriendlyPlayerService,
 		private profileService: ProfileService,
 		private matchService: MatchService,
+		private invitationSercive: InvitationService,
 	)
 	{
 		this.gameFieldArr = [];
@@ -82,9 +84,10 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 		{
 			return socket.disconnect();
 		}
-		socket.emit('savePlayer', async (inviteData) => {
-			await this.connectedFriendlyPlayerService.updateInvitation(current, inviteData);
-		});
+		await this.invitationSercive.updatePlayerByInvitation(current);
+		// socket.emit('savePlayer', async (inviteData) => {
+		// 	await this.connectedFriendlyPlayerService.updateInvitation(current, inviteData);
+		// });
 		this.profileService.ingame(userId);
 		this.logger.log(`current Player : ${current.id}, ${current.socketId}`);
 		this.logger.log(`data taken :`);

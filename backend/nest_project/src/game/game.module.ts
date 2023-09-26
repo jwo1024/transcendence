@@ -16,6 +16,8 @@ import { UserService } from 'src/chat/services/user/user.service';
 import { UserEntity } from 'src/chat/entities/user.entity';
 import { ConnectedFriendlyPlayerService } from './service/connectedFriendlyPlayer.service';
 import { ConnectedFriendlyPlayerEntity } from './entities/connectedFriendlyPlayer.entity';
+import { InvitationEntity } from './entities/invitation.entity';
+import { InvitationService } from './service/invitation.service';
 
 @Module
 ({
@@ -25,6 +27,7 @@ import { ConnectedFriendlyPlayerEntity } from './entities/connectedFriendlyPlaye
 		UserProfile,
 		MatchEntity,
 		HistoryEntity,
+		InvitationEntity,
 		UserEntity,
 	])],
 	// exports: [TypeOrmModule],
@@ -37,6 +40,7 @@ import { ConnectedFriendlyPlayerEntity } from './entities/connectedFriendlyPlaye
 		ConnectedPlayerService,
 		ConnectedFriendlyPlayerService,
 		HistoryService,
+		InvitationService,
 		UserService,
 	],
 })

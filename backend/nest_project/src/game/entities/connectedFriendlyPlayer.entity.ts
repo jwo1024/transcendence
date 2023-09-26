@@ -17,6 +17,9 @@ export class ConnectedFriendlyPlayerEntity
   @Column()
   guestId: number = 0;
 
+  // @Column()
+  // invitation_id: number = 0;
+
   @Column()
   refuseGame: boolean = false;
 
