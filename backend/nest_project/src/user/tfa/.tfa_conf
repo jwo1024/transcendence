@@ -1,4 +1,0 @@
-TFA_EMAIL_HOST="smtp.gmail.com"
-TFA_EMAIL_PORT=587
-TFA_EMAIL_AUTH_USER="j7254913@gmail.com"
-TFA_EMAIL_AUTH_PASS="tnejdimmcqnfdwbt"

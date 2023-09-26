@@ -24,7 +24,8 @@ export class SocialController {
     
     @Post('friend/add/:nickname')
     async addFriend(@Req() req, @Res() res, @Param('nickname') nickname: string) {
-        
+        if (!nickname)
+            throw new BadRequestException('invalid nickname');
             const me = await this.profileService.getUserProfileById(req.user.userId);
             const target = await this.profileService.getUserProfileByNickname(nickname);
             
@@ -39,12 +40,14 @@ export class SocialController {
                 me.friend_list.push(target.id);
                 const ret = await this.profileService.updateUserProfileById(me.id, me);
                 console.log(ret);
-                return res.status(200).send('friend added');
+                return res.status(200).ㄱsend('friend added');
          }
     }
     
     @Post('friend/delete/:id')
     async deleteFriend(@Req() req, @Res() res, @Param('id') targetId: number) {
+        if (!targetId)
+            throw new BadRequestException('invalid id');
         const me = await this.profileService.getUserProfileById(req.user.userId);
         const target = await this.profileService.getUserProfileById(targetId);
         if (!target)
@@ -71,26 +74,30 @@ export class SocialController {
 
     @Post('block/add/:nickname')
     async addBlock(@Req() req, @Res() res, @Param('nickname') nickname: string) {
-            const me = await this.profileService.getUserProfileById(req.user.userId);
-            const target = await this.profileService.getUserProfileByNickname(nickname);
-            
-            if (!target)
-                return res.status(HttpStatus.NOT_FOUND).send('no such user');
-            else if (me.id === target.id)
-                return res.status(HttpStatus.BAD_REQUEST).send('cannot add myself');
-            else if (me.block_list.includes(target.id))
-                return res.status(HttpStatus.CONFLICT).send('already blocked');
-            else
-            {   
-                me.block_list.push(target.id);
-                const ret = await this.profileService.updateUserProfileById(me.id, me);
-                console.log(ret);
-                return res.status(200).send('friend added');
-         }
+        if (!nickname)
+        throw new BadRequestException('invalid nickname');
+        const me = await this.profileService.getUserProfileById(req.user.userId);
+        const target = await this.profileService.getUserProfileByNickname(nickname);
+        
+        if (!target)
+            return res.status(HttpStatus.NOT_FOUND).send('no such user');
+        else if (me.id === target.id)
+            return res.status(HttpStatus.BAD_REQUEST).send('cannot add myself');
+        else if (me.block_list.includes(target.id))
+            return res.status(HttpStatus.CONFLICT).send('already blocked');
+        else
+        {   
+            me.block_list.push(target.id);
+            const ret = await this.profileService.updateUserProfileById(me.id, me);
+            console.log(ret);
+            return res.status(200).send('friend added');
+        }
     }
     
     @Post('block/delete/:id')
     async deleteBlock(@Req() req, @Res() res, @Param('id') targetId: number) {
+        if (!targetId)
+            throw new BadRequestException('invalid id');
         const me = await this.profileService.getUserProfileById(req.user.userId);
         const target = await this.profileService.getUserProfileById(targetId);
         if (!target)
@@ -102,7 +109,4 @@ export class SocialController {
             return res.status(200).send('block deleted');
         }
     }
-
-
-    
 }
