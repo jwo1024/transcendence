@@ -96,8 +96,8 @@ export class ConnectedUserService {
     await this.connectedUserRepository.delete({ user: { id: userId }, room: { roomId } });
   }
 
-  async removeByUserIdAndRoomId(userId: number, roomId: number,
-  ) {
+  async removeByUserIdAndRoomId(userId: number, roomId: number,)
+  {
     // 사용자(userId)와 방(roomId)에 관한 ConnectedUserEntity를 찾습니다.
     const connectedUser = await this.connectedUserRepository.findOne({
       where: { user: { id: userId }, room: { roomId: roomId } },

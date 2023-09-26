@@ -15,7 +15,8 @@ export class MessageEntity {
   @JoinColumn()
   user: UserEntity;
 
-  @ManyToOne(() => RoomEntity, room => room.messages, {onDelete: 'CASCADE',})
+  // @ManyToOne(() => RoomEntity, room => room.messages, {onDelete: 'CASCADE',})
+  @ManyToOne(() => RoomEntity, room => room.messages)
   @JoinColumn()
   room: RoomEntity;
 
