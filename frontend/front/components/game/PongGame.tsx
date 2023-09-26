@@ -99,6 +99,8 @@ const PongGame: React.FC<PongGameProps> = ({ socket }) => {
 
       left.score = data.leftScore;
       right.score = data.rightScore;
+
+      ball.radius = data.ballRadius;
     });
 
     // rendering function

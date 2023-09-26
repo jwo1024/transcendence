@@ -91,6 +91,19 @@ export class MatchService {
 		}
 	}
 
+	async getOpponentByPlayerIdFriend(match_id: number, player_id: number): Promise<ConnectedFriendlyPlayerEntity>
+	{
+		const match = await this.getByMatchId(match_id);
+		if (match.playerLeft === player_id)
+		{
+			return this.connectedFriendlyPlayerService.getPlayer(match.playerRight);
+		}
+		else
+		{
+			return this.connectedFriendlyPlayerService.getPlayer(match.playerLeft);
+		}
+	}
+
 	async updateRightScore(id: number, score: number) : Promise<void>
 	{
 		await this.matchRepository.update({match_id: id}, {scoreRight : score});

@@ -575,6 +575,7 @@ export class LadderGameGateway
         ballSpeed: gameField.ballSpeed,
         leftScore: gameField.scoreLeft,
         rightScore: gameField.scoreRight,
+        ballRadius: gameField.ballRadius,
       };
 
       // server.to(player1.socketId).emit('updateCanvas', gameField);

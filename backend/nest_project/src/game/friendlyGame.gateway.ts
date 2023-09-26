@@ -332,12 +332,13 @@ export class FriendlyGameGateway
       gameTimer: null,
     };
 
+    this.logger.log(`도대체 뭐야 ${match.game_type}`);
     if (match.game_type === 'speedUp') {
-      gameField.ballSpeed = 14;
+    gameField.ballSpeed = 30;
     } else if (match.game_type === 'smallBall') {
-      gameField.ballRadius = 5;
+    gameField.ballRadius = 5;
     } else if (match.game_type === 'enjoyAll') {
-      gameField.ballSpeed = 14;
+    gameField.ballSpeed = 30;
       gameField.ballRadius = 5;
     }
 
@@ -365,17 +366,17 @@ export class FriendlyGameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() userY: number,
   ) {
-    const player1 =
+    const player =
       await this.connectedFriendlyPlayerService.getPlayerBySocketId(socket.id);
-    if (!player1) return;
-    const match = await this.matchService.getByPlayerId(player1.id);
-    // const opponent = await this.matchService.getOpponentByPlayerId(
-    //   match.match_id,
-    //   player.id,
-    // );
-    const opponent = await this.connectedFriendlyPlayerService.getPlayer(player1.guestId);
+    if (!player) return;
+    const match = await this.matchService.getByPlayerId(player.id);
+    const opponent = await this.matchService.getOpponentByPlayerIdFriend(
+      match.match_id,
+      player.id,
+    );
+    // const opponent = await this.connectedFriendlyPlayerService.getPlayer(player.guestId);
     //
-    const player = await this.connectedFriendlyPlayerService.getPlayer(opponent.hostId);
+    // const player = await this.connectedFriendlyPlayerService.getPlayer(opponent.hostId);
     const gameField = await this.getGameFieldByMatchId(match.match_id);
 
     if (userY < 0) {
@@ -538,7 +539,7 @@ export class FriendlyGameGateway
         this.endGame(match.match_id, null);
       }
       if (match.game_type === 'speedUp' || match.game_type === 'enjoyAll')
-        resetBall(gameField, 14, -1);
+        resetBall(gameField, 30, -1);
       else resetBall(gameField, 10, -1);
     } else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth) {
       ++gameField.scoreLeft;
@@ -548,7 +549,7 @@ export class FriendlyGameGateway
         this.endGame(match.match_id, null);
       }
       if (match.game_type === 'speedUp' || match.game_type === 'enjoyAll')
-        resetBall(gameField, 14, 1);
+        resetBall(gameField, 30, 1);
       else resetBall(gameField, 10, 1);
     }
 
@@ -560,6 +561,7 @@ export class FriendlyGameGateway
       ballSpeed: gameField.ballSpeed,
       leftScore: gameField.scoreLeft,
       rightScore: gameField.scoreRight,
+      ballRadius: gameField.ballRadius,
     };
 
     server.to(player1.socketId).emit('updateCanvas', data);
