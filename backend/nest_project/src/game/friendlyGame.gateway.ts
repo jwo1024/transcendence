@@ -370,6 +370,7 @@ export class FriendlyGameGateway
       match.match_id,
       player.id,
     );
+    if (!opponent) return;
     // const opponent = await this.connectedFriendlyPlayerService.getPlayer(player.guestId);
     //
     // const player = await this.connectedFriendlyPlayerService.getPlayer(opponent.hostId);
@@ -386,8 +387,6 @@ export class FriendlyGameGateway
       rightY: gameField.paddleRightY,
     };
 
-    this.logger.log(`제대로 가고 잇니,, ${player.id} : ${player.socketId}`);
-    this.logger.log(`제대로 가고 잇니,, ${opponent.id} : ${opponent.socketId}`);
     if (match.playerLeft === player.id) {
       gameField.paddleLeftY = userY;
       this.server.to(player.socketId).emit('paddleMove', data);
@@ -529,7 +528,7 @@ export class FriendlyGameGateway
     // check score
     if (gameField.ballX - gameField.ballRadius < 0) {
       ++gameField.scoreRight;
-      this.matchService.updateRightScore(match.match_id, gameField.scoreRight);
+      await this.matchService.updateRightScore(match.match_id, gameField.scoreRight);
 
       if (gameField.scoreRight > 2) {
         this.endGame(match.match_id, null);
@@ -539,7 +538,7 @@ export class FriendlyGameGateway
       else resetBall(gameField, 10, -1);
     } else if (gameField.ballX + gameField.ballRadius > gameField.canvasWidth) {
       ++gameField.scoreLeft;
-      this.matchService.updateLeftScore(match.match_id, gameField.scoreRight);
+      await this.matchService.updateLeftScore(match.match_id, gameField.scoreLeft);
 
       if (gameField.scoreLeft > 2) {
         this.endGame(match.match_id, null);

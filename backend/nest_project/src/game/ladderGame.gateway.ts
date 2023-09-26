@@ -347,6 +347,7 @@ export class LadderGameGateway
         match.match_id,
         player.id,
       );
+      if (!opponent) return;
       const gameField = await this.getGameFieldByMatchId(match.match_id);
 
       if (userY < 0) {
@@ -544,7 +545,7 @@ export class LadderGameGateway
       // check score
       if (gameField.ballX - gameField.ballRadius < 0) {
         ++gameField.scoreRight;
-        this.matchService.updateRightScore(
+        await this.matchService.updateRightScore(
           match.match_id,
           gameField.scoreRight,
         );
@@ -558,7 +559,7 @@ export class LadderGameGateway
         gameField.canvasWidth
       ) {
         ++gameField.scoreLeft;
-        this.matchService.updateLeftScore(match.match_id, gameField.scoreRight);
+        await this.matchService.updateLeftScore(match.match_id, gameField.scoreLeft);
 
         if (gameField.scoreLeft > 2) {
           this.endGame(match.match_id, null);
@@ -578,8 +579,6 @@ export class LadderGameGateway
         ballRadius: gameField.ballRadius,
       };
 
-      // server.to(player1.socketId).emit('updateCanvas', gameField);
-      // server.to(player2.socketId).emit('updateCanvas', gameField);
       server.to(player1.socketId).emit('updateCanvas', data);
       server.to(player2.socketId).emit('updateCanvas', data);
     } catch (error) {
@@ -618,17 +617,3 @@ async function resetBall(gameField: GameField, direction: number) {
   gameField.ballYvelocity = 6;
   gameField.ballSpeed = 10;
 }
-
-//
-// async function setGame(userId1: number, userId2: number)
-// {
-// 	const currentMatch = await this.matchService.create(userId1, userId2);
-// 	if (!currentMatch)
-// 	{
-// 		this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId1), userId1);
-// 		this.endPlayer(await this.connectedPlayerService.getSocketIdById(userId2), userId2);
-// 		return ;
-// 	}
-// 	this.logger.log(`setGame : ${currentMatch} match will soon start!`);
-// 	this.startGame(currentMatch);
-// }

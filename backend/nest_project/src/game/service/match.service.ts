@@ -81,6 +81,8 @@ export class MatchService {
 	async getOpponentByPlayerId(match_id: number, player_id: number): Promise<ConnectedPlayerEntity>
 	{
 		const match = await this.getByMatchId(match_id);
+		if (!match)
+			return null;
 		if (match.playerLeft === player_id)
 		{
 			return this.connectedPlayerService.getPlayer(match.playerRight);
@@ -94,6 +96,8 @@ export class MatchService {
 	async getOpponentByPlayerIdFriend(match_id: number, player_id: number): Promise<ConnectedFriendlyPlayerEntity>
 	{
 		const match = await this.getByMatchId(match_id);
+		if (!match)
+			return null;
 		if (match.playerLeft === player_id)
 		{
 			return this.connectedFriendlyPlayerService.getPlayer(match.playerRight);
