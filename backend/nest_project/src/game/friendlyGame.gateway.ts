@@ -53,6 +53,7 @@ export class FriendlyGameGateway implements OnGatewayConnection, OnGatewayDiscon
 	{
 		this.connectedFriendlyPlayerService.deleteAll();
 		this.matchService.deleteAll();
+		this.invitationSercive.deleteAll();
 	}
 
 	async handleConnection(socket: Socket)
