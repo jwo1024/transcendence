@@ -161,6 +161,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   //------------------------------------------------------
   //--------채팅 메서드 시작-------------------------
 
+  private async amIValidUser(socketId : string) : Promise<boolean>
+  {
+    const connections = await this.connectedUserService.getBySocketId(socketId);
+    if (connections === null || connections === undefined)
+      return false;
+    return true;
+  } 
+
   //For Room(단체 채팅방 만들기용 메서드)
   @SubscribeMessage('Room-create')
   async chatRoomCreate(
@@ -168,6 +176,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         @MessageBody() room:RoomCreateDTO)
         // room:RoomCreateDTO) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-create", "you are not valid user.")
+      return ;
+    }
     const userEntity = await this.userService.getOne(socket.data.userId);
 
     //방을 만들고 만든 사용자를 Owner로서 임명 
@@ -214,6 +227,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         @MessageBody() data: { room:RoomCreateDTO, userNickname: string })
         // room:RoomCreateDTO) 
   {
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-create", "you are not valid user.")
+      return ;
+    }
     const room = data.room;
     const userNickname = data.userNickname;
     if (room.roomType != 'dm')
@@ -226,6 +244,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     {
       this.emitErrorEvent(socket.id,"Response-DM-create", "matching user not found");
       return ; //valid하지 않은 사용자 nickname을 넘긴경우
+    }
+    if ( socket.data.userId === userTheOtherProfile.id) //자신과의 대화 불가
+    {
+      this.emitErrorEvent(socket.id,"Response-DM-create", "you are not allowed to do that");
+      return ;
     }
      const userTheOther = await this.userService.getOne(userTheOtherProfile.id);
     if ( userTheOther === undefined)
@@ -293,8 +316,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomInvite: RoomInviteDTO) 
   {
-    this.logger.log(`input room : ${roomInvite.roomId}`);
-    this.logger.log(`input nickname : ${roomInvite.targetUserNickname}`);
+    if (await this.amIValidUser(socket.id) === false)
+    {
+      this.emitErrorEvent(socket.id, "Response-Room-create", "you are not valid user.")
+      return ;
+    }
     
     const targetProfile = await this.profileService.getUserProfileByNickname(roomInvite.targetUserNickname);
     if(targetProfile === null || targetProfile === undefined)
@@ -361,7 +387,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     
     //타겟 납치 & 타겟에게 알림
     await this.roomService.addUserToRoom(targetEntity.id, currentRoom.roomId, connection.socketId);
-   this.logger.log(``)
+  //  this.logger.log(``)
     const newUserProfile = await this.profileService.getUserProfileById(targetEntity.id);
     const currentRoomId = (currentRoom).roomId;
     
@@ -554,6 +580,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     @ConnectedSocket() socket: Socket,
     @MessageBody() roomId: number) 
   {
+    if (await this.connectedUserService.)
     if ( await (this.roomService.isRoomExist(roomId)) === false)
       {
         //존재하지 않는 roomId 요청일 경우 무시
@@ -600,6 +627,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       room.roomOwner = room.roomAdmins[0];
     else
       room.roomOwner = room.users[0].id;
+    room.roomAdmins.push(room.roomOwner);
     await this.roomService.savechangedOwner(room);
   }
 

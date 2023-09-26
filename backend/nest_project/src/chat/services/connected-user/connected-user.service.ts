@@ -63,6 +63,12 @@ export class ConnectedUserService {
     });
   }
 
+  async getBySocketId(socketId : string) : Promise<ConnectedUserI> {
+    return await this.connectedUserRepository.findOne({
+      where: { socketId },
+    })
+  }
+
   async getAllConnectedSocketIds(): Promise<string[]> {
     const connectedUsers = await this.connectedUserRepository.find();
 
