@@ -490,13 +490,13 @@ export class LadderGameGateway implements OnGatewayConnection, OnGatewayDisconne
 	
 	//
 	const data = {
-		a: gameField.ballX,
-		b: gameField.ballY,
-		c: gameField.ballXvelocity,
-		d: gameField.ballYvelocity,
-		e: gameField.ballSpeed,
-		f: gameField.scoreLeft,
-		g: gameField.scoreRight,
+		ballX: gameField.ballX,
+		ballY: gameField.ballY,
+		veloX: gameField.ballXvelocity,
+		veloY: gameField.ballYvelocity,
+		ballSpeed: gameField.ballSpeed,
+		leftScore: gameField.scoreLeft,
+		rightScore: gameField.scoreRight,
 	};
 	
 	// server.to(player1.socketId).emit('updateCanvas', gameField);

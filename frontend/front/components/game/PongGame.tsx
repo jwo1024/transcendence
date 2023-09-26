@@ -117,28 +117,17 @@ const PongGame: React.FC<PongGameProps> = ({socket}) => {
       left.y = data.leftY;
       right.y = data.rightY;
     });
-    
-    // socket.on('updateCanvas', (data: any) => {
-    //   ball.x = data.ballX;
-    //   ball.y = data.ballY;
-    //   ball.velocityX = data.ballXvelocity;
-    //   ball.velocityY = data.ballYvelocity;
-    //   ball.speed = data.ballSpeed;
-      
-    //   left.score = data.scoreLeft;
-    //   right.score = data.scoreRight;
-    // });
 
     // todo: change name
     socket.on('updateCanvas', (data: any) => {
-      ball.x = data.a;
-      ball.y = data.b;
-      ball.velocityX = data.c;
-      ball.velocityY = data.d;
-      ball.speed = data.e;
+      ball.x = data.ballX;
+      ball.y = data.ballY;
+      ball.velocityX = data.veloX;
+      ball.velocityY = data.veloY;
+      ball.speed = data.ballSpeed;
       
-      left.score = data.f;
-      right.score = data.g
+      left.score = data.leftScore;
+      right.score = data.rightScore;
     });
     
     // rendering function

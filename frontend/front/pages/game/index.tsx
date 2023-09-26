@@ -100,6 +100,7 @@ export default function GamePage() {
       setResultOfGame({winPlayer:winner_nickname, losePlayer:loser_nickname});
       check();
       setGamePhase("end");
+
   });
 
   return () => {
