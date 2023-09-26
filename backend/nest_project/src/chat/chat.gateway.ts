@@ -93,7 +93,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
           return this.disconnect(socket);
         const connection = await this.connectedUserService.findByUser(userForChat)
         if (connection !== null)
-            return this.disconnect(socket); //한 아이디로 채팅에 중복 입장 허용하지 않음
+        {
+          this.connectedUserService.deleteAllbyUserId(userId);
+          // const this.connectedUserService.findByUser()
+        }  
+            // this.disconnect(socket); //한 아이디로 채팅에 중복 입장 허용하지 않음
        
         //위에서 disconnect 하는 경우 (this.disconnect에 구현하면 됨)
         //"http://localhost:3001/signup"이나 메인으로 redirection 하는것도 좋을 것
@@ -131,15 +135,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   {
     // // remove connection from DB
     await this.connectedUserService.deleteBySocketId(socket.id);
-    await this.profileService.logOn(socket.data.userId);
+    const a = await this.profileService.logOn(socket.data.userId);
+    this.logger.log(`a : ${a}`);
+    this.logger.log(`!!!!!!!!!!!!!!!!!!!!!!${socket.data.userId}!!!!!!!!!!!!!!!`);
     // await this.profileService.inchat(socket.data.userId);
-    socket.disconnect();
+   await socket.disconnect();
   }
 
-  private disconnect(socket: Socket) 
+  private async disconnect(socket: Socket) 
   {
     //리다이렉션 하라는 메세지 여기에 넣자!
-    socket.disconnect();
+    await this.profileService.logOn(socket.data.userId);
+
+    await socket.disconnect();
   };
 
   // @SubscribeMessage("socketId & message")
@@ -378,29 +386,32 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   @SubscribeMessage('Game-invite')
   async onInviteToGame(
       @ConnectedSocket() socket: Socket,
-      @MessageBody() targetId: number) 
+      @MessageBody() data: {targetId: number}) 
   {
+    
+    const targetId = data.targetId;
     const userEntity = await this.userService.getOne(socket.data.userId);
     if(userEntity === undefined || userEntity === null)
     {
-      this.emitErrorEvent(socket.id, "Responsse-Game-invite", "something's going wrong. please try again");
+      this.emitErrorEvent(socket.id, "Response-Game-invite", "something's going wrong. please try again");
       return ;
     }
     const userProfile = await this.profileService.getUserProfileById(socket.data.userId);
-
+    this.logger
     //내가 차단한 유저 초대시
     if (userProfile.block_list.find(finding => finding === targetId) !== undefined )
     {
-      this.emitErrorEvent(socket.id, "Responsse-Game-invite", "you've blocked target user");
+      this.emitErrorEvent(socket.id, "Response-Game-invite", "you've blocked target user");
       return ;
     }
+
 
     const targetProfile = await this.profileService.getUserProfileById(targetId);
 
     // 나를 차단한 유저에게 초대 안 보냄
     if (targetProfile.block_list.find(finding => finding === userEntity.id) !== undefined )
     {
-      this.emitErrorEvent(socket.id, "Responsse-Game-invite", "you've been blocked");
+      this.emitErrorEvent(socket.id, "Response-Game-invite", "you've been blocked");
       return ;
     }
     
@@ -409,24 +420,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const targetConnection = await this.connectedUserService.findOnebyUserId(targetEntity.id);
     if (targetConnection === undefined)
     {
-      this.emitErrorEvent(socket.id, "Responsse-Game-invite", "the target user is not connected to Chat right now");
+      this.emitErrorEvent(socket.id, "Response-Game-invite", "the target user is not connected to Chat right now");
       return ; 
     }
     
     const invitationEntity = await this.invitationService.create(socket.data.userId, targetId);
     if(invitationEntity === undefined || invitationEntity === null)
     {
-      this.emitErrorEvent(socket.id, "Responsse-Game-invite", "Plese try again");
+      this.logger.log(`user: ${socket.data.userId}`);
+      this.logger.log(`guest: ${targetId}`);
+      this.emitErrorEvent(socket.id, "Response-Game-invite", "Please try again");
       return ; 
     }
 
-    this.emitResponseEvent(socket.id,  "Responsse-Game-invite");
+    this.emitResponseEvent(socket.id,  "Response-Game-invite");
     const simpleUser : SimpleUserDto = {
       
       id: userProfile.id,
       
       nickname : userProfile.nickname,
-
     } 
     
     this.server.to(targetConnection.socketId).emit("got-invited-to-game", simpleUser);

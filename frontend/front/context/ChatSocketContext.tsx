@@ -16,6 +16,7 @@ const ChatSocketContext = (props: React.PropsWithChildren<{}>) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const router = Router;
   const errorPage = process.env.NEXT_PUBLIC_ERROR_PAGE_SIGNUP;
+  const frontUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken"); // tmp
@@ -45,10 +46,12 @@ const ChatSocketContext = (props: React.PropsWithChildren<{}>) => {
     // Socket 연결 실패 시
     socket.on(ON_DISCONNECT, (error) => {
       console.error("Socket connection failed:", error);
+      socket.connect();
     });
 
     socket.on(ON_ERROR, (error) => {
       console.error("Socket error:", error);
+      router.push(`${frontUrl}/menu`);
     });
 
     // socket.onAny((event, ...args) => {

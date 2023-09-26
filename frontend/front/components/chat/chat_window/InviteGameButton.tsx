@@ -29,9 +29,6 @@ const InviteGameButton = ({ friendInfo, className }: InviteGameButtonProps) => {
       console.log("socket?.on ON_RESPONSE_GAME_INVITE", data);
       const res: ResponseDTO = data;
       if (res.success) {
-        alert(
-          `[${friendInfo.nickname}]님에게 게임 초대를 보냈습니다.(초대만 보내짐.. 백엔드랑 연결x) 게임페이지로 이동합니다.`
-        );
         router.push("/game/friendly");
       } else {
         alert(

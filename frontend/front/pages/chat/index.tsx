@@ -1,5 +1,6 @@
 // Libaraies
 import { useEffect, useState, useContext } from "react";
+import { useRouter } from "next/router";
 // Components
 import WaitingRoomWindow from "@/components/chat/WaitingRoomWindow";
 import ChatGroupWindow from "@/components/chat/ChatGroupWindow";
@@ -120,6 +121,7 @@ const ListenSocketBlock = ({
   children,
 }: ListenSocketBlockProps) => {
   const socket = useContext(SocketContext);
+  const router = useRouter();
 
   useEffect(() => {
     // 초기 blockList 업데이트
@@ -145,6 +147,7 @@ const ListenSocketBlock = ({
         )
       )
         socket.emit(EMIT_REFUSE_GAME_INVITE, { hostId: user.id });
+      else router.push("/game/friendly");
     });
     return () => {
       socket?.off(ON_MY_BLOCK_LIST);
