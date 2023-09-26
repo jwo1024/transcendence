@@ -52,7 +52,8 @@ const MakeNewDMMenu = ({ userInfo }: MakeNewChatMenuBoxProps) => {
       else setErrorMsg(null);
     });
     socket?.emit(EMIT_DM_CREATE, { room: newRoom, userNickname: friendNick });
-   
+    if (friendNickRef.current?.value === undefined) return;
+    friendNickRef.current.value = "";
   };
 
   return (

@@ -69,7 +69,8 @@ const useMessageForm = ({
   };
 
   const resetInputMessage = () => {
-    inputRef.current!.value = "";
+    if (inputRef.current?.value === undefined) return;
+    inputRef.current.value = "";
   };
 
   const deleteSentMessage = (msg: RecvMessageDTO) => {

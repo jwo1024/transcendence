@@ -12,8 +12,8 @@ const Error_SignUp = () => {
   };
 
   return (
-    <div className="w-full h-full items-center pt-11 ">
-      <Window title="pong game" w="300" h="300" className="">
+    <div className="flex flex-row  h-90vh items-center justify-center">
+      <Window title="pong game" w="300" h="300">
         <div className="pt-16 text-center">
           <span className=" font-bold text-3xl"> SignUp Error</span>
           <br />
