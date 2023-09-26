@@ -59,7 +59,7 @@ export class RoomService {
     if (room.roomPass != undefined)
       room.roomPass = await this.hashPassword(room.roomPass);
 		//   newUser.password = passwordHash;
-    const Room_dtoToEntity = this.roomRepository.create(this.roomMapper.Create_dtoToEntity(room));
+    const Room_dtoToEntity = await this.roomRepository.create(this.roomMapper.Create_dtoToEntity(room));
     Room_dtoToEntity.roomOwner = creator.id;
     Room_dtoToEntity.roomAdmins.push(creator.id);
     return await this.roomRepository.save(Room_dtoToEntity);
@@ -283,7 +283,7 @@ export class RoomService {
     else
       editedRoom.roomPass = this.hashPassword(newData.roomPass);
     
-    return  this.roomRepository.save(editedRoom);
+    return  (await this.roomRepository.save(editedRoom));
   }
 
   async addUserToBanList( adminDto : AdminRelatedDTO) : Promise<RoomI> 
