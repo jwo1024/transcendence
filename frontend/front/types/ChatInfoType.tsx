@@ -50,7 +50,7 @@ export interface RoomJoinDTO {
 }
 
 export interface RoomInviteDTO {
-  targetUserNick: string;
+  targetUserNickname: string;
   roomId: number;
 }
 
